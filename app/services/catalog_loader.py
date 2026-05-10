@@ -36,13 +36,27 @@ class CatalogLoader:
             with open(self.catalog_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            # Parse assessments
-            for item in data.get("assessments", []):
+            # Parse assessments with failsafe repair
+            import re
+            for i, item in enumerate(data.get("assessments", [])):
                 try:
+                    # Failsafe repairs
+                    if not item.get("id"):
+                        name = item.get("name") or f"unnamed-{i}"
+                        id_name = name.lower()
+                        id_name = id_name.replace("c#", "c-sharp").replace("c++", "c-plus-plus")
+                        item["id"] = re.sub(r'[^a-z0-9]+', '-', id_name).strip('-')
+                    
+                    if item.get("duration_minutes") is None:
+                        item["duration_minutes"] = 30
+                    
+                    if not item.get("test_type"):
+                        item["test_type"] = "K"
+
                     assessment = AssessmentWithMetadata(**item)
                     self.assessments.append(assessment)
                 except Exception as e:
-                    logger.error(f"Failed to parse assessment {item.get('id')}: {e}")
+                    logger.error(f"Failed to parse assessment {item.get('id') or i}: {e}")
 
             logger.info(f"Loaded {len(self.assessments)} assessments from catalog")
 

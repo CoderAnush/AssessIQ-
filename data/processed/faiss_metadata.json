@@ -5,8 +5,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/account-manager-solution",
       "description": "Standard SHL assessment for Account Manager Solution, focused on Cognitive, Personality, Ability, Behavioral evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "account-manager-solution",
       "domains": [
         "cognitive"
       ],
@@ -75,8 +76,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/agency-manager-solution",
       "description": "Standard SHL assessment for Agency Manager Solution, focused on Ability, Behavioral, Personality, Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "agency-manager-solution",
       "domains": [
         "general"
       ],
@@ -141,8 +143,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/apprentice-8-0-job-focused-assessment-4261",
       "description": "Standard SHL assessment for Apprentice + 8.0 Job Focused Assessment, focused on Behavioral, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "apprentice-8-0-job-focused-assessment",
       "domains": [
         "general"
       ],
@@ -201,8 +204,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/apprentice-8-0-job-focused-assessment",
       "description": "Standard SHL assessment for Apprentice 8.0 Job Focused Assessment, focused on Behavioral, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "apprentice-8-0-job-focused-assessment",
       "domains": [
         "general"
       ],
@@ -261,8 +265,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/bank-collections-agent-short-form",
       "description": "Standard SHL assessment for Bank Collections Agent - Short Form, focused on Ability, Behavioral, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "bank-collections-agent-short-form",
       "domains": [
         "general"
       ],
@@ -321,8 +326,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/bank-operations-supervisor-short-form",
       "description": "Standard SHL assessment for Bank Operations Supervisor - Short Form, focused on Ability, Behavioral, Personality, Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "bank-operations-supervisor-short-form",
       "domains": [
         "general"
       ],
@@ -381,8 +387,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/bilingual-spanish-reservation-agent-solution",
       "description": "Standard SHL assessment for Bilingual Spanish Reservation Agent Solution, focused on Behavioral, Personality, Skill, Ability evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "bilingual-spanish-reservation-agent-solution",
       "domains": [
         "general"
       ],
@@ -442,8 +449,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/bookkeeping-accounting-auditing-clerk-short-form",
       "description": "Standard SHL assessment for Bookkeeping, Accounting, Auditing Clerk Short Form, focused on Personality, Skill, Knowledge, Behavioral, Ability evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "bookkeeping-accounting-auditing-clerk-short-form",
       "domains": [
         "general"
       ],
@@ -503,8 +511,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/branch-manager-short-form",
       "description": "Standard SHL assessment for Branch Manager - Short Form, focused on Ability, Behavioral, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "branch-manager-short-form",
       "domains": [
         "general"
       ],
@@ -569,8 +578,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/cashier-solution",
       "description": "Standard SHL assessment for Cashier Solution, focused on Behavioral, Ability, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "cashier-solution",
       "domains": [
         "general"
       ],
@@ -627,8 +637,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/global-skills-development-report",
       "description": "Standard SHL assessment for Global Skills Development Report, focused on Ability, E, Behavioral, Cognitive, D, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "global-skills-development-report",
       "domains": [
         "cognitive"
       ],
@@ -658,8 +669,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "development",
-          "it"
+          "it",
+          "development"
         ],
         "personality": [
           "personality",
@@ -697,8 +708,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/net-framework-4-5",
       "description": "Standard SHL assessment for .NET Framework 4.5, focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "net-framework-4-5",
       "domains": [
         "general"
       ],
@@ -740,8 +752,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/net-mvc-new",
       "description": "Standard SHL assessment for .NET MVC (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "net-mvc-new",
       "domains": [
         "general"
       ],
@@ -783,8 +796,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
       "description": "Standard SHL assessment for Adobe Experience Manager (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "adobe-experience-manager-new",
       "domains": [
         "general"
       ],
@@ -838,8 +852,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/adobe-photoshop-cc",
       "description": "Standard SHL assessment for Adobe Photoshop CC, focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "adobe-photoshop-cc",
       "domains": [
         "general"
       ],
@@ -881,8 +896,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/aeronautical-engineering-new",
       "description": "Standard SHL assessment for Aeronautical Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "aeronautical-engineering-new",
       "domains": [
         "general"
       ],
@@ -929,8 +945,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/aerospace-engineering-new",
       "description": "Standard SHL assessment for Aerospace Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "aerospace-engineering-new",
       "domains": [
         "general"
       ],
@@ -977,8 +994,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/agile-software-development",
       "description": "Standard SHL assessment for Agile Software Development, focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "agile-software-development",
       "domains": [
         "general"
       ],
@@ -1026,8 +1044,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/agile-testing-new",
       "description": "Standard SHL assessment for Agile Testing (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "agile-testing-new",
       "domains": [
         "general"
       ],
@@ -1070,8 +1089,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/ai-skills",
       "description": "Standard SHL assessment for AI Skills, focused on Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "ai-skills",
       "domains": [
         "general"
       ],
@@ -1127,8 +1147,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/amazon-web-services-aws-development-new",
       "description": "Standard SHL assessment for Amazon Web Services (AWS) Development (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "amazon-web-services-aws-development-new",
       "domains": [
         "general"
       ],
@@ -1177,8 +1198,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/android-development-new",
       "description": "Standard SHL assessment for Android Development (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "android-development-new",
       "domains": [
         "general"
       ],
@@ -1228,8 +1250,9 @@
         "Angular",
         "Frontend"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "angular-6-new",
       "domains": [
         "frontend"
       ],
@@ -1275,8 +1298,9 @@
         "Angular",
         "Frontend"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "angularjs-new",
       "domains": [
         "frontend"
       ],
@@ -1320,8 +1344,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/apache-hadoop-new",
       "description": "Standard SHL assessment for Apache Hadoop (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "apache-hadoop-new",
       "domains": [
         "general"
       ],
@@ -1364,8 +1389,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/apache-hadoop-extensions-new",
       "description": "Standard SHL assessment for Apache Hadoop Extensions (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "apache-hadoop-extensions-new",
       "domains": [
         "general"
       ],
@@ -1409,8 +1435,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/apache-hbase-new",
       "description": "Standard SHL assessment for Apache HBase (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "apache-hbase-new",
       "domains": [
         "general"
       ],
@@ -1453,8 +1480,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/apache-hive-new",
       "description": "Standard SHL assessment for Apache Hive (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "apache-hive-new",
       "domains": [
         "general"
       ],
@@ -1497,8 +1525,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/apache-kafka-new",
       "description": "Standard SHL assessment for Apache Kafka (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "apache-kafka-new",
       "domains": [
         "general"
       ],
@@ -1541,8 +1570,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/apache-pig-new",
       "description": "Standard SHL assessment for Apache Pig (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "apache-pig-new",
       "domains": [
         "general"
       ],
@@ -1584,8 +1614,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/apache-spark-new",
       "description": "Standard SHL assessment for Apache Spark (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "apache-spark-new",
       "domains": [
         "general"
       ],
@@ -1628,8 +1659,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/asp-net-with-c-new",
       "description": "Standard SHL assessment for ASP .NET with C# (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "asp-net-with-c-sharp-new",
       "domains": [
         "general"
       ],
@@ -1676,8 +1708,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/asp-net-4-5",
       "description": "Standard SHL assessment for ASP.NET 4.5, focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "asp-net-4-5",
       "domains": [
         "general"
       ],
@@ -1718,8 +1751,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/assessment-and-development-center-exercises",
       "description": "Standard SHL assessment for Assessment and Development Center Exercises, focused on E evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "assessment-and-development-center-exercises",
       "domains": [
         "general"
       ],
@@ -1767,8 +1801,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "description": "Standard SHL assessment for Automata - Fix (New), focused on Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automata-fix-new",
       "domains": [
         "general"
       ],
@@ -1810,8 +1845,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/automata-sql-new",
       "description": "Standard SHL assessment for Automata - SQL (New), focused on Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automata-sql-new",
       "domains": [
         "general"
       ],
@@ -1857,8 +1893,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/automata-new",
       "description": "Standard SHL assessment for Automata (New), focused on Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automata-new",
       "domains": [
         "general"
       ],
@@ -1903,8 +1940,9 @@
         "Data Science",
         "Machine Learning"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automata-data-science-new",
       "domains": [
         "data_science"
       ],
@@ -1953,8 +1991,9 @@
         "Data Science",
         "Machine Learning"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automata-data-science-pro-new",
       "domains": [
         "data_science"
       ],
@@ -2000,8 +2039,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/automata-front-end",
       "description": "Standard SHL assessment for Automata Front End, focused on Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automata-front-end",
       "domains": [
         "general"
       ],
@@ -2043,8 +2083,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/automata-pro-new",
       "description": "Standard SHL assessment for Automata Pro (New), focused on Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automata-pro-new",
       "domains": [
         "general"
       ],
@@ -2086,8 +2127,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/automata-selenium",
       "description": "Standard SHL assessment for Automata Selenium, focused on Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automata-selenium",
       "domains": [
         "general"
       ],
@@ -2129,8 +2171,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/automation-anywhere-rpa-development-new",
       "description": "Standard SHL assessment for Automation Anywhere RPA Development (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automation-anywhere-rpa-development-new",
       "domains": [
         "general"
       ],
@@ -2178,8 +2221,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/automotive-engineering-new",
       "description": "Standard SHL assessment for Automotive Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "automotive-engineering-new",
       "domains": [
         "general"
       ],
@@ -2226,8 +2270,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/basic-biology-new",
       "description": "Standard SHL assessment for Basic Biology (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "basic-biology-new",
       "domains": [
         "general"
       ],
@@ -2270,8 +2315,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/basic-computer-literacy-windows-10-new",
       "description": "Standard SHL assessment for Basic Computer Literacy (Windows 10) (New), focused on Skill, Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "basic-computer-literacy-windows-10-new",
       "domains": [
         "general"
       ],
@@ -2320,8 +2366,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/basic-statistics-new",
       "description": "Standard SHL assessment for Basic Statistics (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "basic-statistics-new",
       "domains": [
         "general"
       ],
@@ -2364,8 +2411,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/biochemistry-new",
       "description": "Standard SHL assessment for Biochemistry (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "biochemistry-new",
       "domains": [
         "general"
       ],
@@ -2407,8 +2455,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/biotech-lab-techniques-new",
       "description": "Standard SHL assessment for Biotech Lab Techniques (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "biotech-lab-techniques-new",
       "domains": [
         "general"
       ],
@@ -2451,8 +2500,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/biztalk-new",
       "description": "Standard SHL assessment for BizTalk (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "biztalk-new",
       "domains": [
         "general"
       ],
@@ -2497,8 +2547,9 @@
         "Communication",
         "Interpersonal"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "business-communication-adaptive",
       "domains": [
         "general"
       ],
@@ -2562,8 +2613,9 @@
         "Communication",
         "Interpersonal"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "business-communications",
       "domains": [
         "general"
       ],
@@ -2624,8 +2676,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/c-programming-new",
       "description": "Standard SHL assessment for C Programming (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "c-programming-new",
       "domains": [
         "general"
       ],
@@ -2677,8 +2730,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/c-programming-new-4039",
       "description": "Standard SHL assessment for C# Programming (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "c-sharp-programming-new",
       "domains": [
         "general"
       ],
@@ -2730,8 +2784,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/c-programming-new-4122",
       "description": "Standard SHL assessment for C++ Programming (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "c-plus-plus-programming-new",
       "domains": [
         "general"
       ],
@@ -2783,8 +2838,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/cardiology-and-diabetes-management-new",
       "description": "Standard SHL assessment for Cardiology and Diabetes Management (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "cardiology-and-diabetes-management-new",
       "domains": [
         "leadership"
       ],
@@ -2832,8 +2888,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/ceramic-engineering-new",
       "description": "Standard SHL assessment for Ceramic Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "ceramic-engineering-new",
       "domains": [
         "general"
       ],
@@ -2880,8 +2937,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/chemical-engineering-new",
       "description": "Standard SHL assessment for Chemical Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "chemical-engineering-new",
       "domains": [
         "general"
       ],
@@ -2928,8 +2986,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/cisco-appdynamics-new",
       "description": "Standard SHL assessment for Cisco AppDynamics (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "cisco-appdynamics-new",
       "domains": [
         "general"
       ],
@@ -2972,8 +3031,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/civil-engineering-new",
       "description": "Standard SHL assessment for Civil Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "civil-engineering-new",
       "domains": [
         "general"
       ],
@@ -3020,8 +3080,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
       "description": "Standard SHL assessment for Cloud Computing (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "cloud-computing-new",
       "domains": [
         "general"
       ],
@@ -3064,8 +3125,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/cobol-programming-new",
       "description": "Standard SHL assessment for COBOL Programming (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "cobol-programming-new",
       "domains": [
         "general"
       ],
@@ -3118,8 +3180,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/computer-science-new",
       "description": "Standard SHL assessment for Computer Science (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "computer-science-new",
       "domains": [
         "general"
       ],
@@ -3162,8 +3225,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/contact-center-call-simulation-new",
       "description": "Standard SHL assessment for Contact Center Call Simulation (New), focused on Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "contact-center-call-simulation-new",
       "domains": [
         "general"
       ],
@@ -3208,8 +3272,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation",
       "description": "Standard SHL assessment for Conversational Multichat Simulation, focused on Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "conversational-multichat-simulation",
       "domains": [
         "general"
       ],
@@ -3255,8 +3320,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "core-java-advanced-level-new",
       "domains": [
         "backend"
       ],
@@ -3281,8 +3347,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "java",
-          "programming"
+          "programming",
+          "java"
         ]
       },
       "inferred_roles": [
@@ -3310,8 +3376,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "core-java-entry-level-new",
       "domains": [
         "backend"
       ],
@@ -3339,8 +3406,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "java",
-          "programming"
+          "programming",
+          "java"
         ]
       },
       "inferred_roles": [
@@ -3368,8 +3435,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/count-out-the-money",
       "description": "Standard SHL assessment for Count Out The Money, focused on Knowledge, Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "count-out-the-money",
       "domains": [
         "general"
       ],
@@ -3411,8 +3479,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/css3-new",
       "description": "Standard SHL assessment for CSS3 (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "css3-new",
       "domains": [
         "frontend"
       ],
@@ -3454,8 +3523,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/culinary-skills-new",
       "description": "Standard SHL assessment for Culinary Skills (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "culinary-skills-new",
       "domains": [
         "general"
       ],
@@ -3498,8 +3568,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/customer-service-phone-simulation",
       "description": "Standard SHL assessment for Customer Service Phone Simulation, focused on Behavioral, Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "customer-service-phone-simulation",
       "domains": [
         "sales"
       ],
@@ -3547,8 +3618,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/customer-service-phone-solution",
       "description": "Standard SHL assessment for Customer Service Phone Solution, focused on Behavioral, Personality, Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "customer-service-phone-solution",
       "domains": [
         "sales"
       ],
@@ -3608,8 +3680,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/cyber-risk-new",
       "description": "Standard SHL assessment for Cyber Risk (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "cyber-risk-new",
       "domains": [
         "general"
       ],
@@ -3652,8 +3725,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/data-entry-new",
       "description": "Standard SHL assessment for Data Entry (New), focused on Skill evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "data-entry-new",
       "domains": [
         "general"
       ],
@@ -3696,8 +3770,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/data-entry-alphanumeric-split-screen-us",
       "description": "Standard SHL assessment for Data Entry Alphanumeric Split Screen - US, focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "data-entry-alphanumeric-split-screen-us",
       "domains": [
         "general"
       ],
@@ -3746,8 +3821,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/data-entry-numeric-split-screen-us",
       "description": "Standard SHL assessment for Data Entry Numeric Split Screen - US, focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "data-entry-numeric-split-screen-us",
       "domains": [
         "general"
       ],
@@ -3796,8 +3872,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/data-entry-ten-key-split-screen",
       "description": "Standard SHL assessment for Data Entry Ten Key Split Screen, focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "data-entry-ten-key-split-screen",
       "domains": [
         "general"
       ],
@@ -3848,8 +3925,9 @@
         "Data Science",
         "Machine Learning"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "data-science-new",
       "domains": [
         "data_science"
       ],
@@ -3894,8 +3972,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/data-warehousing-concepts",
       "description": "Standard SHL assessment for Data Warehousing Concepts, focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "data-warehousing-concepts",
       "domains": [
         "general"
       ],
@@ -3938,8 +4017,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi",
       "description": "Standard SHL assessment for Dependability and Safety Instrument (DSI), focused on Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "A",
+      "id": "dependability-and-safety-instrument-dsi",
       "domains": [
         "general"
       ],
@@ -3998,8 +4078,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/dermatology-new",
       "description": "Standard SHL assessment for Dermatology (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "dermatology-new",
       "domains": [
         "general"
       ],
@@ -4041,8 +4122,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/desktop-support-new",
       "description": "Standard SHL assessment for Desktop Support (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "desktop-support-new",
       "domains": [
         "general"
       ],
@@ -4085,8 +4167,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/digital-advertising-new",
       "description": "Standard SHL assessment for Digital Advertising (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "digital-advertising-new",
       "domains": [
         "general"
       ],
@@ -4133,8 +4216,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/digital-readiness-development-report",
       "description": "Standard SHL assessment for Digital Readiness Development Report - IC, focused on Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "digital-readiness-development-report-ic",
       "domains": [
         "general"
       ],
@@ -4161,8 +4245,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "development",
-          "it"
+          "it",
+          "development"
         ],
         "personality": [
           "personality"
@@ -4194,8 +4278,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/digital-readiness-development-report-manager",
       "description": "Standard SHL assessment for Digital Readiness Development Report - Manager, focused on Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "digital-readiness-development-report-manager",
       "domains": [
         "general"
       ],
@@ -4228,8 +4313,8 @@
           "manager"
         ],
         "technical": [
-          "development",
-          "it"
+          "it",
+          "development"
         ],
         "personality": [
           "personality"
@@ -4263,8 +4348,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/docker-new",
       "description": "Standard SHL assessment for Docker (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "docker-new",
       "domains": [
         "general"
       ],
@@ -4306,8 +4392,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/dojo-new",
       "description": "Standard SHL assessment for Dojo (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "dojo-new",
       "domains": [
         "general"
       ],
@@ -4349,8 +4436,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/drupal-new",
       "description": "Standard SHL assessment for Drupal (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "drupal-new",
       "domains": [
         "general"
       ],
@@ -4392,8 +4480,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/dsi-v1-1-interpretation-report",
       "description": "Standard SHL assessment for DSI v1.1 Interpretation Report, focused on Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "dsi-v1-1-interpretation-report",
       "domains": [
         "general"
       ],
@@ -4451,8 +4540,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/econometrics-new",
       "description": "Standard SHL assessment for Econometrics (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "econometrics-new",
       "domains": [
         "general"
       ],
@@ -4494,8 +4584,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/economics-new",
       "description": "Standard SHL assessment for Economics (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "economics-new",
       "domains": [
         "general"
       ],
@@ -4537,8 +4628,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/electrical-and-electronics-engineering-new",
       "description": "Standard SHL assessment for Electrical and Electronics Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "electrical-and-electronics-engineering-new",
       "domains": [
         "general"
       ],
@@ -4586,8 +4678,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/electrical-engineering-new",
       "description": "Standard SHL assessment for Electrical Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "electrical-engineering-new",
       "domains": [
         "general"
       ],
@@ -4637,8 +4730,9 @@
         "Communication",
         "Interpersonal"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "electronics-telecommunications-engineering-new",
       "domains": [
         "general"
       ],
@@ -4704,8 +4798,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/electronics-and-embedded-systems-engineering-new",
       "description": "Standard SHL assessment for Electronics and Embedded Systems Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "electronics-and-embedded-systems-engineering-new",
       "domains": [
         "general"
       ],
@@ -4754,8 +4849,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/electronics-and-semiconductor-engineering-new",
       "description": "Standard SHL assessment for Electronics and Semiconductor Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "electronics-and-semiconductor-engineering-new",
       "domains": [
         "general"
       ],
@@ -4803,8 +4899,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/english-comprehension-new",
       "description": "Standard SHL assessment for English Comprehension (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "english-comprehension-new",
       "domains": [
         "general"
       ],
@@ -4850,8 +4947,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "enterprise-java-beans-new",
       "domains": [
         "backend"
       ],
@@ -4878,8 +4976,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "java",
-          "programming"
+          "programming",
+          "java"
         ]
       },
       "inferred_roles": [
@@ -4910,8 +5008,9 @@
         "Leadership",
         "Management"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "enterprise-leadership-report-1-0",
       "domains": [
         "leadership"
       ],
@@ -4978,8 +5077,9 @@
         "Leadership",
         "Management"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "enterprise-leadership-report-2-0",
       "domains": [
         "leadership"
       ],
@@ -5043,8 +5143,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/entry-level-cashier-solution",
       "description": "Standard SHL assessment for Entry Level Cashier Solution, focused on Cognitive, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "entry-level-cashier-solution",
       "domains": [
         "cognitive"
       ],
@@ -5110,8 +5211,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/entry-level-customer-serv-retail-and-contact-center",
       "description": "Standard SHL assessment for Entry Level Customer Serv-Retail & Contact Center, focused on Personality, Cognitive evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "entry-level-customer-serv-retail-contact-center",
       "domains": [
         "sales",
         "cognitive"
@@ -5182,8 +5284,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/entry-level-customer-service-general-solution",
       "description": "Standard SHL assessment for Entry Level Customer Service (General) Solution, focused on Cognitive, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "entry-level-customer-service-general-solution",
       "domains": [
         "sales",
         "cognitive"
@@ -5253,8 +5356,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/entry-level-hotel-front-desk-solution",
       "description": "Standard SHL assessment for Entry Level Hotel Front Desk Solution, focused on Cognitive, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "entry-level-hotel-front-desk-solution",
       "domains": [
         "cognitive"
       ],
@@ -5322,8 +5426,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/entry-level-sales-solution",
       "description": "Standard SHL assessment for Entry Level Sales Solution, focused on Cognitive, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "entry-level-sales-solution",
       "domains": [
         "sales",
         "cognitive"
@@ -5391,8 +5496,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/entry-level-technical-support-solution",
       "description": "Standard SHL assessment for Entry Level Technical Support Solution, focused on Personality, Cognitive evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "entry-level-technical-support-solution",
       "domains": [
         "cognitive"
       ],
@@ -5460,8 +5566,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/etl-testing-new",
       "description": "Standard SHL assessment for ETL Testing (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "etl-testing-new",
       "domains": [
         "general"
       ],
@@ -5503,8 +5610,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/executive-scenarios",
       "description": "Standard SHL assessment for Executive Scenarios, focused on Behavioral evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "executive-scenarios",
       "domains": [
         "leadership"
       ],
@@ -5547,8 +5655,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/executive-scenarios-narrative-report",
       "description": "Standard SHL assessment for Executive Scenarios Narrative Report, focused on Behavioral evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "executive-scenarios-narrative-report",
       "domains": [
         "leadership"
       ],
@@ -5593,8 +5702,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/executive-scenarios-profile-report",
       "description": "Standard SHL assessment for Executive Scenarios Profile Report, focused on Behavioral evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "executive-scenarios-profile-report",
       "domains": [
         "leadership"
       ],
@@ -5640,8 +5750,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/expressjs-new",
       "description": "Standard SHL assessment for ExpressJS (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "expressjs-new",
       "domains": [
         "general"
       ],
@@ -5683,8 +5794,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/filing-names-r1",
       "description": "Standard SHL assessment for Filing - Names (R1), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "filing-names-r1",
       "domains": [
         "general"
       ],
@@ -5727,8 +5839,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/filing-numbers",
       "description": "Standard SHL assessment for Filing - Numbers, focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "filing-numbers",
       "domains": [
         "general"
       ],
@@ -5770,8 +5883,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/financial-accounting-new",
       "description": "Standard SHL assessment for Financial Accounting (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "financial-accounting-new",
       "domains": [
         "general"
       ],
@@ -5814,8 +5928,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/financial-and-banking-services-new",
       "description": "Standard SHL assessment for Financial and Banking Services (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "financial-and-banking-services-new",
       "domains": [
         "general"
       ],
@@ -5859,8 +5974,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/fire-engineering-new",
       "description": "Standard SHL assessment for Fire Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "fire-engineering-new",
       "domains": [
         "general"
       ],
@@ -5907,8 +6023,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/following-instructions-v1-uk-r1",
       "description": "Standard SHL assessment for Following Instructions v1 - UK (R1), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "following-instructions-v1-uk-r1",
       "domains": [
         "general"
       ],
@@ -5951,8 +6068,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/following-instructions-v1-us-r2",
       "description": "Standard SHL assessment for Following Instructions v1 - US (R2), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "following-instructions-v1-us-r2",
       "domains": [
         "general"
       ],
@@ -5995,8 +6113,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/food-and-beverage-services-new",
       "description": "Standard SHL assessment for Food and Beverage Services (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "food-and-beverage-services-new",
       "domains": [
         "general"
       ],
@@ -6040,8 +6159,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/food-science-new",
       "description": "Standard SHL assessment for Food Science (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "food-science-new",
       "domains": [
         "general"
       ],
@@ -6084,8 +6204,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/front-office-management-new",
       "description": "Standard SHL assessment for Front Office Management (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "front-office-management-new",
       "domains": [
         "leadership"
       ],
@@ -6133,8 +6254,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/fundamentals-of-chemistry-new",
       "description": "Standard SHL assessment for Fundamentals of Chemistry (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "fundamentals-of-chemistry-new",
       "domains": [
         "general"
       ],
@@ -6177,8 +6299,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/fundamentals-of-physics-new",
       "description": "Standard SHL assessment for Fundamentals of Physics (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "fundamentals-of-physics-new",
       "domains": [
         "general"
       ],
@@ -6221,8 +6344,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/general-diseases-new",
       "description": "Standard SHL assessment for General Diseases (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "general-diseases-new",
       "domains": [
         "general"
       ],
@@ -6265,8 +6389,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/geoinformatics-engineering-new",
       "description": "Standard SHL assessment for Geoinformatics Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "geoinformatics-engineering-new",
       "domains": [
         "general"
       ],
@@ -6313,8 +6438,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/geoscience-engineering-new",
       "description": "Standard SHL assessment for Geoscience Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "geoscience-engineering-new",
       "domains": [
         "general"
       ],
@@ -6361,8 +6487,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/git-new",
       "description": "Standard SHL assessment for GIT (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "git-new",
       "domains": [
         "general"
       ],
@@ -6407,8 +6534,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/global-skills-assessment",
       "description": "Standard SHL assessment for Global Skills Assessment, focused on Cognitive, Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "A",
+      "id": "global-skills-assessment",
       "domains": [
         "cognitive"
       ],
@@ -6466,8 +6594,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/graduate-scenarios",
       "description": "Standard SHL assessment for Graduate Scenarios, focused on Behavioral evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "graduate-scenarios",
       "domains": [
         "general"
       ],
@@ -6513,8 +6642,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/graduate-scenarios-narrative-report",
       "description": "Standard SHL assessment for Graduate Scenarios Narrative Report, focused on Behavioral evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "graduate-scenarios-narrative-report",
       "domains": [
         "general"
       ],
@@ -6562,8 +6692,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/graduate-scenarios-profile-report",
       "description": "Standard SHL assessment for Graduate Scenarios Profile Report, focused on Behavioral evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "graduate-scenarios-profile-report",
       "domains": [
         "general"
       ],
@@ -6612,8 +6743,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/hibernate-new",
       "description": "Standard SHL assessment for Hibernate (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "hibernate-new",
       "domains": [
         "general"
       ],
@@ -6655,8 +6787,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/hipaa-security",
       "description": "Standard SHL assessment for HIPAA (Security), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "hipaa-security",
       "domains": [
         "general"
       ],
@@ -6702,8 +6835,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/hipo-assessment-report-1-0",
       "description": "Standard SHL assessment for HiPo Assessment Report 1.0, focused on Cognitive, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "hipo-assessment-report-1-0",
       "domains": [
         "cognitive"
       ],
@@ -6769,8 +6903,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/hipo-assessment-report-2-0",
       "description": "Standard SHL assessment for HiPo Assessment Report 2.0, focused on Cognitive, Personality evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "P",
+      "id": "hipo-assessment-report-2-0",
       "domains": [
         "cognitive"
       ],
@@ -6836,8 +6971,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/hipo-unlocking-potential-report-2-0",
       "description": "Standard SHL assessment for HiPo Unlocking Potential Report 2.0, focused on Cognitive evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "A",
+      "id": "hipo-unlocking-potential-report-2-0",
       "domains": [
         "cognitive"
       ],
@@ -6896,8 +7032,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/housekeeping-new",
       "description": "Standard SHL assessment for Housekeeping (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "housekeeping-new",
       "domains": [
         "general"
       ],
@@ -6939,8 +7076,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/htmlcss-new",
       "description": "Standard SHL assessment for HTML/CSS (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "html-css-new",
       "domains": [
         "frontend",
         "data_science"
@@ -6983,8 +7121,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/html5-new",
       "description": "Standard SHL assessment for HTML5 (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "html5-new",
       "domains": [
         "data_science"
       ],
@@ -7026,8 +7165,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/human-resources-new",
       "description": "Standard SHL assessment for Human Resources (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "human-resources-new",
       "domains": [
         "general"
       ],
@@ -7070,8 +7210,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/ibm-datastage-new",
       "description": "Standard SHL assessment for IBM DataStage (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "ibm-datastage-new",
       "domains": [
         "general"
       ],
@@ -7113,8 +7254,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/ibm-sterling-order-management-system-new",
       "description": "Standard SHL assessment for IBM Sterling Order Management System (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "ibm-sterling-order-management-system-new",
       "domains": [
         "leadership"
       ],
@@ -7163,8 +7305,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/industrial-engineering-new",
       "description": "Standard SHL assessment for Industrial Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "industrial-engineering-new",
       "domains": [
         "general"
       ],
@@ -7211,8 +7354,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/informatica-architecture-new",
       "description": "Standard SHL assessment for Informatica (Architecture) (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "informatica-architecture-new",
       "domains": [
         "general"
       ],
@@ -7259,8 +7403,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/informatica-developer-new",
       "description": "Standard SHL assessment for Informatica (Developer) (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "informatica-developer-new",
       "domains": [
         "general"
       ],
@@ -7303,8 +7448,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/instrumentation-engineering-new",
       "description": "Standard SHL assessment for Instrumentation Engineering (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "instrumentation-engineering-new",
       "domains": [
         "general"
       ],
@@ -7354,8 +7500,9 @@
         "Communication",
         "Interpersonal"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "interpersonal-communications",
       "domains": [
         "general"
       ],
@@ -7415,8 +7562,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/interviewing-and-hiring-concepts-u-s",
       "description": "Standard SHL assessment for Interviewing and Hiring Concepts (U.S.), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "interviewing-and-hiring-concepts-u-s",
       "domains": [
         "general"
       ],
@@ -7460,8 +7608,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/ios-development-new",
       "description": "Standard SHL assessment for iOS Development (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "ios-development-new",
       "domains": [
         "general"
       ],
@@ -7507,8 +7656,9 @@
       "url": "https://www.shl.com/products/product-catalog/view/itil-it-infrastructure-library-new",
       "description": "Standard SHL assessment for ITIL (IT Infrastructure Library) (New), focused on Knowledge evaluation.",
       "skills": [],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "itil-it-infrastructure-library-new",
       "domains": [
         "general"
       ],
@@ -7559,8 +7709,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "java-2-platform-enterprise-edition-1-4-fundamental",
       "domains": [
         "backend"
       ],
@@ -7588,9 +7739,9 @@
       ],
       "inferred_skills": {
         "technical": [
+          "programming",
           "it",
-          "java",
-          "programming"
+          "java"
         ]
       },
       "inferred_roles": [
@@ -7621,8 +7772,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "java-8-new",
       "domains": [
         "backend"
       ],
@@ -7647,8 +7799,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "java",
-          "programming"
+          "programming",
+          "java"
         ]
       },
       "inferred_roles": [
@@ -7679,8 +7831,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "java-design-patterns-new",
       "domains": [
         "backend"
       ],
@@ -7707,8 +7860,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "java",
-          "programming"
+          "programming",
+          "java"
         ]
       },
       "inferred_roles": [
@@ -7739,8 +7892,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "java-frameworks-new",
       "domains": [
         "backend"
       ],
@@ -7766,8 +7920,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "java",
-          "programming"
+          "programming",
+          "java"
         ]
       },
       "inferred_roles": [
@@ -7798,8 +7952,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "java-platform-enterprise-edition-7-java-ee-7",
       "domains": [
         "backend"
       ],
@@ -7827,9 +7982,9 @@
       ],
       "inferred_skills": {
         "technical": [
+          "programming",
           "it",
-          "java",
-          "programming"
+          "java"
         ]
       },
       "inferred_roles": [
@@ -7860,8 +8015,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "java-web-services-new",
       "domains": [
         "backend"
       ],
@@ -7887,8 +8043,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "java",
-          "programming"
+          "programming",
+          "java"
         ]
       },
       "inferred_roles": [
@@ -7919,8 +8075,9 @@
         "Java",
         "Programming"
       ],
-      "duration_minutes": null,
+      "duration_minutes": 30,
       "test_type": "K",
+      "id": "javascript-new",
       "domains": [
         "backend"
       ],
@@ -7946,8 +8103,8 @@
       ],
       "inferred_skills": {
         "technical": [
-          "java",
-          "programming"
+          "programming",
+          "java"
         ]
       },
       "inferred_roles": [
@@ -7972,163 +8129,162 @@
     }
   },
   "assessment_to_id": {
-    "account manager solution": 0,
-    "agency manager solution": 1,
-    "apprentice + 8.0 job focused assessment": 2,
-    "apprentice 8.0 job focused assessment": 3,
-    "bank collections agent - short form": 4,
-    "bank operations supervisor - short form": 5,
-    "bilingual spanish reservation agent solution": 6,
-    "bookkeeping, accounting, auditing clerk short form": 7,
-    "branch manager - short form": 8,
-    "cashier solution": 9,
-    "global skills development report": 10,
-    ".net framework 4.5": 11,
-    ".net mvc (new)": 12,
-    "adobe experience manager (new)": 13,
-    "adobe photoshop cc": 14,
-    "aeronautical engineering (new)": 15,
-    "aerospace engineering (new)": 16,
-    "agile software development": 17,
-    "agile testing (new)": 18,
-    "ai skills": 19,
-    "amazon web services (aws) development (new)": 20,
-    "android development (new)": 21,
-    "angular 6 (new)": 22,
-    "angularjs (new)": 23,
-    "apache hadoop (new)": 24,
-    "apache hadoop extensions (new)": 25,
-    "apache hbase (new)": 26,
-    "apache hive (new)": 27,
-    "apache kafka (new)": 28,
-    "apache pig (new)": 29,
-    "apache spark (new)": 30,
-    "asp .net with c# (new)": 31,
-    "asp.net 4.5": 32,
-    "assessment and development center exercises": 33,
-    "automata - fix (new)": 34,
-    "automata - sql (new)": 35,
-    "automata (new)": 36,
-    "automata data science (new)": 37,
-    "automata data science pro (new)": 38,
-    "automata front end": 39,
-    "automata pro (new)": 40,
-    "automata selenium": 41,
-    "automation anywhere rpa development (new)": 42,
-    "automotive engineering (new)": 43,
-    "basic biology (new)": 44,
-    "basic computer literacy (windows 10) (new)": 45,
-    "basic statistics (new)": 46,
-    "biochemistry (new)": 47,
-    "biotech lab techniques (new)": 48,
-    "biztalk (new)": 49,
-    "business communication (adaptive)": 50,
-    "business communications": 51,
-    "c programming (new)": 52,
-    "c# programming (new)": 53,
-    "c++ programming (new)": 54,
-    "cardiology and diabetes management (new)": 55,
-    "ceramic engineering (new)": 56,
-    "chemical engineering (new)": 57,
-    "cisco appdynamics (new)": 58,
-    "civil engineering (new)": 59,
-    "cloud computing (new)": 60,
-    "cobol programming (new)": 61,
-    "computer science (new)": 62,
-    "contact center call simulation (new)": 63,
-    "conversational multichat simulation": 64,
-    "core java (advanced level) (new)": 65,
-    "core java (entry level) (new)": 66,
-    "count out the money": 67,
-    "css3 (new)": 68,
-    "culinary skills (new)": 69,
-    "customer service phone simulation": 70,
-    "customer service phone solution": 71,
-    "cyber risk (new)": 72,
-    "data entry (new)": 73,
-    "data entry alphanumeric split screen - us": 74,
-    "data entry numeric split screen - us": 75,
-    "data entry ten key split screen": 76,
-    "data science (new)": 77,
-    "data warehousing concepts": 78,
-    "dependability and safety instrument (dsi)": 79,
-    "dermatology (new)": 80,
-    "desktop support (new)": 81,
-    "digital advertising (new)": 82,
-    "digital readiness development report - ic": 83,
-    "digital readiness development report - manager": 84,
-    "docker (new)": 85,
-    "dojo (new)": 86,
-    "drupal (new)": 87,
-    "dsi v1.1 interpretation report": 88,
-    "econometrics (new)": 89,
-    "economics (new)": 90,
-    "electrical and electronics engineering (new)": 91,
-    "electrical engineering (new)": 92,
-    "electronics & telecommunications engineering (new)": 93,
-    "electronics and embedded systems engineering (new)": 94,
-    "electronics and semiconductor engineering (new)": 95,
-    "english comprehension (new)": 96,
-    "enterprise java beans (new)": 97,
-    "enterprise leadership report 1.0": 98,
-    "enterprise leadership report 2.0": 99,
-    "entry level cashier solution": 100,
-    "entry level customer serv-retail & contact center": 101,
-    "entry level customer service (general) solution": 102,
-    "entry level hotel front desk solution": 103,
-    "entry level sales solution": 104,
-    "entry level technical support solution": 105,
-    "etl testing (new)": 106,
-    "executive scenarios": 107,
-    "executive scenarios narrative report": 108,
-    "executive scenarios profile report": 109,
-    "expressjs (new)": 110,
-    "filing - names (r1)": 111,
-    "filing - numbers": 112,
-    "financial accounting (new)": 113,
-    "financial and banking services (new)": 114,
-    "fire engineering (new)": 115,
-    "following instructions v1 - uk (r1)": 116,
-    "following instructions v1 - us (r2)": 117,
-    "food and beverage services (new)": 118,
-    "food science (new)": 119,
-    "front office management (new)": 120,
-    "fundamentals of chemistry (new)": 121,
-    "fundamentals of physics (new)": 122,
-    "general diseases (new)": 123,
-    "geoinformatics engineering (new)": 124,
-    "geoscience engineering (new)": 125,
-    "git (new)": 126,
-    "global skills assessment": 127,
-    "graduate scenarios": 128,
-    "graduate scenarios narrative report": 129,
-    "graduate scenarios profile report": 130,
-    "hibernate (new)": 131,
-    "hipaa (security)": 132,
-    "hipo assessment report 1.0": 133,
-    "hipo assessment report 2.0": 134,
-    "hipo unlocking potential report 2.0": 135,
-    "housekeeping (new)": 136,
-    "html/css (new)": 137,
-    "html5 (new)": 138,
-    "human resources (new)": 139,
-    "ibm datastage (new)": 140,
-    "ibm sterling order management system (new)": 141,
-    "industrial engineering (new)": 142,
-    "informatica (architecture) (new)": 143,
-    "informatica (developer) (new)": 144,
-    "instrumentation engineering (new)": 145,
-    "interpersonal communications": 146,
-    "interviewing and hiring concepts (u.s.)": 147,
-    "ios development (new)": 148,
-    "itil (it infrastructure library) (new)": 149,
-    "java 2 platform enterprise edition 1.4 fundamental": 150,
-    "java 8 (new)": 151,
-    "java design patterns (new)": 152,
-    "java frameworks (new)": 153,
-    "java platform enterprise edition 7 (java ee 7)": 154,
-    "java web services (new)": 155,
-    "javascript (new)": 156
+    "account-manager-solution": 0,
+    "agency-manager-solution": 1,
+    "apprentice-8-0-job-focused-assessment": 3,
+    "bank-collections-agent-short-form": 4,
+    "bank-operations-supervisor-short-form": 5,
+    "bilingual-spanish-reservation-agent-solution": 6,
+    "bookkeeping-accounting-auditing-clerk-short-form": 7,
+    "branch-manager-short-form": 8,
+    "cashier-solution": 9,
+    "global-skills-development-report": 10,
+    "net-framework-4-5": 11,
+    "net-mvc-new": 12,
+    "adobe-experience-manager-new": 13,
+    "adobe-photoshop-cc": 14,
+    "aeronautical-engineering-new": 15,
+    "aerospace-engineering-new": 16,
+    "agile-software-development": 17,
+    "agile-testing-new": 18,
+    "ai-skills": 19,
+    "amazon-web-services-aws-development-new": 20,
+    "android-development-new": 21,
+    "angular-6-new": 22,
+    "angularjs-new": 23,
+    "apache-hadoop-new": 24,
+    "apache-hadoop-extensions-new": 25,
+    "apache-hbase-new": 26,
+    "apache-hive-new": 27,
+    "apache-kafka-new": 28,
+    "apache-pig-new": 29,
+    "apache-spark-new": 30,
+    "asp-net-with-c-sharp-new": 31,
+    "asp-net-4-5": 32,
+    "assessment-and-development-center-exercises": 33,
+    "automata-fix-new": 34,
+    "automata-sql-new": 35,
+    "automata-new": 36,
+    "automata-data-science-new": 37,
+    "automata-data-science-pro-new": 38,
+    "automata-front-end": 39,
+    "automata-pro-new": 40,
+    "automata-selenium": 41,
+    "automation-anywhere-rpa-development-new": 42,
+    "automotive-engineering-new": 43,
+    "basic-biology-new": 44,
+    "basic-computer-literacy-windows-10-new": 45,
+    "basic-statistics-new": 46,
+    "biochemistry-new": 47,
+    "biotech-lab-techniques-new": 48,
+    "biztalk-new": 49,
+    "business-communication-adaptive": 50,
+    "business-communications": 51,
+    "c-programming-new": 52,
+    "c-sharp-programming-new": 53,
+    "c-plus-plus-programming-new": 54,
+    "cardiology-and-diabetes-management-new": 55,
+    "ceramic-engineering-new": 56,
+    "chemical-engineering-new": 57,
+    "cisco-appdynamics-new": 58,
+    "civil-engineering-new": 59,
+    "cloud-computing-new": 60,
+    "cobol-programming-new": 61,
+    "computer-science-new": 62,
+    "contact-center-call-simulation-new": 63,
+    "conversational-multichat-simulation": 64,
+    "core-java-advanced-level-new": 65,
+    "core-java-entry-level-new": 66,
+    "count-out-the-money": 67,
+    "css3-new": 68,
+    "culinary-skills-new": 69,
+    "customer-service-phone-simulation": 70,
+    "customer-service-phone-solution": 71,
+    "cyber-risk-new": 72,
+    "data-entry-new": 73,
+    "data-entry-alphanumeric-split-screen-us": 74,
+    "data-entry-numeric-split-screen-us": 75,
+    "data-entry-ten-key-split-screen": 76,
+    "data-science-new": 77,
+    "data-warehousing-concepts": 78,
+    "dependability-and-safety-instrument-dsi": 79,
+    "dermatology-new": 80,
+    "desktop-support-new": 81,
+    "digital-advertising-new": 82,
+    "digital-readiness-development-report-ic": 83,
+    "digital-readiness-development-report-manager": 84,
+    "docker-new": 85,
+    "dojo-new": 86,
+    "drupal-new": 87,
+    "dsi-v1-1-interpretation-report": 88,
+    "econometrics-new": 89,
+    "economics-new": 90,
+    "electrical-and-electronics-engineering-new": 91,
+    "electrical-engineering-new": 92,
+    "electronics-telecommunications-engineering-new": 93,
+    "electronics-and-embedded-systems-engineering-new": 94,
+    "electronics-and-semiconductor-engineering-new": 95,
+    "english-comprehension-new": 96,
+    "enterprise-java-beans-new": 97,
+    "enterprise-leadership-report-1-0": 98,
+    "enterprise-leadership-report-2-0": 99,
+    "entry-level-cashier-solution": 100,
+    "entry-level-customer-serv-retail-contact-center": 101,
+    "entry-level-customer-service-general-solution": 102,
+    "entry-level-hotel-front-desk-solution": 103,
+    "entry-level-sales-solution": 104,
+    "entry-level-technical-support-solution": 105,
+    "etl-testing-new": 106,
+    "executive-scenarios": 107,
+    "executive-scenarios-narrative-report": 108,
+    "executive-scenarios-profile-report": 109,
+    "expressjs-new": 110,
+    "filing-names-r1": 111,
+    "filing-numbers": 112,
+    "financial-accounting-new": 113,
+    "financial-and-banking-services-new": 114,
+    "fire-engineering-new": 115,
+    "following-instructions-v1-uk-r1": 116,
+    "following-instructions-v1-us-r2": 117,
+    "food-and-beverage-services-new": 118,
+    "food-science-new": 119,
+    "front-office-management-new": 120,
+    "fundamentals-of-chemistry-new": 121,
+    "fundamentals-of-physics-new": 122,
+    "general-diseases-new": 123,
+    "geoinformatics-engineering-new": 124,
+    "geoscience-engineering-new": 125,
+    "git-new": 126,
+    "global-skills-assessment": 127,
+    "graduate-scenarios": 128,
+    "graduate-scenarios-narrative-report": 129,
+    "graduate-scenarios-profile-report": 130,
+    "hibernate-new": 131,
+    "hipaa-security": 132,
+    "hipo-assessment-report-1-0": 133,
+    "hipo-assessment-report-2-0": 134,
+    "hipo-unlocking-potential-report-2-0": 135,
+    "housekeeping-new": 136,
+    "html-css-new": 137,
+    "html5-new": 138,
+    "human-resources-new": 139,
+    "ibm-datastage-new": 140,
+    "ibm-sterling-order-management-system-new": 141,
+    "industrial-engineering-new": 142,
+    "informatica-architecture-new": 143,
+    "informatica-developer-new": 144,
+    "instrumentation-engineering-new": 145,
+    "interpersonal-communications": 146,
+    "interviewing-and-hiring-concepts-u-s": 147,
+    "ios-development-new": 148,
+    "itil-it-infrastructure-library-new": 149,
+    "java-2-platform-enterprise-edition-1-4-fundamental": 150,
+    "java-8-new": 151,
+    "java-design-patterns-new": 152,
+    "java-frameworks-new": 153,
+    "java-platform-enterprise-edition-7-java-ee-7": 154,
+    "java-web-services-new": 155,
+    "javascript-new": 156
   },
   "embedding_dim": 384,
   "total_vectors": 157

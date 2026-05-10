@@ -24,7 +24,7 @@ from typing import List, Dict, Set, Optional, Tuple
 from dataclasses import dataclass, field
 from app.models.assessment import AssessmentWithMetadata
 from app.services.conversation_analyzer import HiringContext
-from app.core.assessment_taxonomy import AssessmentTaxonomy, AssessmentDomain, RoleDomain
+from app.core.assessment_taxonomy import AssessmentTaxonomy, AssessmentDomain, RoleDomain, AssessmentClassification
 from app.logging.logger import get_logger
 import numpy as np
 

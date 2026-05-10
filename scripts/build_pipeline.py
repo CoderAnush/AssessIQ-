@@ -223,11 +223,37 @@ class RAGPipeline:
 
         catalog_path = self.output_dir / "catalog_processed.json"
 
+        # Final ID check and collision resolution
+        import re
+        import hashlib
+        seen_ids = {}
+        for i, ass in enumerate(assessments):
+            # 1. Generate base ID
+            if not ass.get("id"):
+                id_name = ass.get("name", f"unnamed-{i}").lower()
+                id_name = id_name.replace("c#", "c-sharp").replace("c++", "c-plus-plus")
+                ass["id"] = re.sub(r'[^a-z0-9]+', '-', id_name).strip('-')
+            
+            # 2. Collision detection
+            current_id = ass["id"]
+            if current_id in seen_ids:
+                # Collision! Append hash of URL
+                url_hash = hashlib.md5(ass.get("url", "").encode()).hexdigest()[:4]
+                ass["id"] = f"{current_id}-{url_hash}"
+                logger.warning(f"ID Collision resolved: {current_id} -> {ass['id']}")
+            
+            seen_ids[ass["id"]] = i
+
+            if ass.get("duration_minutes") is None:
+                ass["duration_minutes"] = 30
+                ass["duration_minutes"] = 30
+
         with open(catalog_path, "w") as f:
             json.dump(
                 {
                     "assessments": assessments,
                     "count": len(assessments),
+                    "version": "1.1.0-expanded"
                 },
                 f,
                 indent=2,
@@ -237,19 +263,39 @@ class RAGPipeline:
 
     def run(self) -> Dict:
         """
-        Run complete pipeline.
-
-        Returns:
-            Pipeline summary stats
+        Run complete pipeline with robust normalization.
         """
 
         try:
             # 1. Load
             assessments = self.load_raw_catalog()
             initial_count = len(assessments)
+            
+            # Robust normalization layer
+            import re
+            normalized = []
+            for i, ass in enumerate(assessments):
+                if not ass.get("name") or not ass.get("url"):
+                    logger.warning(f"Skipping assessment {i}: missing name or url")
+                    continue
+                
+                # Repair missing ID
+                if not ass.get("id"):
+                    id_name = ass["name"].lower()
+                    id_name = id_name.replace("c#", "c-sharp").replace("c++", "c-plus-plus")
+                    ass["id"] = re.sub(r'[^a-z0-9]+', '-', id_name).strip('-')
+                
+                # Repair missing duration
+                if ass.get("duration_minutes") is None:
+                    ass["duration_minutes"] = 30
+                
+                normalized.append(ass)
+            
+            normalized_count = len(normalized)
+            logger.info(f"Normalized {normalized_count}/{initial_count} assessments")
 
             # 2. Clean
-            assessments = self.clean_catalog(assessments)
+            assessments = self.clean_catalog(normalized)
 
             # 3. Enrich
             assessments = self.enrich_catalog(assessments)
@@ -273,7 +319,9 @@ class RAGPipeline:
             summary = {
                 "status": "success",
                 "input_count": initial_count,
+                "normalized_count": normalized_count,
                 "output_count": len(assessments),
+                "skipped_count": initial_count - len(assessments),
                 "embeddings_dim": embeddings.shape[1],
                 "output_dir": str(self.output_dir),
                 "files_created": [
@@ -290,7 +338,12 @@ class RAGPipeline:
             logger.info("=" * 80)
             logger.info("RAG PIPELINE COMPLETED SUCCESSFULLY")
             logger.info("=" * 80)
-            logger.info(f"Summary: {json.dumps(summary, indent=2)}")
+            print("\nPIPELINE VALIDATION REPORT:")
+            print(f"- Total Scraped: {initial_count}")
+            print(f"- Total Normalized: {normalized_count}")
+            print(f"- Total Skipped: {initial_count - len(assessments)}")
+            print(f"- Final Catalog Count: {len(assessments)}")
+            print("=" * 80)
 
             return summary
 

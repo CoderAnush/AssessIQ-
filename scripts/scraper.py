@@ -198,24 +198,24 @@ class SHLScraper:
     def _parse_assessment(self, name: str, url: str, **kwargs) -> Dict:
         """
         Parse assessment data into standard format.
-
-        Args:
-            name: Assessment name
-            url: Assessment URL
-            **kwargs: Additional fields
-
-        Returns:
-            Standardized assessment dict
         """
+        import re
+
+        # Auto-generate slug-based ID
+        clean_name = name.strip()
+        # Handle special tech symbols
+        id_name = clean_name.lower()
+        id_name = id_name.replace("c#", "c-sharp").replace("c++", "c-plus-plus")
+        assessment_id = re.sub(r'[^a-z0-9]+', '-', id_name).strip('-')
 
         assessment = {
-            "id": name.lower().replace(" ", "_"),
-            "name": name.strip(),
+            "id": assessment_id,
+            "name": clean_name,
             "url": urljoin(self.BASE_URL, url) if not url.startswith("http") else url,
             "description": kwargs.get("description", ""),
             "skills": kwargs.get("skills", []),
-            "duration": kwargs.get("duration"),
-            "test_type": kwargs.get("test_type"),
+            "duration_minutes": kwargs.get("duration") or 30, # Safe fallback
+            "test_type": kwargs.get("test_type") or "K",
             "job_relevance": kwargs.get("job_relevance", []),
             "metadata": {
                 "scraped_at": datetime.now().isoformat(),
