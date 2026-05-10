@@ -126,30 +126,34 @@ class DecisionEngine:
         """Extract what user wants to compare."""
 
         msg_lower = message.lower()
-
-        # Look for assessment names or patterns like "X vs Y"
         items = []
 
-        # Pattern: "between X and Y"
+        # 1. Pattern matching: "between X and Y"
         import re
-
         between_match = re.search(r"between\s+([^,]+?)\s+and\s+([^?\.!]+)", msg_lower)
         if between_match:
             items.append(between_match.group(1).strip())
             items.append(between_match.group(2).strip())
             return items
 
-        # Pattern: "X vs Y"
+        # 2. Pattern matching: "X vs Y"
         vs_match = re.search(r"(\w+)\s+vs\s+(\w+)", msg_lower)
         if vs_match:
             items.append(vs_match.group(1).strip())
             items.append(vs_match.group(2).strip())
             return items
 
-        # Try to extract known assessment names
-        known_assessments = ["opq", "gsa", "16pf", "java", "python", "leadership", "verbal"]
+        # 3. Capitalized words (Potential Assessment Names)
+        # For "Compare OPQ and Verify Interactive"
+        cap_words = re.findall(r"([A-Z][\w\-]+(?:\s+[A-Z][\w\-]+)*)", message)
+        for word in cap_words:
+            if word.lower() not in ["compare", "and", "vs", "versus", "between"]:
+                items.append(word)
+
+        # 4. Fallback: Hardcoded list
+        known_assessments = ["opq", "gsa", "16pf", "java", "python", "leadership", "verbal", "verify"]
         for assessment in known_assessments:
-            if assessment in msg_lower:
+            if assessment in msg_lower and assessment not in [i.lower() for i in items]:
                 items.append(assessment)
 
         return items[:2] if items else []  # Return first 2 items

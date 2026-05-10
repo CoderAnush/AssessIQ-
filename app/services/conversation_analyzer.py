@@ -297,17 +297,22 @@ class ConversationAnalyzer:
             "salary",
             "compensation",
             "market rate",
-            "tell me about",
             "explain python",
             "teach me",
             "recommend restaurants",
             "weather",
         ]
 
-        # More lenient - only match if it's CLEARLY off-topic
-        if any(text.startswith(pattern) for pattern in ["how to", "teach me", "tell me about"]):
-            # But allow "tell me about the role"
-            if "role" not in text and "job" not in text and "assessment" not in text:
+        # Check for explicitly off-topic keywords
+        if any(pattern in text for pattern in off_topic_patterns):
+            # Exception: allow "hire" or "legal" if "assessment" or "test" is present
+            if "assessment" in text or "test" in text:
+                return False
+            return True
+
+        # Check for generic "how to" or "tell me about" without relevant context
+        if any(text.startswith(pattern) for pattern in ["how to", "teach me", "tell me about", "explain"]):
+            if "role" not in text and "job" not in text and "assessment" not in text and "test" not in text:
                 return True
 
         return False
@@ -328,7 +333,6 @@ class ConversationAnalyzer:
                 break
 
         # Extract role
-        # Improved regex to avoid capturing garbage like "assessments for"
         role_patterns = [
             r"(?:hiring|looking for|need)s?\s+(?:a\s+)?(?:assessments?\s+for\s+)?(?:a\s+)?([^,\.!?]+?)(?:\s+(?:who|with|that|engineer|developer|manager))",
             r"(?:hiring|looking for|need)s?\s+(?:a\s+)?([^,\.!?]+?)$",
@@ -340,10 +344,11 @@ class ConversationAnalyzer:
             if role_match:
                 role = role_match.group(1).strip()
                 # Clean up role
-                role = re.sub(r"^(?:a|an|the)\s+", "", role)
+                role = re.sub(r"^(?:a|an|the|hiring)\s+", "", role)
                 role = re.sub(r"\s+role$", "", role)
-                context.role = role
-                break
+                if role and len(role.split()) < 5:  # Avoid capturing full sentences
+                    context.role = role
+                    break
 
         # Extract tech stack
         for tech in self.TECH_KEYWORDS:
