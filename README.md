@@ -11,6 +11,11 @@ Built with production-grade intelligence, deployment-ready architecture, and ent
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
 [![Gemini API](https://img.shields.io/badge/Gemini-2.0%20Flash-orange.svg)](https://ai.google.dev/)
 
+## Live Demo
+🚀 **Frontend:** [assessiq-ai.streamlit.app](https://assessiq-ai.streamlit.app)  
+📡 **Backend API:** [assessiq-nkp2.onrender.com](https://assessiq-nkp2.onrender.com)  
+📖 **API Docs:** [assessiq-nkp2.onrender.com/docs](https://assessiq-nkp2.onrender.com/docs)
+
 ---
 
 ## The Problem We Solve
@@ -112,8 +117,8 @@ User Query: "Senior Java engineer with strong communication"
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/assessiq.git
-cd assessiq
+git clone https://github.com/CoderAnush/AssessIQ-.git
+cd AssessIQ-
 
 # Create environment
 python -m venv venv
@@ -261,26 +266,32 @@ assessiq/
 
 ---
 
-## Deployment
+## Production Deployment
 
-### Quick Deploy to Render
+### 1. Backend (Render)
+The backend is deployed as a Dockerized FastAPI service on Render.
+- **URL:** `https://assessiq-nkp2.onrender.com`
+- **Config:** `render.yaml`
+- **Auto-deploy:** Enabled on `main` branch.
 
-```bash
-# 1. Push to GitHub
-git add .
-git commit -m "feat: Production-ready AssessIQ"
-git push origin main
+### 2. Frontend (Streamlit Community Cloud)
+The frontend is deployed on Streamlit Cloud for optimal recruiter UX.
+- **URL:** `https://assessiq-ai.streamlit.app`
+- **Entry Point:** `frontend/streamlit_app.py`
+- **Secrets required:** `BACKEND_URL="https://assessiq-nkp2.onrender.com"`
 
-# 2. Go to https://render.com
-# 3. Create new Web Service
-# 4. Connect your GitHub repository
-# 5. Select render.yaml as configuration
-# 6. Set GEMINI_API_KEY environment variable
-# 7. Deploy
+---
 
-# Your API will be available at:
-# https://your-assessiq-service.onrender.com
-```
+## Screenshots
+
+| Scenario | Preview |
+|----------|---------|
+| **Recruiter Dashboard** | ![Dashboard](docs/screenshots/dashboard.png) |
+| **Assessment Recommendation** | ![Recommendation](docs/screenshots/recommendation.png) |
+| **Comparison Analysis** | ![Comparison](docs/screenshots/comparison.png) |
+| **Mobile Experience** | ![Mobile](docs/screenshots/mobile.png) |
+
+---
 
 ### Local Docker
 
@@ -480,8 +491,8 @@ MIT License - See [LICENSE](LICENSE) file for details.
 - 📖 [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
 - 🧪 [Testing Guide](docs/TESTING_GUIDE.md)
 - 🏗️ [Architecture Details](docs/ARCHITECTURE.md)
-- 💬 [GitHub Discussions](https://github.com/yourusername/assessiq/discussions)
-- 🐛 [Report Issues](https://github.com/yourusername/assessiq/issues)
+- 💬 [GitHub Discussions](https://github.com/CoderAnush/AssessIQ-/discussions)
+- 🐛 [Report Issues](https://github.com/CoderAnush/AssessIQ-/issues)
 
 ---
 
