@@ -527,6 +527,17 @@ class RecruiterRanker:
         
         return ""
     
+    def get_top_recommendations(
+        self,
+        ranked_results: List[RankedAssessment],
+        top_k: int = 5
+    ) -> List[Dict]:
+        """
+        Backward compatible method to get top recommendations.
+        Calls get_recommendations_for_api internally.
+        """
+        return self.get_recommendations_for_api(ranked_results, top_k)
+
     def get_recommendations_for_api(
         self, 
         ranked_results: List[RankedAssessment],
@@ -542,18 +553,9 @@ class RecruiterRanker:
                 "url": result.assessment.url,
                 "test_type": result.assessment.test_type.value,
                 "score": result.final_score,
-                "confidence_pct": int(result.final_score * 100),
                 "match_label": result.confidence_label,
                 "category": result.category,
-                "domain": result.domain.value,
                 "explanation": result.explanation,
-                "rank": result.rank_position,
-                "factors": {
-                    "semantic": round(result.factors.semantic_score, 2),
-                    "skill_overlap": round(result.factors.skill_overlap_score, 2),
-                    "domain_alignment": round(result.factors.role_domain_alignment, 2),
-                    "seniority": round(result.factors.seniority_alignment, 2),
-                }
             }
             recommendations.append(rec)
         

@@ -200,33 +200,26 @@ class SchemaValidator:
         if not isinstance(recs, list):
             return False, "'recommendations' must be a list"
 
-        # Check count (0 or 1-10)
-        if len(recs) == 0:
-            pass  # Valid - empty recommendations when gathering info
-        elif 1 <= len(recs) <= 10:
-            pass  # Valid - recommendations provided
-        else:
-            return False, f"'recommendations' must be empty or 1-10 items, got {len(recs)}"
+        if len(recs) > 10:
+            return False, "Too many recommendations (max 10)"
 
-        # Validate each recommendation
         for i, rec in enumerate(recs):
             if not isinstance(rec, dict):
-                return False, f"Recommendation {i+1}: must be an object"
+                return False, f"Recommendation {i+1} is not a dictionary"
 
-            if "name" not in rec or "url" not in rec or "test_type" not in rec:
-                return False, f"Recommendation {i+1}: missing required fields"
+            required = ["name", "url", "test_type"]
+            for field in required:
+                if field not in rec:
+                    return False, f"Recommendation {i+1} missing '{field}'"
 
-            if not isinstance(rec.get("name"), str):
-                return False, f"Recommendation {i+1}: 'name' must be a string"
-
-            if not isinstance(rec.get("url"), str):
-                return False, f"Recommendation {i+1}: 'url' must be a string"
-
-            if not isinstance(rec.get("test_type"), str):
-                return False, f"Recommendation {i+1}: 'test_type' must be a string"
-
+            # Check test_type value
             if rec.get("test_type") not in ["K", "A", "P"]:
-                return False, f"Recommendation {i+1}: 'test_type' must be K, A, or P"
+                return False, f"Recommendation {i+1} has invalid test_type: {rec.get('test_type')}"
+
+            # Check URL format
+            url = rec.get("url", "")
+            if not isinstance(url, str) or not url.startswith("https://www.shl.com"):
+                return False, f"Recommendation {i+1} has invalid URL: {url}"
 
         # Validate end_of_conversation
         end_flag = response.get("end_of_conversation")

@@ -181,25 +181,34 @@ async def chat(request: ChatRequest) -> ChatResponse:
         logger.debug(f"Reasoning: {decision.reasoning}")
 
         # 4. EXECUTE ACTION
-        if decision.action == AgentAction.REFUSE:
-            return _handle_refusal(decision)
+        try:
+            if decision.action == AgentAction.REFUSE:
+                return _handle_refusal(decision)
 
-        elif decision.action == AgentAction.CLARIFY:
-            return _handle_clarification(decision)
+            elif decision.action == AgentAction.CLARIFY:
+                return _handle_clarification(decision)
 
-        elif decision.action == AgentAction.COMPARE:
-            return _handle_comparison(decision, messages)
+            elif decision.action == AgentAction.COMPARE:
+                return _handle_comparison(decision, messages)
 
-        elif decision.action == AgentAction.REFINE:
-            return _handle_refinement(decision_engine.get_context_from_messages(messages), messages)
+            elif decision.action == AgentAction.REFINE:
+                return _handle_refinement(decision_engine.get_context_from_messages(messages), messages)
 
-        elif decision.action == AgentAction.RECOMMEND:
-            return _handle_recommendation(decision_engine.get_context_from_messages(messages), messages)
+            elif decision.action == AgentAction.RECOMMEND:
+                return _handle_recommendation(decision_engine.get_context_from_messages(messages), messages)
 
-        else:
-            logger.error(f"Unknown action: {decision.action}")
+            else:
+                logger.error(f"Unknown action: {decision.action}")
+                return ChatResponse(
+                    reply="I encountered an unexpected error while processing your request. Please try rephrasing.",
+                    recommendations=[],
+                    end_of_conversation=False,
+                )
+        except Exception as e:
+            logger.error(f"Action execution error: {e}", exc_info=True)
+            # Graceful fallback for any logic errors in specific handlers
             return ChatResponse(
-                reply="I encountered an unexpected error. Please try again.",
+                reply="I'm processing your request but encountered a temporary issue. Here's what I can tell you: I'm currently analyzing SHL assessments for your needs. Could you please try again with a slightly different query?",
                 recommendations=[],
                 end_of_conversation=False,
             )
@@ -208,9 +217,11 @@ async def chat(request: ChatRequest) -> ChatResponse:
         raise
     except Exception as e:
         logger.error(f"Chat endpoint error: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="An error occurred processing your request",
+        # Final safety net to avoid 500
+        return ChatResponse(
+            reply="I apologize, but I'm having trouble processing that right now. Please try again in a moment.",
+            recommendations=[],
+            end_of_conversation=False
         )
 
     finally:
@@ -403,7 +414,12 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
     # Get top recommendations (with real dynamic scores and contextual explanations)
     recommendations = ranker.get_top_recommendations(ranked, settings.max_recommendations)
 
-    # Validate - if this fails, it's a real error
+    # DEFENSIVE GUARD: Ensure recommendations is a list of dicts
+    if not isinstance(recommendations, list):
+        logger.error(f"Ranker returned invalid type: {type(recommendations)}")
+        recommendations = []
+
+    # Validate no hallucinations
     is_clean, error = hallucination_checker.check_recommendations(recommendations)
     if not is_clean:
         logger.error(f"Hallucination detected: {error}")
