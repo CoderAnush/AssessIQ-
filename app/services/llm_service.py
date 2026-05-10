@@ -68,7 +68,7 @@ class LLMService:
                 )
 
                 # Call Gemini
-                response = model.generate_content(full_prompt)
+                response = model.generate_content(full_prompt, request_options={"timeout": 20})
 
                 if response and response.text:
                     logger.debug(f"Gemini response (length={len(response.text)})")
@@ -209,7 +209,7 @@ Just respond with the question, no explanation."""
 
         try:
             model = genai.GenerativeModel(self.model)
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt, request_options={"timeout": 20})
             return response.text.strip()
         except Exception as e:
             logger.error(f"Error generating clarification: {e}")
@@ -233,7 +233,7 @@ Just respond with the question, no explanation."""
 
         try:
             model = genai.GenerativeModel(self.model)
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt, request_options={"timeout": 20})
             return response.text.strip()
         except Exception as e:
             logger.error(f"Error generating comparison: {e}")
@@ -248,7 +248,7 @@ Just respond with the question, no explanation."""
 
         try:
             model = genai.GenerativeModel(self.model)
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt, request_options={"timeout": 20})
             return response.text.strip()
         except Exception as e:
             logger.error(f"Error generating refusal: {e}")

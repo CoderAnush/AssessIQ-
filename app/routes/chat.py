@@ -6,6 +6,8 @@ Wires all components together in stateless conversation flow.
 from fastapi import APIRouter, HTTPException, Body
 from typing import List, Dict, Tuple, Optional
 import time
+import traceback
+import json
 
 from app.models.response import ChatRequest, ChatResponse, Message
 from app.services.catalog_loader import CatalogLoader
@@ -180,10 +182,15 @@ async def chat(request: Dict = Body(...)) -> ChatResponse:
     from app.models.response import ChatRequest, Message
     start_time = time.time()
 
+    print("=" * 60)
+    print("CHAT ENDPOINT HIT")
+    print("RAW REQUEST:", request)
+    print("=" * 60)
     logger.info(f"CHAT ENDPOINT HIT with payload: {request}")
 
     try:
-        # 1. FLEXIBLE PAYLOAD PARSING
+        # STEP 1: Payload parsing
+        print("STEP 1: Request received - Payload parsing")
         logger.info("STAGE: Payload Parsing")
         
         # Case A: {"message": "..."}
@@ -208,14 +215,17 @@ async def chat(request: Dict = Body(...)) -> ChatResponse:
                 }
             )
 
-        # 2. INITIALIZE SERVICES
+        # STEP 2: Initialize services
+        print("STEP 2: Payload parsed - Initializing services")
         logger.info("STAGE: Service Initialization")
         _initialize_services()
 
-        # 3. VALIDATE REQUEST
+        # STEP 3: Validate request
+        print("STEP 3: Services initialized - Validating request")
         logger.info("STAGE: Request Validation")
         is_valid, error = SchemaValidator.validate_request_schema(chat_request.dict())
         if not is_valid:
+            print("FAILURE: Request validation failed")
             logger.error(f"Request validation failed: {error}")
             return JSONResponse(
                 status_code=200,
@@ -228,24 +238,30 @@ async def chat(request: Dict = Body(...)) -> ChatResponse:
             )
 
         messages = [{"role": m.role, "content": m.content} for m in chat_request.messages]
+        print(f"STEP 4: Request validated - Processing {len(messages)} messages")
         logger.info(f"Processing chat with {len(messages)} messages")
 
-        # 4. CHECK TURN LIMIT
+        # STEP 5: Turn limit check
+        print("STEP 5: Turn limit check")
         logger.info("STAGE: Turn Limit Check")
         turn_count = decision_engine.get_turn_count(messages)
         if turn_count >= settings.max_conversation_turns:
+            print("EXIT: Max turns reached")
             return ChatResponse(
                 reply="We've reached the conversation turn limit. I hope the recommendations were helpful!",
                 recommendations=[],
                 end_of_conversation=True,
             )
 
-        # 5. DECIDE ACTION
+        # STEP 6: Action Decision
+        print("STEP 6: Decision engine start")
         logger.info("STAGE: Action Decision")
         decision = decision_engine.decide(messages)
+        print(f"STEP 7: Decision engine complete - Action: {decision.action}")
         logger.info(f"Decision: {decision.action}")
 
-        # 6. EXECUTE ACTION
+        # STEP 8: Execute Action
+        print(f"STEP 8: Executing action: {decision.action}")
         logger.info(f"STAGE: Executing {decision.action}")
         try:
             if decision.action == AgentAction.REFUSE:
@@ -266,11 +282,26 @@ async def chat(request: Dict = Body(...)) -> ChatResponse:
                     end_of_conversation=False,
                 )
             
-            # STAGE: Sanitization
+            # STEP 9: Sanitization
+            print("STEP 9: Action complete - Sanitizing response")
             logger.info("STAGE: Response Sanitization")
             if hasattr(response, 'recommendations') and response.recommendations:
                 response.recommendations = _force_safe_recommendations(response.recommendations)
             
+            # STEP 10: Serialization Test
+            print("STEP 10: Serialization test")
+            try:
+                if hasattr(response, 'dict'):
+                    resp_dict = response.dict()
+                else:
+                    resp_dict = response
+                print("SERIALIZATION TEST SUCCESS:")
+                print(json.dumps(resp_dict, default=str))
+            except Exception as ser_err:
+                print(f"SERIALIZATION TEST FAILED: {ser_err}")
+                traceback.print_exc()
+
+            print("STEP 11: Returning response")
             return response
 
         except Exception as e:
@@ -287,6 +318,9 @@ async def chat(request: Dict = Body(...)) -> ChatResponse:
             )
 
     except Exception as e:
+        print("FATAL ERROR IN CHAT ENDPOINT:")
+        print(str(e))
+        traceback.print_exc()
         logger.exception("CRITICAL CHAT ENDPOINT FAILURE")
         return JSONResponse(
             status_code=200,
@@ -295,7 +329,8 @@ async def chat(request: Dict = Body(...)) -> ChatResponse:
                 "recommendations": [],
                 "end_of_conversation": False,
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "traceback": traceback.format_exc()
             }
         )
     finally:
@@ -305,14 +340,17 @@ async def chat(request: Dict = Body(...)) -> ChatResponse:
 
 def _handle_refusal(decision) -> ChatResponse:
     """Handle refusal action with defensive fallback."""
+    print("SUB-STEP: Refusal handler start")
     logger.info("Executing REFUSE action")
     
     try:
         reply = decision.reasoning or "I focus specifically on SHL assessment recommendations. How can I help you with your hiring needs?"
     except Exception as e:
+        print(f"ERROR in _handle_refusal: {e}")
         logger.error(f"Refusal processing failed: {e}")
         reply = "I focus specifically on SHL assessment recommendations. How can I help you with your hiring needs?"
     
+    print("SUB-STEP: Refusal handler complete")
     return ChatResponse(
         reply=reply,
         recommendations=[],
@@ -322,14 +360,17 @@ def _handle_refusal(decision) -> ChatResponse:
 
 def _handle_clarification(decision) -> ChatResponse:
     """Handle clarification action with defensive fallback."""
+    print("SUB-STEP: Clarification handler start")
     logger.info("Executing CLARIFY action")
     
     try:
         question = decision.next_question or "Could you provide more details about the role requirements?"
     except Exception as e:
+        print(f"ERROR in _handle_clarification: {e}")
         logger.error(f"Clarification processing failed: {e}")
         question = "To give you the best SHL recommendations, could you tell me a bit more about the role and seniority level?"
     
+    print("SUB-STEP: Clarification handler complete")
     return ChatResponse(
         reply=question,
         recommendations=[],
@@ -339,6 +380,7 @@ def _handle_clarification(decision) -> ChatResponse:
 
 def _handle_comparison(decision, messages: List) -> ChatResponse:
     """Handle comparison action with memory-backed relative reference resolution."""
+    print("SUB-STEP: Comparison handler start")
     logger.info("Executing COMPARE action")
 
     items = decision.comparison_items or []
@@ -352,12 +394,14 @@ def _handle_comparison(decision, messages: List) -> ChatResponse:
     needs_memory_resolution = any(ref in last_user_msg for ref in relative_refs)
     
     if needs_memory_resolution or len(items) < 2:
+        print("SUB-STEP: Resolving comparison from memory")
         # Try to get from conversation memory
         stored_recs = _get_stored_recommendations(messages)
         if len(stored_recs) >= 2:
             logger.info(f"Using stored recommendations for comparison: {stored_recs[0]['name']}, {stored_recs[1]['name']}")
             items = [stored_recs[0]["name"], stored_recs[1]["name"]]
         elif len(items) < 2:
+            print("SUB-STEP: Not enough items for comparison")
             logger.warning("Not enough items to compare and no memory available")
             return ChatResponse(
                 reply="I need at least two assessments to compare. Please ask for recommendations first, or specify which assessments to compare (e.g., 'Compare OPQ32r and GSA').",
@@ -373,8 +417,10 @@ def _handle_comparison(decision, messages: List) -> ChatResponse:
         )
 
     # Get assessments
+    print(f"SUB-STEP: Validating items: {items}")
     is_valid, error, assessments = hallucination_checker.validate_comparison_items(items)
     if not is_valid:
+        print(f"FAILURE: Comparison validation failed: {error}")
         logger.warning(f"Comparison validation failed: {error}")
         return ChatResponse(
             reply=f"I couldn't find one of those assessments in the SHL catalog. {error}",
@@ -383,6 +429,7 @@ def _handle_comparison(decision, messages: List) -> ChatResponse:
         )
 
     # Generate comparison
+    print("SUB-STEP: Generating comparison with LLM")
     try:
         assessment_list = list(assessments.values())
         comparison_text = llm_service.generate_comparison(
@@ -402,9 +449,11 @@ def _handle_comparison(decision, messages: List) -> ChatResponse:
             },
         )
     except Exception as e:
+        print(f"ERROR in comparison generation: {e}")
         logger.error(f"Comparison generation failed: {e}")
         comparison_text = f"I've analyzed both **{assessment_list[0].name}** and **{assessment_list[1].name}**. While I encountered an issue generating a detailed comparison table, I recommend reviewing both as they are top-tier SHL assessments for this role."
 
+    print("SUB-STEP: Comparison handler complete")
     return ChatResponse(
         reply=comparison_text,
         recommendations=[],
@@ -414,42 +463,52 @@ def _handle_comparison(decision, messages: List) -> ChatResponse:
 
 def _handle_refinement(context, messages: List) -> ChatResponse:
     """Handle refinement action with proper fallback handling."""
+    print("SUB-STEP: Refinement handler start")
     logger.info("Executing REFINE action")
 
     last_user_msg = messages[-1]["content"]
 
     # Retrieve and rank again with updated context
+    print("SUB-STEP: REFINE - Retrieving assessments")
     logger.info("REFINE: Retrieving assessments")
     query = f"{context.role or ''} {' '.join(context.soft_skills)} {' '.join(context.tech_stack)}"
     retrieved = retriever.retrieve(query, context, top_k=settings.top_k_retrieval)
 
     # Create assessment dict for ranker
+    print("SUB-STEP: REFINE - Fetching all assessments")
     assessment_dict = {a.id: a for a in catalog_loader.get_all()}
 
+    print("SUB-STEP: REFINE - Ranking assessments")
     logger.info("REFINE: Ranking assessments")
     ranked = ranker.rank(retrieved, context, assessment_dict)
     recommendations = ranker.get_top_recommendations(ranked, settings.max_recommendations)
 
     # Validate no hallucinations
+    print("SUB-STEP: REFINE - Checking hallucinations")
     logger.info("REFINE: Checking hallucinations")
     try:
         is_clean, error = hallucination_checker.check_recommendations(recommendations)
         if not is_clean:
+            print(f"WARNING: Hallucination detected: {error}")
             logger.error(f"Hallucination detected: {error}")
             # If hallucination detected, filter them out rather than crashing
             recommendations = [r for r in recommendations if r.get("name", "").lower() in hallucination_checker.valid_names]
     except Exception as e:
+        print(f"ERROR in hallucination check: {e}")
         logger.error(f"Hallucination check failed: {e}")
         pass
 
     # Store updated recommendations in memory
+    print("SUB-STEP: REFINE - Storing in memory")
     logger.info("REFINE: Storing in memory")
     try:
         _store_recommendations_in_memory(messages, recommendations)
     except Exception as e:
+        print(f"ERROR in memory storage: {e}")
         logger.error(f"Failed to store recommendations in memory: {e}")
 
     # Generate LLM response
+    print("SUB-STEP: REFINE - Generating LLM response")
     logger.info("REFINE: Generating LLM reply")
     try:
         prompt = get_recommendation_prompt(str(context), recommendations)
@@ -459,10 +518,12 @@ def _handle_refinement(context, messages: List) -> ChatResponse:
             conversation_context=str(context),
         )
     except Exception as e:
+        print(f"ERROR in LLM response generation: {e}")
         logger.error(f"LLM generation failed: {e}")
         llm_response = {"_llm_failed": True}
 
     # Use LLM reply but keep our ranked recommendations
+    print("SUB-STEP: REFINE - Building final response")
     if llm_response.get("_llm_failed") or not llm_response.get("reply"):
         reply_text = f"I've refined the recommendations for a {context.role or 'this role'} based on your latest input:"
     else:
@@ -475,14 +536,17 @@ def _handle_refinement(context, messages: List) -> ChatResponse:
         "end_of_conversation": False
     }
 
+    print("SUB-STEP: Refinement handler complete")
     return ChatResponse(**response_data)
 
 
 def _handle_recommendation(context, messages: List) -> ChatResponse:
     """Handle recommendation action with proper fallback handling."""
+    print("SUB-STEP: Recommendation handler start")
     logger.info("Executing RECOMMEND action")
 
     # Build query from context
+    print("SUB-STEP: RECOMMEND - Building query")
     logger.info("RECOMMEND: Building query")
     query_parts = []
     if context.role:
@@ -495,10 +559,12 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
     query = " ".join(query_parts) or "assessment"
 
     # Retrieve
+    print("SUB-STEP: RECOMMEND - Retrieving assessments")
     logger.info("RECOMMEND: Retrieving assessments")
     retrieved = retriever.retrieve(query, context, top_k=settings.top_k_retrieval)
 
     if not retrieved:
+        print("SUB-STEP: RECOMMEND - No assessments found")
         logger.warning("No assessments retrieved")
         return ChatResponse(
             reply="I couldn't find suitable assessments in the catalog for your criteria. Could you provide more details?",
@@ -507,38 +573,47 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
         )
 
     # Rank
+    print("SUB-STEP: RECOMMEND - Ranking assessments")
     logger.info("RECOMMEND: Ranking assessments")
     assessment_dict = {a.id: a for a in catalog_loader.get_all()}
     ranked = ranker.rank(retrieved, context, assessment_dict)
 
     # Get top recommendations
+    print("SUB-STEP: RECOMMEND - Formatting recommendations")
     logger.info("RECOMMEND: Formatting recommendations")
     recommendations = ranker.get_top_recommendations(ranked, settings.max_recommendations)
 
     # DEFENSIVE GUARD: Ensure recommendations is a list of dicts
     if not isinstance(recommendations, list):
+        print(f"ERROR: Ranker returned invalid type: {type(recommendations)}")
         logger.error(f"Ranker returned invalid type: {type(recommendations)}")
         recommendations = []
 
     # Validate no hallucinations
+    print("SUB-STEP: RECOMMEND - Checking hallucinations")
     logger.info("RECOMMEND: Checking hallucinations")
     try:
         is_clean, error = hallucination_checker.check_recommendations(recommendations)
         if not is_clean:
+            print(f"WARNING: Hallucination detected: {error}")
             logger.error(f"Hallucination detected: {error}")
             recommendations = [r for r in recommendations if r.get("name", "").lower() in hallucination_checker.valid_names]
     except Exception as e:
+        print(f"ERROR in hallucination check: {e}")
         logger.error(f"Hallucination check failed: {e}")
         pass
 
     # Store recommendations in memory
+    print("SUB-STEP: RECOMMEND - Storing in memory")
     logger.info("RECOMMEND: Storing in memory")
     try:
         _store_recommendations_in_memory(messages, recommendations)
     except Exception as e:
+        print(f"ERROR in memory storage: {e}")
         logger.error(f"Failed to store recommendations in memory: {e}")
 
     # Generate LLM response
+    print("SUB-STEP: RECOMMEND - Generating LLM response")
     logger.info("RECOMMEND: Generating LLM reply")
     try:
         prompt = get_recommendation_prompt(str(context), recommendations)
@@ -548,9 +623,11 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
             conversation_context=str(context),
         )
     except Exception as e:
+        print(f"ERROR in LLM response generation: {e}")
         logger.error(f"LLM generation failed: {e}")
         llm_response = {"_llm_failed": True}
 
+    print("SUB-STEP: RECOMMEND - Building final response")
     if llm_response.get("_llm_failed") or not llm_response.get("reply"):
         reply_text = f"Based on your requirements for a {context.role or 'this role'}, here are the most relevant SHL assessments:"
     else:
@@ -563,4 +640,5 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
         "end_of_conversation": decision_engine.is_conversation_complete(messages)
     }
 
+    print("SUB-STEP: Recommendation handler complete")
     return ChatResponse(**response_data)
