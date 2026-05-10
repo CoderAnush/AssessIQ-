@@ -775,18 +775,23 @@ def main():
         if signature != st.session_state.last_processed_signature:
             with st.chat_message("assistant", avatar="🤖"):
                 with st.spinner("Reconstructing context..."):
-                        # Prevent duplicate requests from multiple reruns
-                        if st.session_state.request_in_progress:
-                            st.info("Request already in progress — waiting for result...")
+                    # Prevent duplicate requests from multiple reruns
+                    if st.session_state.request_in_progress:
+                        st.info("Request already in progress — waiting for result...")
+                        response = None
+                    else:
+                        st.session_state.request_in_progress = True
+                        try:
+                            start_t = time.time()
+                            response = send_chat_request(st.session_state.messages)
+                            st.session_state.last_query_time = time.time() - start_t
+                        except Exception as e:
                             response = None
-                        else:
-                            st.session_state.request_in_progress = True
-                            try:
-                                response = send_chat_request(st.session_state.messages)
-                            finally:
-                                st.session_state.request_in_progress = False
+                            st.session_state.request_errors.append(f"Request failed: {e}")
+                        finally:
+                            st.session_state.request_in_progress = False
 
-                        if response:
+                    if response:
                         reply = str(response.get("reply", ""))
                         recs = response.get("recommendations", []) or []
                         enriched = enrich_recommendations(recs, st.session_state.latest_user_query)
@@ -823,8 +828,9 @@ def main():
                             st.session_state.latest_comparison = comparison
 
                         st.caption(f"Latency: {st.session_state.last_query_time:.2f}s | Schema: Strict")
-                    elif st.session_state.request_errors:
-                        st.error(st.session_state.request_errors[-1])
+                    else:
+                        if st.session_state.request_errors:
+                            st.error(st.session_state.request_errors[-1])
 
 if __name__ == "__main__":
     main()
