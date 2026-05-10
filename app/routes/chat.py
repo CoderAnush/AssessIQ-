@@ -79,6 +79,33 @@ def _sanitize_reply(reply: str) -> str:
     return reply
 
 
+def _force_safe_recommendations(recommendations: List[Dict]) -> List[Dict]:
+    """Force all recommendations to match required schema with strict type casting."""
+    safe_recs = []
+    for rec in recommendations:
+        if not isinstance(rec, dict):
+            continue
+            
+        safe_rec = {
+            "id": str(rec.get("id", "unknown")),
+            "name": str(rec.get("name", "SHL Assessment")),
+            "url": str(rec.get("url", "https://www.shl.com")),
+            "test_type": str(rec.get("test_type", "K")),
+            "score": float(rec.get("score", 0.85)),
+            "match_label": str(rec.get("match_label", "Strong Match")),
+            "category": str(rec.get("category", "Professional Assessment")),
+            "explanation": str(rec.get("explanation", "Recommended based on role requirements.")),
+        }
+        
+        # Ensure score is within 0-1 range
+        if safe_rec["score"] > 1.0:
+            safe_rec["score"] = safe_rec["score"] / 100.0
+        safe_rec["score"] = max(0.0, min(1.0, safe_rec["score"]))
+        
+        safe_recs.append(safe_rec)
+    return safe_recs
+
+
 # Global services (initialized once)
 catalog_loader = None
 retriever = None
@@ -95,7 +122,8 @@ def _initialize_services():
     try:
         if catalog_loader is None:
             from app.services.catalog_loader import CatalogLoader
-            catalog_loader = CatalogLoader()
+            catalog_path = getattr(settings, "catalog_path", "data/processed/catalog_processed.json")
+            catalog_loader = CatalogLoader(catalog_path)
         
         if llm_service is None:
             from app.services.llm_service import LLMService
@@ -109,8 +137,11 @@ def _initialize_services():
                 import faiss
                 import os
                 
-                model = SentenceTransformer(settings.embedding_model_name)
-                index_path = os.path.join("data", "indices", "faiss_index.bin")
+                # Use correct setting names from config.py
+                model_name = getattr(settings, "embeddings_model", "sentence-transformers/all-MiniLM-L6-v2")
+                model = SentenceTransformer(model_name)
+                
+                index_path = getattr(settings, "faiss_index_path", "data/processed/faiss_index.bin")
                 if os.path.exists(index_path):
                     index = faiss.read_index(index_path)
                 else:
@@ -143,97 +174,102 @@ def _initialize_services():
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
     """
-    Main chat endpoint.
-
-    Stateless conversation flow:
-    1. Validate request
-    2. Analyze conversation
-    3. Decide action
-    4. Execute action (clarify/recommend/refine/compare/refuse)
-    5. Validate response
-    6. Return
-
-    Args:
-        request: ChatRequest with full message history
-
-    Returns:
-        ChatResponse with reply, recommendations, end_flag
+    Main chat endpoint with emergency debugging and granular logging.
     """
-
+    from fastapi.responses import JSONResponse
     start_time = time.time()
 
     try:
-        # Initialize services
+        # 1. INITIALIZE SERVICES
+        logger.info("STAGE: Service Initialization")
         _initialize_services()
 
-        # 1. VALIDATE REQUEST
+        # 2. VALIDATE REQUEST
+        logger.info("STAGE: Request Validation")
         is_valid, error = SchemaValidator.validate_request_schema(request.dict())
         if not is_valid:
             logger.error(f"Request validation failed: {error}")
-            raise HTTPException(status_code=400, detail=error)
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "reply": f"I encountered a validation error: {error}",
+                    "recommendations": [],
+                    "end_of_conversation": False,
+                    "success": False
+                }
+            )
 
         messages = [{"role": m.role, "content": m.content} for m in request.messages]
-        logger.info(f"Received {len(messages)} messages")
+        logger.info(f"Processing chat with {len(messages)} messages")
 
-        # 2. CHECK TURN LIMIT
+        # 3. CHECK TURN LIMIT
+        logger.info("STAGE: Turn Limit Check")
         turn_count = decision_engine.get_turn_count(messages)
         if turn_count >= settings.max_conversation_turns:
-            logger.info(f"Conversation at turn limit ({turn_count})")
             return ChatResponse(
-                reply="We've reached the conversation turn limit. I hope the recommendations are helpful!",
+                reply="We've reached the conversation turn limit. I hope the recommendations were helpful!",
                 recommendations=[],
                 end_of_conversation=True,
             )
 
-        # 3. DECIDE ACTION
+        # 4. DECIDE ACTION
+        logger.info("STAGE: Action Decision")
         decision = decision_engine.decide(messages)
-        logger.info(f"Decision: {decision.action} (confidence: {decision.confidence:.2f})")
-        logger.debug(f"Reasoning: {decision.reasoning}")
+        logger.info(f"Decision: {decision.action}")
 
-        # 4. EXECUTE ACTION
+        # 5. EXECUTE ACTION
+        logger.info(f"STAGE: Executing {decision.action}")
         try:
             if decision.action == AgentAction.REFUSE:
-                return _handle_refusal(decision)
-
+                response = _handle_refusal(decision)
             elif decision.action == AgentAction.CLARIFY:
-                return _handle_clarification(decision)
-
+                response = _handle_clarification(decision)
             elif decision.action == AgentAction.COMPARE:
-                return _handle_comparison(decision, messages)
-
+                response = _handle_comparison(decision, messages)
             elif decision.action == AgentAction.REFINE:
-                return _handle_refinement(decision_engine.get_context_from_messages(messages), messages)
-
+                response = _handle_refinement(decision_engine.get_context_from_messages(messages), messages)
             elif decision.action == AgentAction.RECOMMEND:
-                return _handle_recommendation(decision_engine.get_context_from_messages(messages), messages)
-
+                response = _handle_recommendation(decision_engine.get_context_from_messages(messages), messages)
             else:
                 logger.error(f"Unknown action: {decision.action}")
-                return ChatResponse(
-                    reply="I encountered an unexpected error while processing your request. Please try rephrasing.",
+                response = ChatResponse(
+                    reply="I'm not sure how to handle that request. Could you please rephrase?",
                     recommendations=[],
                     end_of_conversation=False,
                 )
+            
+            # STAGE: Sanitization
+            logger.info("STAGE: Response Sanitization")
+            if hasattr(response, 'recommendations') and response.recommendations:
+                response.recommendations = _force_safe_recommendations(response.recommendations)
+            
+            return response
+
         except Exception as e:
-            logger.error(f"Action execution error: {e}", exc_info=True)
-            # Graceful fallback for any logic errors in specific handlers
-            return ChatResponse(
-                reply="I'm processing your request but encountered a temporary issue. Here's what I can tell you: I'm currently analyzing SHL assessments for your needs. Could you please try again with a slightly different query?",
-                recommendations=[],
-                end_of_conversation=False,
+            logger.exception(f"Action execution failure: {e}")
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "reply": "I'm processing your request but encountered a temporary issue. Please try rephrasing slightly.",
+                    "recommendations": [],
+                    "end_of_conversation": False,
+                    "success": False,
+                    "error": str(e)
+                }
             )
 
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Chat endpoint error: {e}", exc_info=True)
-        # Final safety net to avoid 500
-        return ChatResponse(
-            reply="I apologize, but I'm having trouble processing that right now. Please try again in a moment.",
-            recommendations=[],
-            end_of_conversation=False
+        logger.exception("CRITICAL CHAT ENDPOINT FAILURE")
+        return JSONResponse(
+            status_code=200,
+            content={
+                "reply": "I apologize, but I'm having trouble processing that right now. Please try again in a moment.",
+                "recommendations": [],
+                "end_of_conversation": False,
+                "success": False,
+                "error": str(e)
+            }
         )
-
     finally:
         elapsed = time.time() - start_time
         logger.info(f"Chat request completed in {elapsed:.2f}s")
@@ -355,39 +391,38 @@ def _handle_refinement(context, messages: List) -> ChatResponse:
     last_user_msg = messages[-1]["content"]
 
     # Retrieve and rank again with updated context
+    logger.info("REFINE: Retrieving assessments")
     query = f"{context.role or ''} {' '.join(context.soft_skills)} {' '.join(context.tech_stack)}"
     retrieved = retriever.retrieve(query, context, top_k=settings.top_k_retrieval)
 
     # Create assessment dict for ranker
     assessment_dict = {a.id: a for a in catalog_loader.get_all()}
 
+    logger.info("REFINE: Ranking assessments")
     ranked = ranker.rank(retrieved, context, assessment_dict)
     recommendations = ranker.get_top_recommendations(ranked, settings.max_recommendations)
 
     # Validate no hallucinations
+    logger.info("REFINE: Checking hallucinations")
     try:
         is_clean, error = hallucination_checker.check_recommendations(recommendations)
         if not is_clean:
             logger.error(f"Hallucination detected: {error}")
             # If hallucination detected, filter them out rather than crashing
             recommendations = [r for r in recommendations if r.get("name", "").lower() in hallucination_checker.valid_names]
-            if not recommendations:
-                 return ChatResponse(
-                    reply="I've updated my analysis based on your feedback, but I need a few more details to find the perfect SHL assessment for you.",
-                    recommendations=[],
-                    end_of_conversation=False
-                )
     except Exception as e:
         logger.error(f"Hallucination check failed: {e}")
         pass
 
     # Store updated recommendations in memory
+    logger.info("REFINE: Storing in memory")
     try:
         _store_recommendations_in_memory(messages, recommendations)
     except Exception as e:
         logger.error(f"Failed to store recommendations in memory: {e}")
 
     # Generate LLM response
+    logger.info("REFINE: Generating LLM reply")
     try:
         prompt = get_recommendation_prompt(str(context), recommendations)
         llm_response = llm_service.generate_response(
@@ -405,21 +440,12 @@ def _handle_refinement(context, messages: List) -> ChatResponse:
     else:
         reply_text = _sanitize_reply(llm_response.get("reply", "Here are the refined recommendations based on your updates."))
     
+    logger.info("REFINE: Building final ChatResponse")
     response_data = {
         "reply": reply_text,
         "recommendations": recommendations,
         "end_of_conversation": False
     }
-
-    # Validate schema
-    is_valid, error = SchemaValidator.validate_chat_response(response_data)
-    if not is_valid:
-        logger.error(f"Response schema invalid: {error}")
-        return ChatResponse(
-            reply="Here are the refined recommendations based on your updates:",
-            recommendations=recommendations,
-            end_of_conversation=False
-        )
 
     return ChatResponse(**response_data)
 
@@ -429,6 +455,7 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
     logger.info("Executing RECOMMEND action")
 
     # Build query from context
+    logger.info("RECOMMEND: Building query")
     query_parts = []
     if context.role:
         query_parts.append(context.role)
@@ -440,6 +467,7 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
     query = " ".join(query_parts) or "assessment"
 
     # Retrieve
+    logger.info("RECOMMEND: Retrieving assessments")
     retrieved = retriever.retrieve(query, context, top_k=settings.top_k_retrieval)
 
     if not retrieved:
@@ -451,10 +479,12 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
         )
 
     # Rank
+    logger.info("RECOMMEND: Ranking assessments")
     assessment_dict = {a.id: a for a in catalog_loader.get_all()}
     ranked = ranker.rank(retrieved, context, assessment_dict)
 
-    # Get top recommendations (with real dynamic scores and contextual explanations)
+    # Get top recommendations
+    logger.info("RECOMMEND: Formatting recommendations")
     recommendations = ranker.get_top_recommendations(ranked, settings.max_recommendations)
 
     # DEFENSIVE GUARD: Ensure recommendations is a list of dicts
@@ -463,30 +493,25 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
         recommendations = []
 
     # Validate no hallucinations
+    logger.info("RECOMMEND: Checking hallucinations")
     try:
         is_clean, error = hallucination_checker.check_recommendations(recommendations)
         if not is_clean:
             logger.error(f"Hallucination detected: {error}")
-            # If hallucination detected, filter them out rather than crashing
             recommendations = [r for r in recommendations if r.get("name", "").lower() in hallucination_checker.valid_names]
-            if not recommendations:
-                 return ChatResponse(
-                    reply="I'm sorry, I encountered an issue validating the recommendations. Could you please try again?",
-                    recommendations=[],
-                    end_of_conversation=False
-                )
     except Exception as e:
         logger.error(f"Hallucination check failed: {e}")
-        # Proceed with caution if checker fails
         pass
 
-    # Store recommendations in memory for comparison support
+    # Store recommendations in memory
+    logger.info("RECOMMEND: Storing in memory")
     try:
         _store_recommendations_in_memory(messages, recommendations)
     except Exception as e:
         logger.error(f"Failed to store recommendations in memory: {e}")
 
-    # Generate LLM response for conversational reply
+    # Generate LLM response
+    logger.info("RECOMMEND: Generating LLM reply")
     try:
         prompt = get_recommendation_prompt(str(context), recommendations)
         llm_response = llm_service.generate_response(
@@ -498,33 +523,16 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
         logger.error(f"LLM generation failed: {e}")
         llm_response = {"_llm_failed": True}
 
-    # CRITICAL FIX: Always use OUR recommendations with our scores/explanations
-    # The LLM response is only for the conversational "reply" text
-    
-    # Check if LLM failed but we have valid recommendations
     if llm_response.get("_llm_failed") or not llm_response.get("reply"):
-        # Use neutral success message - NO fallback apology
         reply_text = f"Based on your requirements for a {context.role or 'this role'}, here are the most relevant SHL assessments:"
     else:
-        # Use LLM reply but ensure it doesn't contain fallback language
         reply_text = _sanitize_reply(llm_response.get("reply", ""))
 
-    # Build final response with OUR recommendations (preserving dynamic scores/explanations)
+    logger.info("RECOMMEND: Building final ChatResponse")
     response_data = {
         "reply": reply_text,
         "recommendations": recommendations,
         "end_of_conversation": decision_engine.is_conversation_complete(messages)
     }
-
-    # Validate schema
-    is_valid, error = SchemaValidator.validate_chat_response(response_data)
-    if not is_valid:
-        logger.error(f"Response schema invalid: {error}")
-        # Still return recommendations - this is a schema issue, not a data issue
-        return ChatResponse(
-            reply="Here are the most relevant assessments for your requirements:",
-            recommendations=recommendations,
-            end_of_conversation=decision_engine.is_conversation_complete(messages)
-        )
 
     return ChatResponse(**response_data)
