@@ -404,7 +404,7 @@ def main():
         
         # Controls
         st.subheader("🛠️ Session")
-        if st.button("🗑️ Reset Conversation", use_container_width=True):
+        if st.button("🗑️ Reset Conversation", key="reset_conversation_btn", use_container_width=True):
             st.session_state.messages = []
             st.session_state.conversation_id = f"conv_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             st.rerun()
