@@ -278,7 +278,8 @@ The backend is deployed as a Dockerized FastAPI service on Render.
 The frontend is deployed on Streamlit Cloud for optimal recruiter UX.
 - **URL:** `https://assessiq-ai.streamlit.app`
 - **Entry Point:** `frontend/streamlit_app.py`
-- **Secrets required:** `BACKEND_URL="https://assessiq-nkp2.onrender.com"`
+- **Requirements File:** `frontend/requirements.txt`
+- **Secrets required:** `BACKEND_URL="https://assessiq-nkp2.onrender.com"` (Note: `GEMINI_API_KEY` is only needed on the Backend, not the Frontend).
 
 ---
 

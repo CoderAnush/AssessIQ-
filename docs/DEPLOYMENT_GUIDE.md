@@ -132,19 +132,21 @@ python scripts/validate_pipeline.py
 - Free hosting for Streamlit apps
 - GitHub integration
 - Automatic updates on push
+- Optimized build times with lightweight `frontend/requirements.txt`
 
 **Steps:**
 1. Push code to GitHub
 2. Go to https://streamlit.io/cloud
-3. Create new app from `frontend/streamlit_app.py`
-4. Set `GEMINI_API_KEY` in Secrets
+3. Create new app:
+   - **Repository:** `CoderAnush/AssessIQ-`
+   - **Main file path:** `frontend/streamlit_app.py`
+4. Set **Advanced Settings > Secrets**:
+   ```toml
+   BACKEND_URL = "https://assessiq-nkp2.onrender.com"
+   ```
 5. Deploy
 
-**Configuration:**
-- Create `.streamlit/secrets.toml`:
-  ```toml
-  GEMINI_API_KEY = "your-key-here"
-  ```
+**Note:** `GEMINI_API_KEY` is NOT needed for the frontend as it calls the backend which handles LLM requests.
 
 ### AWS ECS (Docker)
 
