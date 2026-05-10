@@ -8,6 +8,7 @@ import requests
 import json
 import os
 import textwrap
+import traceback
 from datetime import datetime
 from typing import List, Dict, Optional
 
@@ -195,24 +196,26 @@ def init_session_state():
 def get_api_response(messages: List[Dict]) -> Optional[Dict]:
     """Call AssessIQ Production API with robust error handling and logging."""
     try:
+        # 1. PREPARE PAYLOAD
         api_payload = {"messages": messages}
         
-        # LOGGING: Request outgoing
-        if os.getenv("DEBUG_FRONTEND") == "true":
-            print(f"DEBUG: SENDING REQUEST TO {BACKEND_URL}/chat")
-            print(f"DEBUG: PAYLOAD: {json.dumps(api_payload, indent=2)}")
+        # 2. FRONTEND DEBUGGING (Visible in Streamlit UI)
+        st.write("🔍 **DEBUG: Request Initiation**")
+        st.write(f"Endpoint: `{BACKEND_URL}/chat`")
+        st.json(api_payload)
         
+        # 3. EXECUTE REQUEST
+        st.write("🚀 **DEBUG: Executing requests.post...**")
         response = requests.post(
             f"{BACKEND_URL}/chat",
             json=api_payload,
-            timeout=50,  # Increased for Render cold starts
+            timeout=50,
             headers={"Content-Type": "application/json"}
         )
         
-        # LOGGING: Response incoming
-        if os.getenv("DEBUG_FRONTEND") == "true":
-            print(f"DEBUG: RESPONSE STATUS: {response.status_code}")
-            print(f"DEBUG: RESPONSE BODY: {response.text[:500]}...")
+        # 4. TRACE RESPONSE
+        st.write(f"✅ **DEBUG: Response Received (Status: {response.status_code})**")
+        st.code(response.text[:1000], language="json")
 
         if response.status_code == 429:
             st.warning("⚠️ Rate limit reached (Gemini Free Tier). Please wait a few seconds.")
@@ -228,7 +231,8 @@ def get_api_response(messages: List[Dict]) -> Optional[Dict]:
         st.error(f"🌐 Connectivity Error: Could not reach AssessIQ at {BACKEND_URL}")
         return None
     except Exception as e:
-        st.error(f"❌ Unexpected error communicating with backend: {str(e)}")
+        st.error(f"❌ CRITICAL FRONTEND ERROR: {str(e)}")
+        st.code(traceback.format_exc())
         return None
 
 
@@ -422,6 +426,26 @@ def main():
             st.session_state.messages = []
             st.session_state.conversation_id = f"conv_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             st.rerun()
+
+        st.markdown("---")
+        st.subheader("📡 Connectivity Test")
+        if st.button("Test Backend Health", key="test_health_btn", use_container_width=True):
+            try:
+                r = requests.get(f"{BACKEND_URL}/health", timeout=10)
+                st.write(f"Health Status: {r.status_code}")
+                st.write(f"Health Response: {r.text}")
+            except Exception as e:
+                st.error(f"Health Test Failed: {str(e)}")
+        
+        if st.button("Test Direct /chat", key="test_chat_btn", use_container_width=True):
+            try:
+                payload = {"message": "ping"}
+                st.write(f"Testing POST {BACKEND_URL}/chat")
+                r = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=10)
+                st.write(f"Chat Status: {r.status_code}")
+                st.write(f"Chat Response: {r.text}")
+            except Exception as e:
+                st.error(f"Chat Test Failed: {str(e)}")
 
         st.markdown("---")
         st.info("💡 **Grounded Retrieval**: All recommendations are verified against the SHL Individual Test Solutions catalog.")
