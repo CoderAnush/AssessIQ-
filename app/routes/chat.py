@@ -121,17 +121,21 @@ def _initialize_services():
     """Initialize all services (lazy loading) with error resilience."""
     global catalog_loader, retriever, ranker, decision_engine, llm_service, hallucination_checker
 
+    print("SUB-STEP: Service Initialization Start")
     try:
         if catalog_loader is None:
+            print("SUB-STEP: Loading Catalog...")
             from app.services.catalog_loader import CatalogLoader
             catalog_path = getattr(settings, "catalog_path", "data/processed/catalog_processed.json")
             catalog_loader = CatalogLoader(catalog_path)
         
         if llm_service is None:
+            print("SUB-STEP: Initializing LLM Service...")
             from app.services.llm_service import LLMService
             llm_service = LLMService()
             
         if retriever is None:
+            print("SUB-STEP: Initializing Retriever...")
             from app.services.retriever import HybridRetriever
             # Attempt to load models/indices
             try:
@@ -141,15 +145,19 @@ def _initialize_services():
                 
                 # Use correct setting names from config.py
                 model_name = getattr(settings, "embeddings_model", "sentence-transformers/all-MiniLM-L6-v2")
+                print(f"SUB-STEP: Loading Embeddings Model ({model_name})...")
                 model = SentenceTransformer(model_name)
                 
                 index_path = getattr(settings, "faiss_index_path", "data/processed/faiss_index.bin")
                 if os.path.exists(index_path):
+                    print(f"SUB-STEP: Reading FAISS Index from {index_path}...")
                     index = faiss.read_index(index_path)
                 else:
+                    print("SUB-STEP: FAISS Index NOT FOUND")
                     index = None
                     logger.warning(f"FAISS index not found at {index_path}")
             except Exception as e:
+                print(f"ERROR in retriever init: {e}")
                 logger.error(f"Failed to load semantic search components: {e}")
                 model = None
                 index = None
@@ -157,18 +165,25 @@ def _initialize_services():
             retriever = HybridRetriever(catalog_loader, model, index)
             
         if ranker is None:
+            print("SUB-STEP: Initializing Ranker...")
             from app.services.ranker import RecommendationRanker
             ranker = RecommendationRanker()
             
         if decision_engine is None:
+            print("SUB-STEP: Initializing Decision Engine...")
             from app.agents.decision_engine import DecisionEngine
             decision_engine = DecisionEngine()
             
         if hallucination_checker is None:
+            print("SUB-STEP: Initializing Hallucination Checker...")
             from app.utils.hallucination_checker import HallucinationChecker
             hallucination_checker = HallucinationChecker(catalog_loader)
+        
+        print("SUB-STEP: Service Initialization Complete")
             
     except Exception as e:
+        print(f"CRITICAL ERROR in _initialize_services: {e}")
+        traceback.print_exc()
         logger.critical(f"CRITICAL SERVICE INITIALIZATION FAILURE: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Service initialization failed")
 
