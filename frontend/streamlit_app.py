@@ -14,6 +14,10 @@ from typing import List, Dict, Optional
 # --- CONFIGURATION ---
 BACKEND_URL = os.getenv("BACKEND_URL", "https://assessiq-nkp2.onrender.com")
 
+# --- DEBUGGING ---
+if os.getenv("DEBUG_FRONTEND") == "true":
+    st.sidebar.write(f"Backend URL: {BACKEND_URL}")
+
 # Configure page
 st.set_page_config(
     page_title="AssessIQ | Enterprise AI Assessment Intelligence",
@@ -189,9 +193,14 @@ def init_session_state():
 
 
 def get_api_response(messages: List[Dict]) -> Optional[Dict]:
-    """Call AssessIQ Production API with robust error handling."""
+    """Call AssessIQ Production API with robust error handling and logging."""
     try:
         api_payload = {"messages": messages}
+        
+        # LOGGING: Request outgoing
+        if os.getenv("DEBUG_FRONTEND") == "true":
+            print(f"DEBUG: SENDING REQUEST TO {BACKEND_URL}/chat")
+            print(f"DEBUG: PAYLOAD: {json.dumps(api_payload, indent=2)}")
         
         response = requests.post(
             f"{BACKEND_URL}/chat",
@@ -200,6 +209,11 @@ def get_api_response(messages: List[Dict]) -> Optional[Dict]:
             headers={"Content-Type": "application/json"}
         )
         
+        # LOGGING: Response incoming
+        if os.getenv("DEBUG_FRONTEND") == "true":
+            print(f"DEBUG: RESPONSE STATUS: {response.status_code}")
+            print(f"DEBUG: RESPONSE BODY: {response.text[:500]}...")
+
         if response.status_code == 429:
             st.warning("⚠️ Rate limit reached (Gemini Free Tier). Please wait a few seconds.")
             return None

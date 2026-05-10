@@ -3,8 +3,8 @@ POST /chat endpoint - main API.
 Wires all components together in stateless conversation flow.
 """
 
-from fastapi import APIRouter, HTTPException
-from typing import List, Dict
+from fastapi import APIRouter, HTTPException, Body
+from typing import List, Dict, Tuple, Optional
 import time
 
 from app.models.response import ChatRequest, ChatResponse, Message
@@ -171,22 +171,50 @@ def _initialize_services():
         raise HTTPException(status_code=500, detail="Service initialization failed")
 
 
-@router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
+@router.post("/chat")
+async def chat(request: Dict = Body(...)) -> ChatResponse:
     """
-    Main chat endpoint with emergency debugging and granular logging.
+    Main chat endpoint with emergency debugging, granular logging, and flexible payload parsing.
     """
     from fastapi.responses import JSONResponse
+    from app.models.response import ChatRequest, Message
     start_time = time.time()
 
+    logger.info(f"CHAT ENDPOINT HIT with payload: {request}")
+
     try:
-        # 1. INITIALIZE SERVICES
+        # 1. FLEXIBLE PAYLOAD PARSING
+        logger.info("STAGE: Payload Parsing")
+        
+        # Case A: {"message": "..."}
+        if "message" in request and "messages" not in request:
+            logger.info("Parsing legacy 'message' format")
+            chat_request = ChatRequest(messages=[Message(role="user", content=request["message"])])
+        
+        # Case B: {"messages": [...]}
+        elif "messages" in request:
+            logger.info("Parsing standard 'messages' format")
+            chat_request = ChatRequest(**request)
+            
+        else:
+            logger.error(f"Invalid payload structure: {request}")
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "reply": "I received an invalid request format. Please provide 'messages' or 'message'.",
+                    "recommendations": [],
+                    "end_of_conversation": False,
+                    "success": False
+                }
+            )
+
+        # 2. INITIALIZE SERVICES
         logger.info("STAGE: Service Initialization")
         _initialize_services()
 
-        # 2. VALIDATE REQUEST
+        # 3. VALIDATE REQUEST
         logger.info("STAGE: Request Validation")
-        is_valid, error = SchemaValidator.validate_request_schema(request.dict())
+        is_valid, error = SchemaValidator.validate_request_schema(chat_request.dict())
         if not is_valid:
             logger.error(f"Request validation failed: {error}")
             return JSONResponse(
@@ -199,10 +227,10 @@ async def chat(request: ChatRequest) -> ChatResponse:
                 }
             )
 
-        messages = [{"role": m.role, "content": m.content} for m in request.messages]
+        messages = [{"role": m.role, "content": m.content} for m in chat_request.messages]
         logger.info(f"Processing chat with {len(messages)} messages")
 
-        # 3. CHECK TURN LIMIT
+        # 4. CHECK TURN LIMIT
         logger.info("STAGE: Turn Limit Check")
         turn_count = decision_engine.get_turn_count(messages)
         if turn_count >= settings.max_conversation_turns:
@@ -212,12 +240,12 @@ async def chat(request: ChatRequest) -> ChatResponse:
                 end_of_conversation=True,
             )
 
-        # 4. DECIDE ACTION
+        # 5. DECIDE ACTION
         logger.info("STAGE: Action Decision")
         decision = decision_engine.decide(messages)
         logger.info(f"Decision: {decision.action}")
 
-        # 5. EXECUTE ACTION
+        # 6. EXECUTE ACTION
         logger.info(f"STAGE: Executing {decision.action}")
         try:
             if decision.action == AgentAction.REFUSE:

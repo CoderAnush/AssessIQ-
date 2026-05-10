@@ -69,6 +69,18 @@ def create_app() -> FastAPI:
         """Health check endpoint for readiness probes."""
         return {"status": "ok"}
 
+    # Middleware for request/response logging
+    @app.middleware("http")
+    async def log_requests(request, call_next):
+        logger.info(f"INCOMING REQUEST: {request.method} {request.url}")
+        try:
+            response = await call_next(request)
+            logger.info(f"RESPONSE STATUS: {response.status_code}")
+            return response
+        except Exception as e:
+            logger.exception(f"MIDDLEWARE ERROR: {e}")
+            raise
+
     # Mount chat routes
     app.include_router(chat.router)
 
