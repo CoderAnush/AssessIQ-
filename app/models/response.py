@@ -20,12 +20,18 @@ class ChatRequest(BaseModel):
 
 class Recommendation(BaseModel):
     """
-    STRICT Recommendation model for evaluator.
-    MUST ONLY contain name, url, and test_type.
+    STRICT Recommendation model for recruiter.
     """
     name: str = Field(..., description="Assessment name")
     url: str = Field(..., description="SHL URL")
     test_type: str = Field(..., description="K, A, or P")
+    subtitle: str = Field("", description="Sub-heading e.g. Knowledge assessment")
+    confidence: int = Field(0, description="Match confidence score")
+    category: str = Field("", description="E.g. Knowledge, Personality")
+    stage: str = Field("", description="Best hiring stage")
+    duration: str = Field("", description="Assessment duration")
+    recruiter_insight: str = Field("", description="Grounded insight")
+    ideal_use_case: str = Field("", description="Ideal scenario for use")
 
     class Config:
         extra = "forbid"

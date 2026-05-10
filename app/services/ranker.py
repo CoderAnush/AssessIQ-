@@ -881,15 +881,15 @@ class RecruiterRanker:
         """
         return self.get_recommendations_for_api(ranked_results, top_k)
 
-    def get_recommendations_for_api(
+    async def get_recommendations_for_api(
         self, 
         ranked_results: List[RankedAssessment],
-        top_k: int = 5,
-        candidate_pool: Optional[List[Tuple[AssessmentWithMetadata, RankingFactors, float]]] = None
+        context: Optional[Any] = None,
+        top_k: int = 5
     ) -> Dict:
         """
         STRICT COMPLIANCE VERSION (Phase 1 & 5).
-        Returns ONLY name, url, and test_type as required by the evaluator.
+        Returns fully structured recommendations as required by the recruiter UI.
         """
         recommendations = []
         
@@ -898,12 +898,32 @@ class RecruiterRanker:
         if not ranked_results: count = 0
 
         for result in ranked_results[:count]:
-            # PHASE 5: Grounded from catalog only
-            # PHASE 1: name, url, test_type only
+            # Generate reasoning if context provided
+            insight = "Catalog-grounded assessment for recruiter screening."
+            ideal_use_case = "Grounded catalog recommendation."
+            stage = "Screening"
+            
+            if context and self.explanation_engine:
+                explanation = await self.explanation_engine.generate_explanation(
+                    result.assessment, 
+                    context, 
+                    result.factors
+                )
+                insight = explanation.get("why_it_matches", insight)
+                ideal_use_case = explanation.get("ideal_use_case", ideal_use_case)
+                stage = explanation.get("best_hiring_stage", "Screening").title()
+
             rec = {
                 "name": str(result.assessment.name),
                 "url": str(result.assessment.url),
-                "test_type": str(result.assessment.test_type.value) if hasattr(result.assessment.test_type, 'value') else "K"
+                "test_type": str(result.assessment.test_type.value) if hasattr(result.assessment.test_type, 'value') else "K",
+                "subtitle": f"{result.category} assessment",
+                "confidence": int(result.final_score * 100),
+                "category": str(result.category),
+                "stage": stage,
+                "duration": f"{getattr(result.assessment, 'duration_minutes', 30)} min",
+                "recruiter_insight": insight,
+                "ideal_use_case": ideal_use_case
             }
             recommendations.append(rec)
             

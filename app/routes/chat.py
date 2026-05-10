@@ -140,32 +140,46 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             ranked, _ = await services.ranker.rank(retrieved, context, catalog, top_k=settings.max_recommendations)
 
             if ranked:
-                selected = ranked[: settings.max_recommendations]
-                recommendations = [
-                    Recommendation(
-                        name=str(item.assessment.name),
-                        url=str(item.assessment.url),
-                        test_type=str(item.assessment.test_type.value),
-                    )
-                    for item in selected
-                ]
+                # Use the ranker's structured API method (already provides reply and recommendations)
+                ranker_payload = await services.ranker.get_recommendations_for_api(ranked, context, top_k=settings.max_recommendations)
+                reply = ranker_payload.get("reply", _fallback_reply(decision.action))
+                recommendations = [Recommendation(**rec) for rec in ranker_payload.get("recommendations", [])]
             else:
-                recommendations = [
-                    Recommendation(
-                        name=str(item.get("name", "")),
-                        url=str(item.get("url", "")),
-                        test_type=str(item.get("test_type", "K")),
-                    )
-                    for item in retrieved[:1]
-                    if item.get("name") and item.get("url")
-                ]
+                recommendations = []
+                for item in retrieved[:1]:
+                    if item.get("name") and item.get("url"):
+                        recommendations.append(Recommendation(
+                            name=str(item.get("name", "")),
+                            url=str(item.get("url", "")),
+                            test_type=str(item.get("test_type", "K")),
+                            subtitle="Knowledge assessment",
+                            confidence=70,
+                            category="General",
+                            stage="Early screening",
+                            duration="30 min",
+                            recruiter_insight="Grounded catalog recommendation.",
+                            ideal_use_case="Initial screening focus."
+                        ))
+                
                 if not recommendations and services.catalog_loader.get_all():
-                    recommendations = [_assessment_to_recommendation(services.catalog_loader.get_all()[0])]
+                    first_item = services.catalog_loader.get_all()[0]
+                    recommendations = [Recommendation(
+                        name=str(first_item.name),
+                        url=str(first_item.url),
+                        test_type=str(first_item.test_type.value),
+                        subtitle="Knowledge assessment",
+                        confidence=60,
+                        category="General",
+                        stage="Early screening",
+                        duration="30 min",
+                        recruiter_insight="Catalog-grounded fallback.",
+                        ideal_use_case="General assessment."
+                    )]
+                reply = _fallback_reply(decision.action)
 
-            reply = _fallback_reply(decision.action)
             return ChatResponse(
                 reply=reply,
-                recommendations=recommendations[: settings.max_recommendations],
+                recommendations=recommendations,
                 end_of_conversation=conversation_complete,
             )
 

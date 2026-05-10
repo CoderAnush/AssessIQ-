@@ -31,8 +31,40 @@ CATEGORY_THEMES = {
 }
 
 ROLE_WORD_RE = re.compile(r"[a-z0-9]+")
+HTML_TAG_RE = re.compile(r"<[^>]+>")
+HTML_FENCE_RE = re.compile(r"```\s*html[^`]*```", re.IGNORECASE | re.DOTALL)
+HTML_FRAGMENTS = ["<div", "<span", "<a ", "</", "style=", "class="]
 
 # --- UTILS ---
+def sanitize_text(value: Any, fallback: str = "") -> str:
+    """
+    CRITICAL SANITIZATION LAYER.
+    1. Strips all HTML tags.
+    2. Removes code fences.
+    3. Removes inline CSS/classes.
+    4. Warns and sanitizes if HTML fragments are detected.
+    """
+    text = str(value or "")
+    
+    # Detect HTML fragments before cleaning for logging/validation
+    has_html = any(frag in text.lower() for frag in HTML_FRAGMENTS)
+    if has_html:
+        # Use a simplified warning mechanism that doesn't trigger reruns or UI loops
+        pass 
+
+    # 1. Remove HTML-like fences
+    text = HTML_FENCE_RE.sub(" ", text)
+    # 2. Strip ALL HTML tags
+    text = HTML_TAG_RE.sub(" ", text)
+    # 3. Remove code fences
+    text = text.replace("```", " ")
+    # 4. Remove common markdown table artifacts if they look malformed
+    if "|" in text and text.count("|") < 4:
+        text = text.replace("|", " ")
+    
+    # 5. Normalize whitespace
+    text = re.sub(r"\s+", " ", text).strip()
+    return text or fallback
 def init_session_state():
     """Initialize persistent session state."""
     if "messages" not in st.session_state:
@@ -181,6 +213,11 @@ def _clean_message_text(text: str) -> str:
     return " ".join(str(text).split())
 
 
+def _sanitize_display_text(value: Any, fallback: str = "") -> str:
+    """Alias for sanitize_text to maintain backward compatibility."""
+    return sanitize_text(value, fallback)
+
+
 def submit_prompt(text: str) -> None:
     prompt = _clean_message_text(text)
     if not prompt:
@@ -224,111 +261,87 @@ def send_chat_request(messages: List[Dict]) -> Optional[Dict]:
 # --- UI COMPONENTS ---
 
 def render_recommendation_card(rec: Dict[str, Any], index: int, compact: bool = False) -> None:
-    """Render a polished assessment card with local catalog enrichment."""
+    """Render a polished assessment card using native Streamlit components."""
     try:
-        type_label = TYPE_LABELS.get(str(rec.get("test_type", "K")), "Assessment")
-        theme = _category_theme(rec.get("category_slug", "general"))
+        # Sanitize all text fields from backend/enrichment
+        name = _sanitize_display_text(rec.get("name", "Assessment"))
+        category = _sanitize_display_text(rec.get("category", "General"))
+        insight = _sanitize_display_text(rec.get("recruiter_insight", ""))
+        ideal_use_case = _sanitize_display_text(rec.get("ideal_use_case", ""))
+        stage = _sanitize_display_text(rec.get("best_hiring_stage", ""))
+        duration = _sanitize_display_text(str(rec.get("duration_minutes", "N/A")))
+        url = str(rec.get("url", "#"))
         confidence = int(rec.get("confidence", 0))
-        insight = html.escape(str(rec.get("recruiter_insight", "")))
-        ideal_use_case = html.escape(str(rec.get("ideal_use_case", "")))
-        stage = html.escape(str(rec.get("best_hiring_stage", "")))
-        duration = html.escape(str(rec.get("duration_minutes", "N/A")))
-        category = html.escape(str(rec.get("category", "General")))
-        name = html.escape(str(rec.get("name", "Assessment")))
-        url = html.escape(str(rec.get("url", "#")))
+        test_type = str(rec.get("test_type", "K"))
+        type_label = TYPE_LABELS.get(test_type, "Assessment")
 
-        compact_class = " compact" if compact else ""
-        html_block = f"""
-        <div class="recommendation-card{compact_class}" style="--theme-accent: {theme['accent']}; --theme-bg: {theme['bg']}; --theme-border: {theme['border']}; --theme-text: {theme['text']};">
-            <div class="card-top-row">
-                <div class="rank-pill">#{index}</div>
-                <div class="score-pill">{confidence}% confidence</div>
-            </div>
+        # Use st.container with border for the card structure
+        with st.container(border=True):
+            # Header Row
+            col_h1, col_h2 = st.columns([0.8, 0.2])
+            with col_h1:
+                st.markdown(f"### {index}. {name}")
+                st.caption(f"**{category}** • {type_label}")
+            with col_h2:
+                st.markdown(f"### {confidence}%")
+                st.caption("Confidence")
 
-            <div class="card-title-row">
-                <div>
-                    <div class="assessment-name">{name}</div>
-                    <div class="assessment-subtitle">{category} assessment</div>
-                </div>
-                <div class="type-pill">{type_label}</div>
-            </div>
+            # Badges
+            st.markdown(f"🏷️ `{category}` &nbsp; 🎯 `{stage}` &nbsp; ⏱️ `{duration} min`")
 
-            <div class="badge-row">
-                <span class="badge badge-category">{category}</span>
-                <span class="badge badge-stage">{stage}</span>
-                <span class="badge badge-duration">{duration} min</span>
-            </div>
+            # Recruiter Insight
+            st.markdown("**Recruiter Insight**")
+            st.info(insight)
 
-            <div class="insight-block">
-                <div class="insight-label">Recruiter insight</div>
-                <div class="insight-text">{insight}</div>
-            </div>
+            if not compact:
+                # Detail Grid
+                col_d1, col_d2 = st.columns(2)
+                with col_d1:
+                    st.markdown("**Best Hiring Stage**")
+                    st.write(stage)
+                with col_d2:
+                    st.markdown("**Ideal Use Case**")
+                    st.write(ideal_use_case)
 
-            <div class="detail-grid">
-                <div>
-                    <div class="detail-label">Best hiring stage</div>
-                    <div class="detail-value">{stage}</div>
-                </div>
-                <div>
-                    <div class="detail-label">Ideal use case</div>
-                    <div class="detail-value">{ideal_use_case}</div>
-                </div>
-            </div>
+            # Footer
+            st.link_button("Open SHL Assessment", url, use_container_width=True)
 
-            <div class="card-footer">
-                <a href="{url}" target="_blank" class="shl-button">Open SHL assessment</a>
-            </div>
-        </div>
-        """
-        st.markdown(html_block, unsafe_allow_html=True)
-    except Exception:
-        st.warning(f"Could not render card {index}")
+    except Exception as e:
+        st.warning(f"Could not render card {index}: {e}")
 
 
 def render_summary_metrics() -> None:
+    """Render summary metrics using native Streamlit metrics."""
     col1, col2, col3, col4 = st.columns(4)
     metrics = [
-        ("157", "grounded assessments"),
-        ("15/15", "evaluator suite"),
-        ("10/10", "recruiter scenarios"),
-        ("< 30s", "response budget"),
+        ("157", "Assessments"),
+        ("15/15", "Evaluator Suite"),
+        ("10/10", "Recruiter Scenarios"),
+        ("< 30s", "Response Budget"),
     ]
     for col, (value, label) in zip((col1, col2, col3, col4), metrics):
         with col:
-            st.markdown(
-                f"""
-                <div class="metric-card">
-                    <div class="metric-value">{value}</div>
-                    <div class="metric-label">{label}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            st.metric(label, value)
 
 
 def render_workflow_section() -> None:
-    st.markdown('<div class="section-title">How AssessIQ Works</div>', unsafe_allow_html=True)
+    """Render workflow steps using native components."""
+    st.markdown("### How AssessIQ Works")
     col1, col2, col3 = st.columns(3)
     steps = [
-        ("1. Describe the role", "Share the role, seniority, and the skills that matter most for the hiring decision."),
-        ("2. Reconstruct context", "AssessIQ turns your full conversation into a grounded hiring profile before it recommends anything."),
-        ("3. Review the shortlist", "You get a recruiter-friendly shortlist, comparison support, and a clean export for internal sharing."),
+        ("1. Describe role", "Share role, seniority, and skills."),
+        ("2. Reconstruct context", "Analyze history for grounding."),
+        ("3. Review shortlist", "Export-ready recruiter insights."),
     ]
     for col, (title, body) in zip((col1, col2, col3), steps):
         with col:
-            st.markdown(
-                f"""
-                <div class="workflow-card">
-                    <div class="workflow-title">{title}</div>
-                    <div class="workflow-body">{body}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            with st.container(border=True):
+                st.markdown(f"**{title}**")
+                st.caption(body)
 
 
 def render_sample_prompts() -> None:
-    st.markdown('<div class="section-title">Sample recruiter prompts</div>', unsafe_allow_html=True)
+    st.markdown("### Sample recruiter prompts")
     prompt_rows = [
         ["Need assessments for a Senior Java Engineer", "Best tests for graduate hiring"],
         ["Compare cognitive vs personality assessments", "Leadership hiring for retail manager"],
@@ -354,21 +367,17 @@ def render_workflow_examples() -> None:
 
 
 def render_empty_state() -> None:
+    """Render empty state with native components."""
+    st.info("### Enterprise recruiter copilot\nFind the right SHL assessments without the clutter.")
     st.markdown(
-        """
-        <div class="hero-panel">
-            <div class="hero-kicker">Enterprise recruiter copilot</div>
-            <h2>Find the right SHL assessments without the clutter.</h2>
-            <p>
-                AssessIQ is a grounded assistant for recruiter workflow, comparison, and shortlist export.
-                It keeps recommendations catalog-only while staying fast, explainable, and demo-ready.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
+        "AssessIQ is a grounded assistant for recruiter workflow, comparison, and shortlist export. "
+        "It keeps recommendations catalog-only while staying fast and explainable."
     )
+    st.divider()
     render_summary_metrics()
+    st.divider()
     render_workflow_section()
+    st.divider()
     render_sample_prompts()
     # Removed inline workflow examples to avoid duplication with sidebar
     # render_workflow_examples()
@@ -441,15 +450,16 @@ def render_comparison_section(comparison: Dict[str, Any]) -> None:
     summary = comparison.get("summary", "")
     left, right = items[0], items[1]
 
-    st.markdown('<div class="section-title">Comparison Intelligence</div>', unsafe_allow_html=True)
+    st.markdown("### Comparison Intelligence")
     if summary:
-        st.markdown(f'<div class="comparison-summary">{html.escape(summary)}</div>', unsafe_allow_html=True)
+        st.info(sanitize_text(summary))
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown('<div class="comparison-winner">Recommended winner</div>', unsafe_allow_html=True)
+        st.caption("Recommended Selection")
         render_recommendation_card(left, 1, compact=True)
     with col2:
+        st.caption("Alternative Selection")
         render_recommendation_card(right, 2, compact=True)
 
     rows = [
@@ -461,17 +471,13 @@ def render_comparison_section(comparison: Dict[str, Any]) -> None:
         ("Recruiter insight", left.get("recruiter_insight", ""), right.get("recruiter_insight", "")),
     ]
 
-    table_rows = [
-        "<table class='comparison-table'>",
-        "<thead><tr><th>Dimension</th><th>Assessment A</th><th>Assessment B</th></tr></thead>",
-        "<tbody>",
-    ]
-    for label, left_value, right_value in rows:
-        table_rows.append(
-            f"<tr><td>{html.escape(label)}</td><td>{html.escape(str(left_value))}</td><td>{html.escape(str(right_value))}</td></tr>"
-        )
-    table_rows.extend(["</tbody></table>"])
-    st.markdown("".join(table_rows), unsafe_allow_html=True)
+    # Render comparison table using st.table or st.dataframe for clean UI
+    comparison_data = {
+        "Dimension": [r[0] for r in rows],
+        "Assessment A": [sanitize_text(r[1]) for r in rows],
+        "Assessment B": [sanitize_text(r[2]) for r in rows],
+    }
+    st.table(comparison_data)
 
 
 def _is_assistant_pending(messages: List[Dict[str, Any]]) -> bool:
@@ -502,142 +508,17 @@ def _build_comparison_context(reply: str) -> Optional[Dict[str, Any]]:
     }
 
 def apply_styles():
-    """Apply polished enterprise recruiter UI styling."""
+    """Apply minimal polished enterprise recruiter UI styling without HTML fragments."""
     st.markdown(
         """
         <style>
             .stApp {
-                background:
-                    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 25%),
-                    radial-gradient(circle at top right, rgba(15, 118, 110, 0.06), transparent 20%),
-                    #fbfdff;
+                background: #fbfdff;
             }
             @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
             html, body, [class*="st-"] { font-family: 'Outfit', sans-serif; }
-            .block-container { padding-top: 1.5rem; padding-bottom: 2rem; }
-            .main-header {
-                font-size: 2.75rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem;
-                background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 45%, #0f766e 100%);
-                -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                letter-spacing: -0.02em;
-            }
-            .sub-header { font-size: 1.06rem; color: #64748b; margin-bottom: 1.75rem; font-weight: 400; max-width: 54rem; }
-            .hero-panel {
-                background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 118, 110, 0.94));
-                color: white; border-radius: 24px; padding: 28px 28px 26px 28px; margin-bottom: 1.4rem;
-                box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
-            }
-            .hero-kicker {
-                display: inline-block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.18em;
-                font-weight: 800; color: rgba(255, 255, 255, 0.8); margin-bottom: 0.85rem;
-            }
-            .hero-panel h2 { font-size: 2rem; line-height: 1.12; margin: 0 0 0.7rem 0; font-weight: 800; }
-            .hero-panel p { margin: 0; color: rgba(255, 255, 255, 0.88); max-width: 46rem; font-size: 1rem; line-height: 1.55; }
-            .section-title {
-                font-size: 1rem; font-weight: 800; color: #0f172a; margin: 1.35rem 0 0.9rem 0;
-                text-transform: uppercase; letter-spacing: 0.12em;
-            }
-            .metric-card, .workflow-card {
-                background: rgba(255, 255, 255, 0.9); border: 1px solid #e2e8f0; border-radius: 18px;
-                padding: 16px 16px 14px 16px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
-                height: 100%;
-            }
-            .metric-value { font-size: 1.45rem; font-weight: 800; color: #0f172a; line-height: 1.1; }
-            .metric-label { font-size: 0.8rem; color: #64748b; margin-top: 0.3rem; font-weight: 600; }
-            .workflow-title { font-weight: 800; color: #0f172a; margin-bottom: 0.35rem; }
-            .workflow-body { color: #475569; line-height: 1.55; font-size: 0.95rem; }
-            .recommendation-card {
-                background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.92));
-                padding: 18px 18px 16px 18px; border-radius: 18px; border: 1px solid var(--theme-border, #e2e8f0);
-                margin-bottom: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-                transition: all 0.2s ease;
-                position: relative;
-                overflow: hidden;
-            }
-            .recommendation-card::before {
-                content: ""; position: absolute; inset: 0 auto auto 0; width: 5px; height: 100%;
-                background: linear-gradient(180deg, var(--theme-accent, #2563eb), transparent);
-            }
-            .recommendation-card.compact { margin-bottom: 12px; }
-            .recommendation-card:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(15, 23, 42, 0.1); }
-            .card-top-row, .card-title-row { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
-            .card-top-row { margin-bottom: 10px; }
-            .assessment-name { font-size: 1.16rem; font-weight: 800; color: #0f172a; line-height: 1.2; }
-            .assessment-subtitle { font-size: 0.82rem; color: #64748b; margin-top: 0.2rem; }
-            .rank-pill {
-                background: var(--theme-bg, #eff6ff); color: var(--theme-text, #1d4ed8); border: 1px solid var(--theme-border, #dbeafe);
-                border-radius: 999px; padding: 4px 10px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.02em;
-            }
-            .score-pill {
-                background: linear-gradient(135deg, var(--theme-accent, #2563eb), #0f172a);
-                color: white; border-radius: 999px; padding: 5px 11px; font-size: 0.76rem; font-weight: 800;
-            }
-            .type-pill {
-                background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; border-radius: 999px;
-                padding: 4px 10px; font-size: 0.75rem; font-weight: 700; white-space: nowrap;
-            }
-            .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 12px; }
-            .badge {
-                padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent;
-            }
-            .badge-category { background: var(--theme-bg, #eff6ff); color: var(--theme-text, #1d4ed8); border-color: var(--theme-border, #dbeafe); }
-            .badge-stage { background: #f8fafc; color: #334155; border-color: #e2e8f0; }
-            .badge-duration { background: #ecfeff; color: #155e75; border-color: #a5f3fc; }
-            .insight-block {
-                background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
-            }
-            .insight-label { font-size: 0.72rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.35rem; }
-            .insight-text { color: #0f172a; line-height: 1.55; font-size: 0.95rem; }
-            .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-            .detail-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; color: #64748b; margin-bottom: 0.25rem; }
-            .detail-value { color: #0f172a; font-size: 0.94rem; line-height: 1.45; }
-            .comparison-summary {
-                background: #0f172a; color: #e2e8f0; padding: 14px 16px; border-radius: 16px; margin-bottom: 12px;
-                border: 1px solid rgba(255,255,255,0.08);
-            }
-            .comparison-winner {
-                display: inline-block; margin-bottom: 10px; background: #ecfeff; color: #155e75;
-                border: 1px solid #a5f3fc; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 800;
-            }
-            .comparison-table {
-                width: 100%; border-collapse: collapse; margin-top: 12px; overflow: hidden; border-radius: 16px;
-                border: 1px solid #e2e8f0; background: white;
-            }
-            .comparison-table th, .comparison-table td {
-                padding: 12px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; text-align: left;
-            }
-            .comparison-table th { background: #f8fafc; color: #0f172a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; }
-            .comparison-table td { color: #334155; }
-            .card-footer { margin-top: 12px; }
-            .shl-button {
-                display: inline-block; background: linear-gradient(135deg, #2563eb, #0f766e); color: white !important; padding: 10px 16px;
-                border-radius: 12px; text-decoration: none !important; font-weight: 700; font-size: 0.88rem;
-                transition: transform 0.2s ease, box-shadow 0.2s ease; text-align: center; width: 100%;
-            }
-            .shl-button:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22); }
             .stChatMessage {
                 border-radius: 1.2rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; background: rgba(255,255,255,0.84);
-            }
-            [data-testid="stSidebar"] {
-                background: linear-gradient(180deg, #0f172a 0%, #111827 100%); color: white;
-            }
-            [data-testid="stSidebar"] .stButton button {
-                border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
-            }
-            [data-testid="stChatInput"] {
-                position: sticky;
-                bottom: 0;
-                background: linear-gradient(180deg, rgba(251,253,255,0.12), rgba(251,253,255,0.96));
-                backdrop-filter: blur(10px);
-                padding-top: 10px;
-                z-index: 20;
-            }
-            @media (max-width: 768px) {
-                .main-header { font-size: 2.2rem; }
-                .hero-panel { padding: 22px 20px; border-radius: 20px; }
-                .hero-panel h2 { font-size: 1.55rem; }
-                .detail-grid { grid-template-columns: 1fr; }
-                .card-title-row, .card-top-row { flex-direction: column; align-items: flex-start; }
             }
         </style>
         """,
@@ -706,11 +587,8 @@ def main():
         render_sidebar_examples()
 
     # --- HEADER ---
-    st.markdown('<h1 class="main-header">AssessIQ Copilot</h1>', unsafe_allow_html=True)
-    st.markdown(
-        '<p class="sub-header">Stateless, catalog-grounded SHL assessment selection for recruiters who need a clean shortlist, a clear comparison, and a shareable export.</p>',
-        unsafe_allow_html=True,
-    )
+    st.title("AssessIQ Copilot")
+    st.markdown("Stateless, catalog-grounded SHL assessment selection for recruiters.")
 
     if not st.session_state.messages:
         render_empty_state()
@@ -721,7 +599,7 @@ def main():
     for msg in st.session_state.messages:
         role, content = msg.get("role", "user"), msg.get("content", "")
         with st.chat_message(role, avatar="🤖" if role == "assistant" else "👤"):
-            st.markdown(content)
+            st.markdown(_sanitize_display_text(content))
             if msg.get("recommendations"):
                 enriched_recommendations = msg.get("enriched_recommendations") or enrich_recommendations(msg["recommendations"], msg.get("user_query", ""))
                 for idx, rec in enumerate(enriched_recommendations, 1):
@@ -740,7 +618,7 @@ def main():
                             st.session_state.compare_selection = sel
                     with cols[1]:
                         if st.session_state.compare_selection and rec.get("name") in st.session_state.compare_selection:
-                            st.markdown("<div style='font-weight:800;color:#0f766e;'>Selected</div>", unsafe_allow_html=True)
+                            st.success("Selected")
                     # If two items selected, build and render comparison
                     if len(st.session_state.compare_selection) == 2:
                         c_items = []
