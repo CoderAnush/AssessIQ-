@@ -4,6 +4,7 @@ Loads environment variables and provides config objects.
 """
 
 from pydantic_settings import BaseSettings
+from pydantic import validator
 from pathlib import Path
 from typing import Optional
 
@@ -32,6 +33,18 @@ class Settings(BaseSettings):
     api_port: int = 8000
     api_host: str = "0.0.0.0"
     environment: str = "development"
+
+    @validator("api_port", pre=True)
+    def parse_api_port(cls, v):
+        """Parse port from environment, preferring PORT variable if set."""
+        import os
+        env_port = os.environ.get("PORT")
+        if env_port:
+            try:
+                return int(env_port)
+            except ValueError:
+                pass
+        return v or 8000
 
     # Retrieval Parameters
     semantic_search_weight: float = 0.7

@@ -99,12 +99,16 @@ app = create_app()
 if __name__ == "__main__":
     import uvicorn
 
-    logger.info(f"Starting server on {settings.api_host}:{settings.api_port}")
+    import os
+    port = int(os.environ.get("PORT", settings.api_port))
+    host = os.environ.get("HOST", settings.api_host)
+    
+    logger.info(f"Starting server on {host}:{port}")
 
     uvicorn.run(
         "app.main:app",
-        host=settings.api_host,
-        port=settings.api_port,
+        host=host,
+        port=port,
         reload=settings.debug,
         log_level=settings.log_level.lower(),
     )
