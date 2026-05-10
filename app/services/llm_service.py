@@ -83,7 +83,7 @@ class LLMService:
                             time.sleep(self.retry_delay * (2 ** attempt))
                             continue
 
-                return self._get_safe_default()
+                return self._get_safe_default(has_recommendations=False)
 
             except google_exceptions.ResourceExhausted as e:
                 # Rate limit hit
@@ -94,7 +94,7 @@ class LLMService:
                     continue
                 else:
                     logger.error(f"Rate limited after {self.max_retries} attempts")
-                    return self._get_safe_default()
+                    return self._get_safe_default(has_recommendations=False)
 
             except (TimeoutError, google_exceptions.DeadlineExceeded) as e:
                 logger.error(f"Timeout on attempt {attempt + 1}: {e}")
@@ -102,7 +102,7 @@ class LLMService:
                     time.sleep(self.retry_delay)
                     continue
                 else:
-                    return self._get_safe_default()
+                    return self._get_safe_default(has_recommendations=False)
 
             except google_exceptions.GoogleAPIError as e:
                 logger.error(f"Gemini API error on attempt {attempt + 1}: {e}")
@@ -110,7 +110,7 @@ class LLMService:
                     time.sleep(self.retry_delay)
                     continue
                 else:
-                    return self._get_safe_default()
+                    return self._get_safe_default(has_recommendations=False)
 
             except Exception as e:
                 logger.error(f"Unexpected error on attempt {attempt + 1}: {type(e).__name__}: {e}")
@@ -118,9 +118,9 @@ class LLMService:
                     time.sleep(self.retry_delay)
                     continue
                 else:
-                    return self._get_safe_default()
+                    return self._get_safe_default(has_recommendations=False)
 
-        return self._get_safe_default()
+        return self._get_safe_default(has_recommendations=False)
 
     def _parse_json_response(self, text: str) -> Optional[Dict]:
         """
@@ -166,13 +166,28 @@ class LLMService:
 
             return None
 
-    def _get_safe_default(self) -> Dict:
-        """Return safe default response when parsing fails."""
-        return {
-            "reply": "I apologize, I'm having trouble processing your request. Could you rephrase that?",
-            "recommendations": [],
-            "end_of_conversation": False,
-        }
+    def _get_safe_default(self, has_recommendations: bool = False) -> Dict:
+        """
+        Return safe default response when parsing fails.
+        
+        CRITICAL: If we have recommendations from the ranking pipeline,
+        don't show the fallback apology message - use a neutral success message instead.
+        """
+        if has_recommendations:
+            # Ranking succeeded but LLM formatting failed - return neutral success
+            return {
+                "reply": "Here are the most relevant assessments based on your requirements:",
+                "recommendations": [],  # Will be filled by caller
+                "end_of_conversation": False,
+                "_llm_failed": True,  # Flag for caller to know LLM failed
+            }
+        else:
+            # True failure - no recommendations available
+            return {
+                "reply": "I couldn't generate recommendations at this moment. Please try again.",
+                "recommendations": [],
+                "end_of_conversation": False,
+            }
 
     def generate_clarification(
         self, missing_info: List[str], context_str: str

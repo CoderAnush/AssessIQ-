@@ -4,7 +4,7 @@ Wires all components together in stateless conversation flow.
 """
 
 from fastapi import APIRouter, HTTPException
-from typing import List
+from typing import List, Dict
 import time
 
 from app.models.response import ChatRequest, ChatResponse, Message
@@ -28,6 +28,60 @@ from app.logging.logger import get_logger
 logger = get_logger("chat_endpoint")
 
 router = APIRouter()
+
+# Conversation memory for recommendation persistence
+_conversation_memory: Dict[str, List[Dict]] = {}
+
+
+def _get_conversation_id(messages: List[dict]) -> str:
+    """Generate a conversation ID from message history."""
+    # Simple hash of last user message content
+    if messages:
+        last_user_msg = None
+        for msg in reversed(messages):
+            if msg.get("role") == "user":
+                last_user_msg = msg.get("content", "")
+                break
+        if last_user_msg:
+            import hashlib
+            return hashlib.md5(last_user_msg[:50].encode()).hexdigest()[:12]
+    return "default"
+
+
+def _store_recommendations_in_memory(messages: List[dict], recommendations: List[Dict]) -> None:
+    """Store recommendations in conversation memory for comparison support."""
+    conv_id = _get_conversation_id(messages)
+    _conversation_memory[conv_id] = recommendations
+    logger.info(f"Stored {len(recommendations)} recommendations in memory for conversation {conv_id}")
+
+
+def _get_stored_recommendations(messages: List[dict]) -> List[Dict]:
+    """Retrieve stored recommendations from conversation memory."""
+    conv_id = _get_conversation_id(messages)
+    recs = _conversation_memory.get(conv_id, [])
+    logger.info(f"Retrieved {len(recs)} recommendations from memory for conversation {conv_id}")
+    return recs
+
+
+def _sanitize_reply(reply: str) -> str:
+    """Remove fallback/error language from LLM reply."""
+    fallback_phrases = [
+        "i apologize",
+        "i'm having trouble",
+        "i'm sorry",
+        "could you rephrase",
+        "i don't understand",
+        "i cannot process",
+    ]
+    
+    reply_lower = reply.lower()
+    for phrase in fallback_phrases:
+        if phrase in reply_lower:
+            # Replace with neutral professional language
+            return "Here are the most relevant assessments based on your requirements:"
+    
+    return reply
+
 
 # Global services (initialized once)
 catalog_loader = None
@@ -191,13 +245,34 @@ def _handle_clarification(decision) -> ChatResponse:
 
 
 def _handle_comparison(decision, messages: List) -> ChatResponse:
-    """Handle comparison action."""
+    """Handle comparison action with memory-backed relative reference resolution."""
     logger.info("Executing COMPARE action")
 
     items = decision.comparison_items or []
+    
+    # Check for relative references that need memory resolution
+    last_user_msg = messages[-1]["content"].lower() if messages else ""
+    relative_refs = ["top 2", "top two", "first 2", "first two", "compare them", 
+                     "both of them", "top recommendations", "which is better", 
+                     "difference between them", "compare these"]
+    
+    needs_memory_resolution = any(ref in last_user_msg for ref in relative_refs)
+    
+    if needs_memory_resolution or len(items) < 2:
+        # Try to get from conversation memory
+        stored_recs = _get_stored_recommendations(messages)
+        if len(stored_recs) >= 2:
+            logger.info(f"Using stored recommendations for comparison: {stored_recs[0]['name']}, {stored_recs[1]['name']}")
+            items = [stored_recs[0]["name"], stored_recs[1]["name"]]
+        elif len(items) < 2:
+            logger.warning("Not enough items to compare and no memory available")
+            return ChatResponse(
+                reply="I need at least two assessments to compare. Please ask for recommendations first, or specify which assessments to compare (e.g., 'Compare OPQ32r and GSA').",
+                recommendations=[],
+                end_of_conversation=False,
+            )
 
     if len(items) < 2:
-        logger.warning("Not enough items to compare")
         return ChatResponse(
             reply="I need at least two assessments to compare. Which two would you like me to compare?",
             recommendations=[],
@@ -241,13 +316,13 @@ def _handle_comparison(decision, messages: List) -> ChatResponse:
 
 
 def _handle_refinement(context, messages: List) -> ChatResponse:
-    """Handle refinement action."""
+    """Handle refinement action with proper fallback handling."""
     logger.info("Executing REFINE action")
 
     last_user_msg = messages[-1]["content"]
 
-    # Retrieve and rank again
-    query = f"{context.role or ''} {' '.join(context.soft_skills)} {' '.join(context.technical_skills)}"
+    # Retrieve and rank again with updated context
+    query = f"{context.role or ''} {' '.join(context.soft_skills)} {' '.join(context.tech_stack)}"
     retrieved = retriever.retrieve(query, context, top_k=settings.top_k_retrieval)
 
     # Create assessment dict for ranker
@@ -262,13 +337,11 @@ def _handle_refinement(context, messages: List) -> ChatResponse:
         logger.error(f"Hallucination detected: {error}")
         raise HTTPException(status_code=500, detail="Response validation failed")
 
-    # Generate LLM response
-    # Pass the full ranked metadata for grounded reasoning
-    prompt = get_recommendation_prompt(
-        str(context),
-        recommendations,
-    )
+    # Store updated recommendations in memory
+    _store_recommendations_in_memory(messages, recommendations)
 
+    # Generate LLM response
+    prompt = get_recommendation_prompt(str(context), recommendations)
     llm_response = llm_service.generate_response(
         system_prompt=get_system_prompt(),
         user_message=prompt,
@@ -276,25 +349,29 @@ def _handle_refinement(context, messages: List) -> ChatResponse:
     )
 
     # Use LLM reply but keep our ranked recommendations
-    # This preserves the dynamic scores and categories
-    llm_response["recommendations"] = recommendations
+    reply_text = _sanitize_reply(llm_response.get("reply", "Here are the refined recommendations based on your updates."))
+    
+    response_data = {
+        "reply": reply_text,
+        "recommendations": recommendations,
+        "end_of_conversation": False
+    }
 
     # Validate schema
-    is_valid, error = SchemaValidator.validate_chat_response(llm_response)
+    is_valid, error = SchemaValidator.validate_chat_response(response_data)
     if not is_valid:
         logger.error(f"Response schema invalid: {error}")
-        # Fallback to simple valid response if LLM failed schema
         return ChatResponse(
-            reply=llm_response.get("reply", "Here are the refined recommendations based on your updates."),
+            reply="Here are the refined recommendations based on your updates:",
             recommendations=recommendations,
             end_of_conversation=False
         )
 
-    return ChatResponse(**llm_response)
+    return ChatResponse(**response_data)
 
 
 def _handle_recommendation(context, messages: List) -> ChatResponse:
-    """Handle recommendation action."""
+    """Handle recommendation action with proper fallback handling."""
     logger.info("Executing RECOMMEND action")
 
     # Build query from context
@@ -323,43 +400,53 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
     assessment_dict = {a.id: a for a in catalog_loader.get_all()}
     ranked = ranker.rank(retrieved, context, assessment_dict)
 
-    # Get top recommendations
+    # Get top recommendations (with real dynamic scores and contextual explanations)
     recommendations = ranker.get_top_recommendations(ranked, settings.max_recommendations)
 
-    # Validate
+    # Validate - if this fails, it's a real error
     is_clean, error = hallucination_checker.check_recommendations(recommendations)
     if not is_clean:
         logger.error(f"Hallucination detected: {error}")
         raise HTTPException(status_code=500, detail="Response validation failed")
 
-    # Generate response via LLM
-    # Pass the full recommendations list (which now includes score, match_label, category, etc.)
-    prompt = get_recommendation_prompt(
-        str(context),
-        recommendations,
-    )
+    # Store recommendations in memory for comparison support
+    _store_recommendations_in_memory(messages, recommendations)
 
+    # Generate LLM response for conversational reply
+    prompt = get_recommendation_prompt(str(context), recommendations)
     llm_response = llm_service.generate_response(
         system_prompt=get_system_prompt(),
         user_message=prompt,
         conversation_context=str(context),
     )
 
-    # Use LLM reply but keep our ranked recommendations (preserving scores/labels)
-    llm_response["recommendations"] = recommendations
+    # CRITICAL FIX: Always use OUR recommendations with our scores/explanations
+    # The LLM response is only for the conversational "reply" text
+    
+    # Check if LLM failed but we have valid recommendations
+    if llm_response.get("_llm_failed") or not llm_response.get("reply"):
+        # Use neutral success message - NO fallback apology
+        reply_text = f"Based on your requirements for a {context.role or 'this role'}, here are my recommendations:"
+    else:
+        # Use LLM reply but ensure it doesn't contain fallback language
+        reply_text = _sanitize_reply(llm_response.get("reply", ""))
+
+    # Build final response with OUR recommendations (preserving dynamic scores/explanations)
+    response_data = {
+        "reply": reply_text,
+        "recommendations": recommendations,
+        "end_of_conversation": decision_engine.is_conversation_complete(messages)
+    }
 
     # Validate schema
-    is_valid, error = SchemaValidator.validate_chat_response(llm_response)
+    is_valid, error = SchemaValidator.validate_chat_response(response_data)
     if not is_valid:
         logger.error(f"Response schema invalid: {error}")
-        # Fallback to ensure we don't crash the UI
+        # Still return recommendations - this is a schema issue, not a data issue
         return ChatResponse(
-            reply=llm_response.get("reply", "Based on your requirements, I've selected the most relevant SHL assessments."),
+            reply="Here are the most relevant assessments for your requirements:",
             recommendations=recommendations,
             end_of_conversation=decision_engine.is_conversation_complete(messages)
         )
 
-    # Check if conversation should end
-    llm_response["end_of_conversation"] = decision_engine.is_conversation_complete(messages)
-
-    return ChatResponse(**llm_response)
+    return ChatResponse(**response_data)

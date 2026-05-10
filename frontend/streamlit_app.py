@@ -103,6 +103,18 @@ st.markdown(textwrap.dedent("""
             border: 1px solid #dbeafe;
         }
 
+        .badge-domain {
+            background-color: #f0fdf4;
+            color: #16a34a;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 1px solid #bbf7d0;
+            margin-left: 6px;
+        }
+
         .confidence-exceptional { color: #059669; font-weight: 800; }
         .confidence-high { color: #10b981; font-weight: 800; }
         .confidence-medium { color: #f59e0b; font-weight: 800; }
@@ -212,21 +224,42 @@ def clean_html(html: str) -> str:
 
 
 def render_recommendation_card(rec: Dict, index: int) -> None:
-    """Render a premium enterprise-grade recommendation card."""
+    """Render a premium enterprise-grade recommendation card with dynamic scoring."""
     # Use backend-provided score and label
-    score = rec.get("score", 0.85)
+    score = rec.get("score", 0.75)
     conf_pct = int(score * 100)
-    match_label = rec.get("match_label", "Strong Match")
+    match_label = rec.get("match_label", "Good Match")
     
-    # Visual style mapping
-    if conf_pct >= 90:
+    # Dynamic score-based styling with natural spread visualization
+    if conf_pct >= 94:
         conf_style = "confidence-exceptional"
-    elif conf_pct >= 80:
+        score_color = "#059669"  # Green
+        score_bg = "#d1fae5"
+    elif conf_pct >= 88:
         conf_style = "confidence-high"
-    elif conf_pct >= 70:
+        score_color = "#10b981"  # Light green
+        score_bg = "#d1fae5"
+    elif conf_pct >= 80:
+        conf_style = "confidence-medium-high"
+        score_color = "#3b82f6"  # Blue
+        score_bg = "#dbeafe"
+    elif conf_pct >= 74:
         conf_style = "confidence-medium"
+        score_color = "#f59e0b"  # Amber
+        score_bg = "#fef3c7"
     else:
         conf_style = "confidence-low"
+        score_color = "#ef4444"  # Red
+        score_bg = "#fee2e2"
+
+    # Get explanation - now with contextual metadata-based text
+    explanation = rec.get('explanation', '')
+    if not explanation or explanation == "Strategic recommendation based on multi-factor role alignment.":
+        explanation = "Recommended based on alignment with your hiring requirements."
+    
+    # Domain badge
+    domain = rec.get('domain', '')
+    domain_badge = f'<span class="badge-domain">{domain}</span>' if domain else ''
 
     html = f"""
     <div class="recommendation-card">
@@ -235,6 +268,7 @@ def render_recommendation_card(rec: Dict, index: int) -> None:
                 <div style="margin-bottom: 8px;">
                     <span class="badge-type">{rec.get('test_type', 'A')}</span>
                     <span class="badge-category">{rec.get('category', 'Assessment')}</span>
+                    {domain_badge}
                 </div>
                 <div class="assessment-title">#{index} {rec.get('name')}</div>
                 <p style="margin: 0; color: #94a3b8; font-size: 0.8rem; font-family: monospace;">
@@ -242,20 +276,93 @@ def render_recommendation_card(rec: Dict, index: int) -> None:
                 </p>
             </div>
             <div style="text-align: right;">
-                <div class="{conf_style}" style="font-size: 1.75rem; line-height: 1;">{conf_pct}%</div>
-                <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; margin-top: 4px;">{match_label}</div>
+                <div style="background: {score_bg}; padding: 8px 12px; border-radius: 8px; display: inline-block;">
+                    <div class="{conf_style}" style="font-size: 1.75rem; line-height: 1; color: {score_color};">{conf_pct}%</div>
+                    <div style="font-size: 0.65rem; color: {score_color}; text-transform: uppercase; font-weight: 700; margin-top: 4px; opacity: 0.8;">{match_label}</div>
+                </div>
             </div>
         </div>
         
-        <div class="explanation-text" style="background: #f8fafc; padding: 12px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 16px 0;">
-            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Recruiter Reasoning</div>
-            {rec.get('explanation', 'Strategic recommendation based on multi-factor role alignment.')}
+        <div class="explanation-text" style="background: #f8fafc; padding: 14px; border-radius: 10px; border-left: 4px solid {score_color}; margin: 16px 0; line-height: 1.6;">
+            <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.03em;">Recruiter Reasoning</div>
+            <div style="color: #334155; font-size: 0.95rem;">{explanation}</div>
         </div>
         
-        <div style="margin-top: 20px;">
+        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
             <a href="{rec.get('url')}" target="_blank" class="shl-link-button">
                 Configure on SHL.com ↗
             </a>
+            <span style="font-size: 0.7rem; color: #94a3b8;">{rec.get('duration_minutes', '30')} min</span>
+        </div>
+    </div>
+    """
+    st.markdown(clean_html(html), unsafe_allow_html=True)
+
+
+def render_comparison_card(comparison_data: Dict) -> None:
+    """Render a comparison card for two assessments."""
+    if not comparison_data:
+        return
+    
+    a1 = comparison_data.get("assessment_1", {})
+    a2 = comparison_data.get("assessment_2", {})
+    matrix = comparison_data.get("comparison_matrix", [])
+    summary = comparison_data.get("recruiter_summary", "")
+    
+    # Build comparison matrix rows
+    matrix_html = ""
+    for item in matrix[:6]:  # Show top 6 dimensions
+        dimension = item.get("dimension", "").replace("_", " ").title()
+        winner = item.get("winner", "tie")
+        reasoning = item.get("reasoning", "")
+        
+        # Determine winner styling
+        if winner == "assessment_1":
+            winner_indicator = f"<span style='color: #059669; font-weight: 600;'>{a1.get('name', 'A')}</span>"
+        elif winner == "assessment_2":
+            winner_indicator = f"<span style='color: #059669; font-weight: 600;'>{a2.get('name', 'B')}</span>"
+        else:
+            winner_indicator = "<span style='color: #64748b;'>Tie</span>"
+        
+        matrix_html += f"""
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 12px; font-weight: 600; color: #1e293b;">{dimension}</td>
+            <td style="padding: 12px; text-align: center;">{winner_indicator}</td>
+            <td style="padding: 12px; color: #64748b; font-size: 0.85rem;">{reasoning}</td>
+        </tr>
+        """
+    
+    html = f"""
+    <div class="recommendation-card" style="border: 2px solid #3b82f6;">
+        <div style="margin-bottom: 20px;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #3b82f6; text-transform: uppercase; margin-bottom: 8px;">🔍 Assessment Comparison</div>
+            <div style="font-size: 1.1rem; color: #334155; line-height: 1.5;">{summary}</div>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+            <thead>
+                <tr style="background: #f1f5f9;">
+                    <th style="padding: 12px; text-align: left; font-weight: 700; color: #475569;">Dimension</th>
+                    <th style="padding: 12px; text-align: center; font-weight: 700; color: #475569;">Advantage</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 700; color: #475569;">Reasoning</th>
+                </tr>
+            </thead>
+            <tbody>
+                {matrix_html}
+            </tbody>
+        </table>
+        
+        <div style="display: flex; gap: 16px; margin-top: 20px;">
+            <div style="flex: 1; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Option A</div>
+                <div style="font-weight: 700; color: #1e293b;">{a1.get('name', 'N/A')}</div>
+                <div style="font-size: 0.8rem; color: #94a3b8;">{a1.get('duration', 30)} min • {a1.get('test_type', 'A')}</div>
+            </div>
+            <div style="flex: 1; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Option B</div>
+                <div style="font-weight: 700; color: #1e293b;">{a2.get('name', 'N/A')}</div>
+                <div style="font-size: 0.8rem; color: #94a3b8;">{a2.get('duration', 30)} min • {a2.get('test_type', 'A')}</div>
+            </div>
         </div>
     </div>
     """
