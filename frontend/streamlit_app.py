@@ -350,7 +350,9 @@ def render_sample_prompts() -> None:
         cols = st.columns(2)
         for col, prompt in zip(cols, row):
             with col:
-                if st.button(prompt, key=f"sample_prompt_{row_index}_{prompt}", use_container_width=True):
+                # Use deterministic key based on row and content hash/index
+                p_key = f"sample_prompt_{row_index}_{prompt.replace(' ', '_').lower()[:20]}"
+                if st.button(prompt, key=p_key, use_container_width=True):
                     submit_prompt(prompt)
 
 
@@ -536,6 +538,7 @@ def render_sidebar_export() -> None:
         mime="text/markdown",
         use_container_width=True,
         disabled=not has_content,
+        key="export_report_button_sidebar"
     )
 
 
@@ -563,7 +566,7 @@ def main():
         st.title("🎯 AssessIQ")
         st.caption("Enterprise recruiter demo")
         st.markdown("---")
-        if st.button("🗑️ Clear Conversation", use_container_width=True):
+        if st.button("🗑️ Clear Conversation", use_container_width=True, key="clear_conversation_sidebar"):
             st.session_state.messages = []
             st.session_state.conversation_id = str(uuid.uuid4())
             st.session_state.last_processed_signature = ""
@@ -579,7 +582,7 @@ def main():
         if sel:
             for name in sel:
                 st.markdown(f"- {name}")
-        if st.button("Clear comparison selection", use_container_width=True):
+        if st.button("Clear comparison selection", use_container_width=True, key="clear_comparison_selection_sidebar"):
             st.session_state.compare_selection = []
             st.session_state.latest_comparison = None
             st.experimental_rerun()
@@ -596,17 +599,21 @@ def main():
         render_summary_metrics()
 
     # --- CHAT DISPLAY ---
-    for msg in st.session_state.messages:
+    for msg_idx, msg in enumerate(st.session_state.messages):
         role, content = msg.get("role", "user"), msg.get("content", "")
         with st.chat_message(role, avatar="🤖" if role == "assistant" else "👤"):
             st.markdown(_sanitize_display_text(content))
             if msg.get("recommendations"):
+                # Use msg_idx in enrichment to keep keys stable
                 enriched_recommendations = msg.get("enriched_recommendations") or enrich_recommendations(msg["recommendations"], msg.get("user_query", ""))
                 for idx, rec in enumerate(enriched_recommendations, 1):
                     render_recommendation_card(rec, idx)
                     # Interactive controls for comparison selection
                     cols = st.columns([1, 1, 8])
-                    compare_key = f"compare_{idx}_{rec.get('name','').replace(' ','_')}_{st.session_state.conversation_id}"
+                    # Deterministic unique key based on message index, item index, and item ID
+                    rec_id = rec.get("id", rec.get("name", str(idx)).replace(" ","_"))
+                    compare_key = f"compare_btn_{msg_idx}_{idx}_{rec_id}"
+                    
                     with cols[0]:
                         if st.button("Select for compare", key=compare_key):
                             sel = st.session_state.compare_selection
@@ -614,11 +621,15 @@ def main():
                             if name in sel:
                                 sel.remove(name)
                             else:
-                                sel.append(name)
+                                if len(sel) < 2:
+                                    sel.append(name)
+                                else:
+                                    st.warning("Only two items can be compared at once.")
                             st.session_state.compare_selection = sel
                     with cols[1]:
                         if st.session_state.compare_selection and rec.get("name") in st.session_state.compare_selection:
                             st.success("Selected")
+                    
                     # If two items selected, build and render comparison
                     if len(st.session_state.compare_selection) == 2:
                         c_items = []
@@ -643,7 +654,7 @@ def main():
                 render_comparison_section(msg["comparison"])
 
     # --- INPUT ---
-    if prompt := st.chat_input("Describe the role or ask a question..."):
+    if prompt := st.chat_input("Describe the role or ask a question...", key="chat_input_main"):
         st.session_state.latest_user_query = _clean_message_text(prompt)
         st.session_state.messages.append({"role": "user", "content": st.session_state.latest_user_query})
         st.rerun()
@@ -683,11 +694,11 @@ def main():
 
                         if enriched:
                             st.session_state.latest_recommendations = enriched
-                            for idx, rec in enumerate(enriched, 1):
-                                render_recommendation_card(rec, idx)
+                            for e_idx, rec in enumerate(enriched, 1):
+                                render_recommendation_card(rec, e_idx)
                         elif st.session_state.latest_recommendations:
-                            for idx, rec in enumerate(st.session_state.latest_recommendations, 1):
-                                render_recommendation_card(rec, idx)
+                            for e_idx, rec in enumerate(st.session_state.latest_recommendations, 1):
+                                render_recommendation_card(rec, e_idx)
 
                         st.session_state.latest_reply = reply
                         st.session_state.messages.append(
