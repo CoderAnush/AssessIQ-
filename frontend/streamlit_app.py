@@ -193,6 +193,11 @@ def get_api_response(messages: List[Dict]) -> Optional[Dict]:
         return None
 
 
+def clean_html(html: str) -> str:
+    """Strip all leading whitespace from each line to prevent Markdown code-block interpretation."""
+    return "\n".join([line.strip() for line in html.split("\n")])
+
+
 def render_recommendation_card(rec: Dict, index: int) -> None:
     """Render a premium enterprise-grade recommendation card."""
     # Score mapping
@@ -208,7 +213,7 @@ def render_recommendation_card(rec: Dict, index: int) -> None:
         conf_style = "confidence-low"
         match_label = "Potential Match"
 
-    st.markdown(textwrap.dedent(f"""
+    html = f"""
     <div class="recommendation-card">
         <div class="card-header">
             <div>
@@ -234,7 +239,8 @@ def render_recommendation_card(rec: Dict, index: int) -> None:
             </a>
         </div>
     </div>
-    """), unsafe_allow_html=True)
+    """
+    st.markdown(clean_html(html), unsafe_allow_html=True)
 
 
 def main():
@@ -244,18 +250,19 @@ def main():
     # --- SIDEBAR ---
     with st.sidebar:
         # Styled Logo Header
-        st.markdown(textwrap.dedent("""
+        logo_html = """
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
                 <div style="background: #2563eb; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem;">A</div>
                 <div style="font-weight: 800; font-size: 1.4rem; color: #1e293b; letter-spacing: -0.02em;">AssessIQ</div>
             </div>
-        """), unsafe_allow_html=True)
+        """
+        st.markdown(clean_html(logo_html), unsafe_allow_html=True)
         
         st.markdown("---")
         
         # System Status
         st.markdown("##### 🟢 System Status")
-        st.markdown(textwrap.dedent(f"""
+        status_html = f"""
             <div class="status-container">
                 <div style="font-size: 0.85rem; color: #475569; margin-bottom: 4px;">
                     <span class="status-dot"></span> Backend: <b>Live</b>
@@ -264,7 +271,8 @@ def main():
                     <span class="status-dot"></span> Retrieval: <b>Grounded</b>
                 </div>
             </div>
-        """), unsafe_allow_html=True)
+        """
+        st.markdown(clean_html(status_html), unsafe_allow_html=True)
 
         st.markdown("---")
         
@@ -288,7 +296,7 @@ def main():
     # Chat Area
     if not st.session_state.messages:
         # Empty State / Welcome
-        st.markdown(textwrap.dedent(f"""
+        welcome_html = f"""
         <div class="welcome-container">
             <h2 style="color: #1e293b; margin-bottom: 16px;">Welcome, Recruiter</h2>
             <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 32px;">
@@ -296,7 +304,8 @@ def main():
                 grounded in real-world psychometric data.
             </p>
         </div>
-        """), unsafe_allow_html=True)
+        """
+        st.markdown(clean_html(welcome_html), unsafe_allow_html=True)
         
         # Sample Prompt Cards
         cols = st.columns(3)
@@ -359,7 +368,7 @@ def main():
 
     # --- FOOTER ---
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown(textwrap.dedent("""
+    footer_html = """
         <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center;">
             <p style="color: #94a3b8; font-size: 0.8rem; margin: 0;">
                 Grounded in SHL Assessment Catalog v1.0 | Powered by Hybrid RAG + Gemini 2.0 Flash
@@ -368,7 +377,12 @@ def main():
                 © 2026 AssessIQ AI | Production Build 7faea76
             </p>
         </div>
-    """), unsafe_allow_html=True)
+    """
+    st.markdown(clean_html(footer_html), unsafe_allow_html=True)
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
