@@ -22,7 +22,7 @@ from app.core.assessment_taxonomy import (
     AssessmentTaxonomy, AssessmentDomain, RoleDomain, AssessmentClassification
 )
 from app.services.recruiter_reasoning import RecruiterExplanationEngine
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 
 logger = get_logger("comparison_engine")
 
@@ -53,13 +53,20 @@ class ComparisonScore:
 
 @dataclass
 class ComparisonResult:
-    """Complete comparison result."""
+    """Enterprise-grade comparison result."""
     assessment_1: AssessmentWithMetadata
     assessment_2: AssessmentWithMetadata
-    comparison_matrix: List[ComparisonScore]
+    
+    # Structured Matrix Data
+    best_for: Tuple[str, str]
+    seniority: Tuple[str, str]
+    measures: Tuple[str, str]
+    strengths: Tuple[str, str]
+    weaknesses: Tuple[str, str]
+    recommended_use_case: Tuple[str, str]
+    
     overall_winner: str
-    winner_reasoning: str
-    use_case_recommendations: Dict[str, str]
+    recruiter_recommendation: str  # Strategic advice
     recruiter_summary: str
 
 
@@ -82,49 +89,108 @@ class ComparisonEngine:
     ) -> ComparisonResult:
         """
         Generate comprehensive comparison between two assessments.
-        
-        Returns structured comparison with recruiter-grade reasoning.
         """
         logger.info(f"Comparing {assessment_1.name} vs {assessment_2.name}")
         
-        # Get classifications
-        class_1 = self.taxonomy.get_assessment_classification(assessment_1.id)
-        class_2 = self.taxonomy.get_assessment_classification(assessment_2.id)
+        class_1 = self.taxonomy.get_assessment_classification(assessment_1.id) or self.taxonomy._classify_assessment(assessment_1)
+        class_2 = self.taxonomy.get_assessment_classification(assessment_2.id) or self.taxonomy._classify_assessment(assessment_2)
         
-        if not class_1:
-            class_1 = self.taxonomy._classify_assessment(assessment_1)
-        if not class_2:
-            class_2 = self.taxonomy._classify_assessment(assessment_2)
-        
-        # Build comparison matrix
-        matrix = self._build_comparison_matrix(
-            assessment_1, assessment_2, class_1, class_2, context
+        # 1. Best For
+        best_for = (
+            class_1.ideal_use_cases[0] if class_1.ideal_use_cases else "General hiring",
+            class_2.ideal_use_cases[0] if class_2.ideal_use_cases else "General hiring"
         )
         
-        # Determine overall winner
-        overall_winner, winner_reasoning = self._determine_overall_winner(
-            assessment_1, assessment_2, matrix, class_1, class_2, context
+        # 2. Seniority
+        seniority = (
+            ", ".join(assessment_1.seniority_levels) if assessment_1.seniority_levels else "Professional",
+            ", ".join(assessment_2.seniority_levels) if assessment_2.seniority_levels else "Professional"
         )
         
-        # Generate use case recommendations
-        use_cases = self._generate_use_case_recommendations(
-            assessment_1, assessment_2, class_1, class_2, context
+        # 3. Measures
+        measures = (
+            ", ".join(class_1.key_capabilities[:2]),
+            ", ".join(class_2.key_capabilities[:2])
         )
         
-        # Generate recruiter summary
-        recruiter_summary = self._generate_recruiter_summary(
-            assessment_1, assessment_2, matrix, overall_winner, context
+        # 4. Strengths
+        strengths = (
+            self._get_strength(assessment_1, class_1),
+            self._get_strength(assessment_2, class_2)
         )
+        
+        # 5. Weaknesses
+        weaknesses = (
+            self._get_weakness(assessment_1, class_1),
+            self._get_weakness(assessment_2, class_2)
+        )
+        
+        # 6. Recommended Use Case
+        use_case = (
+            f"Screening for {class_1.primary_domain.value}",
+            f"Screening for {class_2.primary_domain.value}"
+        )
+        
+        # Determine Winner & Strategic Recommendation
+        winner, rec = self._calculate_strategic_recommendation(assessment_1, assessment_2, class_1, class_2, context)
+        
+        # Summary
+        summary = self._generate_recruiter_summary_v2(assessment_1, assessment_2, class_1, class_2, winner)
         
         return ComparisonResult(
             assessment_1=assessment_1,
             assessment_2=assessment_2,
-            comparison_matrix=matrix,
-            overall_winner=overall_winner,
-            winner_reasoning=winner_reasoning,
-            use_case_recommendations=use_cases,
-            recruiter_summary=recruiter_summary
+            best_for=best_for,
+            seniority=seniority,
+            measures=measures,
+            strengths=strengths,
+            weaknesses=weaknesses,
+            recommended_use_case=use_case,
+            overall_winner=winner,
+            recruiter_recommendation=rec,
+            recruiter_summary=summary
         )
+
+    def _get_strength(self, assessment, classification) -> str:
+        if classification.primary_domain == AssessmentDomain.TECHNICAL:
+            return "Deep technical verification"
+        if classification.primary_domain == AssessmentDomain.COGNITIVE:
+            return "High learning agility predictor"
+        if classification.primary_domain == AssessmentDomain.PERSONALITY:
+            return "Strong behavioral fit insights"
+        return "Comprehensive competency coverage"
+
+    def _get_weakness(self, assessment, classification) -> str:
+        if classification.primary_domain == AssessmentDomain.TECHNICAL:
+            return "May overlook behavioral fit"
+        if classification.primary_domain == AssessmentDomain.COGNITIVE:
+            return "Doesn't measure specific skills"
+        if getattr(assessment, "duration_minutes", 30) > 45:
+            return "Higher candidate time commitment"
+        return "Less specialized focus"
+
+    def _calculate_strategic_recommendation(self, a1, a2, c1, c2, context) -> Tuple[str, str]:
+        if not context:
+            return "tie", f"Both assessments are catalog-listed SHL options. {a1.name} is classified as {c1.primary_domain.value}, and {a2.name} is classified as {c2.primary_domain.value}."
+            
+        role_domain = self.taxonomy.classify_role(context.role or "", list(context.tech_stack))
+        p1 = self.taxonomy.get_domain_priorities(role_domain).get(c1.primary_domain, 0)
+        p2 = self.taxonomy.get_domain_priorities(role_domain).get(c2.primary_domain, 0)
+        
+        if p1 > p2:
+            return "assessment_1", f"{a1.name} is the closer catalog match for this role because it is classified as {c1.primary_domain.value} and the requested role maps more strongly to that domain."
+        elif p2 > p1:
+            return "assessment_2", f"{a2.name} is the closer catalog match for this role because it is classified as {c2.primary_domain.value} and the requested role maps more strongly to that domain."
+        else:
+            return "tie", f"Both assessments remain viable catalog options for {context.role or 'this role'} because the catalog priorities are tied for {c1.primary_domain.value} and {c2.primary_domain.value}."
+
+    def _generate_recruiter_summary_v2(self, a1, a2, c1, c2, winner) -> str:
+        if winner == "tie":
+            return f"Both {a1.name} and {a2.name} are grounded SHL catalog assessments. {a1.name} is classified as {c1.primary_domain.value} and {a2.name} is classified as {c2.primary_domain.value}."
+        
+        w_name = a1.name if winner == "assessment_1" else a2.name
+        l_name = a2.name if winner == "assessment_1" else a1.name
+        return f"{w_name} is the catalog-backed recommendation. {l_name} remains the alternate catalog option for comparison."
     
     def compare_by_names(
         self,
@@ -588,27 +654,24 @@ class ComparisonEngine:
                 "id": result.assessment_1.id,
                 "name": result.assessment_1.name,
                 "test_type": result.assessment_1.test_type.value,
-                "duration": getattr(result.assessment_1, 'duration_minutes', 30),
                 "url": result.assessment_1.url,
             },
             "assessment_2": {
                 "id": result.assessment_2.id,
                 "name": result.assessment_2.name,
                 "test_type": result.assessment_2.test_type.value,
-                "duration": getattr(result.assessment_2, 'duration_minutes', 30),
                 "url": result.assessment_2.url,
             },
-            "comparison_matrix": [
-                {
-                    "dimension": score.dimension.value,
-                    "winner": score.winner,
-                    "reasoning": score.reasoning,
-                }
-                for score in result.comparison_matrix
-            ],
+            "matrix": {
+                "Best For": result.best_for,
+                "Seniority": result.seniority,
+                "Measures": result.measures,
+                "Strengths": result.strengths,
+                "Weaknesses": result.weaknesses,
+                "Recommended Use Case": result.recommended_use_case
+            },
             "overall_winner": result.overall_winner,
-            "winner_reasoning": result.winner_reasoning,
-            "use_cases": result.use_case_recommendations,
+            "recruiter_recommendation": result.recruiter_recommendation,
             "recruiter_summary": result.recruiter_summary,
         }
 

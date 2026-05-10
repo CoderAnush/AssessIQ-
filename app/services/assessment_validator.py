@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple
 import re
 from app.models.assessment import AssessmentWithMetadata
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 
 logger = get_logger("assessment_validator")
 

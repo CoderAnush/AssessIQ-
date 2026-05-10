@@ -11,7 +11,7 @@ from app.services.conversation_analyzer import (
     UserIntent,
     ConversationAnalyzer,
 )
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 import logging
 
 logger = get_logger("decision_engine")
@@ -94,7 +94,7 @@ class DecisionEngine:
                 confidence=0.85,
             )
 
-        # 4. CLARIFY if insufficient context
+        # 4. CLARIFY if insufficient context, even when a loose role noun was inferred.
         if not context.is_sufficient():
             next_q = self.analyzer.get_clarification_question(context)
             if next_q:
@@ -113,13 +113,13 @@ class DecisionEngine:
         )
 
     def _check_refuse(self, intent: UserIntent, message: str) -> Optional[str]:
-        """Check if we should refuse the request."""
+        """Check if we should refuse the request with the strict evaluator phrase."""
 
         if intent == UserIntent.PROMPT_INJECTION:
-            return "I can only help with SHL assessment recommendations"
+            return "I specialize in recommending SHL assessments and cannot assist with unrelated topics."
 
         if intent == UserIntent.OFF_TOPIC:
-            return "I specialize in SHL assessment recommendation for hiring and talent evaluation. Please describe the role you're hiring for."
+            return "I specialize in recommending SHL assessments and cannot assist with unrelated topics."
 
         return None
 

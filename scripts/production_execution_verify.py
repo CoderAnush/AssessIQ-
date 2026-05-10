@@ -15,7 +15,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.config import settings, validate_config
-from app.logging.logger import setup_logging
+from app.logger_config.logger import setup_logging
 from app.services.llm_service import LLMService
 from app.routes.chat import chat
 from app.models.response import ChatRequest, Message

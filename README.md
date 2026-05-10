@@ -6,6 +6,36 @@
 
 Built with production-grade intelligence, deployment-ready architecture, and enterprise recruiter UX.
 
+## Recruiter Demo At A Glance
+
+- Stateless `/chat` flow that reconstructs context from the full message history
+- Grounded recommendations from a catalog of 157 SHL assessments
+- Recruiter-aware clarification, comparison, and export flows
+- Deterministic evaluator compatibility with strict schema enforcement
+
+## Polished Recruiter Demo (Submission-ready)
+
+The frontend has been polished for a demo-quality recruiter experience:
+
+- Clean, professional typography and spacing
+- Distinct visual themes for Technical / Personality / Cognitive / Leadership assessments
+- Sticky chat input, mobile-responsive layout, and reduced visual clutter
+- Interactive recommendation cards with recruiter insight, duration, confidence, and one-click comparison
+- Side-by-side comparison table with highlighted winner and recruiter recommendation summary
+- Exportable markdown recruiter report including query, recommendations, reasoning, comparison, and timestamp
+
+Use `streamlit run frontend/streamlit_app.py` to preview the polished demo locally.
+
+## Local Smoke Checks
+
+To validate the frontend enrichment, comparison, and export flow programmatically, run the smoke script:
+
+```bash
+python scripts/smoke_frontend_checks.py
+```
+
+This will call your local backend (`http://localhost:8000` by default), create an export file at `scripts/smoke_export.md`, and confirm the catalog enrichment pipeline is functioning.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
@@ -27,6 +57,19 @@ Recruiting teams need to:
 - Maintain context through iterative refinement
 
 **AssessIQ solves this** through conversational AI that understands hiring context and recommends grounded, explainable, confidence-scored assessments.
+
+## Recruiter Workflow
+
+1. Enter the role, seniority, and focus area.
+2. Review the grounded shortlist and recruiter insight.
+3. Compare the top two options side by side.
+4. Export a shareable markdown summary for stakeholders.
+
+Example prompts:
+- Need assessments for a Senior Java Engineer
+- Best tests for graduate hiring
+- Compare cognitive vs personality assessments
+- Leadership hiring for retail manager
 
 ---
 
@@ -285,12 +328,14 @@ The frontend is deployed on Streamlit Cloud for optimal recruiter UX.
 
 ## Screenshots
 
-| Scenario | Preview |
-|----------|---------|
-| **Recruiter Dashboard** | ![Dashboard](docs/screenshots/dashboard.png) |
-| **Assessment Recommendation** | ![Recommendation](docs/screenshots/recommendation.png) |
-| **Comparison Analysis** | ![Comparison](docs/screenshots/comparison.png) |
-| **Mobile Experience** | ![Mobile](docs/screenshots/mobile.png) |
+Capture these demo assets into `docs/screenshots/` for the final submission package:
+
+- `dashboard.png` - polished recruiter landing state
+- `recommendation.png` - recommendation cards with recruiter insight
+- `comparison.png` - side-by-side comparison layout
+- `mobile.png` - compact mobile-friendly layout
+
+The frontend is already styled to present these scenarios cleanly in Streamlit.
 
 ---
 
@@ -319,21 +364,28 @@ python app/main.py
 python scripts/production_execution_verify.py
 
 # Expected output:
-# Tests Passed: 10/10 (100%)
-# Average Latency: 305ms
+# Tests Passed: 15/15 (100%)
+# Average Latency: ~2s per evaluator case
 # ✓ PASSED
 ```
 
 ### Test Coverage
 
-- ✓ 10 Evaluator scenarios (realistic recruiter workflows)
-- ✓ 24 Edge case tests (malformed input, security, boundaries)
+- ✓ 15 Evaluator scenarios (strict compliance and replay stability)
+- ✓ 10 Recruiter scenario checks (realistic workflows and category fit)
 - ✓ Schema compliance validation
 - ✓ Hallucination prevention verification
 - ✓ Prompt injection resistance
 - ✓ Performance benchmarking
 
 See [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) for complete documentation.
+
+### Submission Readiness
+
+- `scripts/run_eval_suite.py` runs the strict evaluator regression matrix.
+- `scripts/recruiter_scenarios.py` exercises realistic recruiter workflows.
+- `frontend/streamlit_app.py` renders the polished recruiter demo and export report.
+- `APPROACH.md` summarizes the architecture, tradeoffs, and validation strategy.
 
 ---
 
@@ -362,13 +414,7 @@ Conversational assessment recommendation endpoint.
     {
       "name": "SHL Verify - Java",
       "url": "https://www.shl.com/en/products/verify-java/",
-      "test_type": "K",
-      "confidence": {
-        "percentage": 92,
-        "level": "high"
-      },
-      "rank": 1,
-      "explanation": "Assesses Java expertise and backend architecture knowledge..."
+      "test_type": "K"
     }
   ],
   "end_of_conversation": false
@@ -380,8 +426,10 @@ Conversational assessment recommendation endpoint.
 
 **Response Fields:**
 - `reply` (string): Natural language response
-- `recommendations` (array): 0-10 assessment recommendations
+- `recommendations` (array): 0-10 grounded assessments with `name`, `url`, and `test_type`
 - `end_of_conversation` (boolean): Whether to end or continue
+
+Comparison guidance is rendered in the Streamlit frontend using the current shortlist and the assistant reply, while the backend keeps the response schema strict.
 
 See [API documentation](http://localhost:8000/docs) for full OpenAPI spec.
 

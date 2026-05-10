@@ -5,6 +5,7 @@ Initializes app, loads data, and mounts routes.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
 import psutil
@@ -12,7 +13,7 @@ import time
 import os
 
 from app.config import settings, validate_config
-from app.logging.logger import setup_logging
+from app.logger_config.logger import setup_logging
 from app.models.response import HealthResponse
 from app.routes import chat
 
@@ -26,62 +27,66 @@ async def lifespan(app: FastAPI):
 
     # STARTUP
     logger.info("Starting AssessIQ AI...")
-    print("="*60)
-    print("BACKEND STARTUP INITIATED")
-    print(f"Memory Usage: {psutil.virtual_memory()}")
-    print("="*60)
+    logger.info("BACKEND STARTUP INITIATED")
+    logger.debug(f"Memory Usage: {psutil.virtual_memory()}")
     
     start_time = time.time()
+    app.state.start_time = start_time
     
     try:
         validate_config()
         logger.info("Configuration validated")
 
         # 1. Load Catalog
-        print("STARTUP: Loading Catalog...")
+        logger.info("STARTUP: Loading Catalog...")
         from app.services.catalog_loader import CatalogLoader
         catalog_path = getattr(settings, "catalog_path", "data/processed/catalog_processed.json")
         app.state.catalog_loader = CatalogLoader(catalog_path)
-        print(f"STARTUP: Catalog loaded in {time.time() - start_time:.2f}s")
+        logger.info(f"STARTUP: Catalog loaded in {time.time() - start_time:.2f}s")
 
-        # 2. Initialize LLM
-        print("STARTUP: Initializing LLM Service...")
-        from app.services.llm_service import LLMService
-        app.state.llm_service = LLMService()
-        print(f"STARTUP: LLM Service ready in {time.time() - start_time:.2f}s")
+        # 2. Initialize LLM only when credentials are available.
+        gemini_key = getattr(settings, "gemini_api_key", "")
+        if gemini_key and gemini_key != "your_gemini_api_key_here":
+            logger.info("STARTUP: Initializing LLM Service...")
+            from app.services.llm_service import LLMService
+            app.state.llm_service = LLMService()
+            logger.info(f"STARTUP: LLM Service ready in {time.time() - start_time:.2f}s")
+        else:
+            app.state.llm_service = None
+            logger.info("STARTUP: LLM Service skipped (no API key configured)")
 
         # 3. Initialize Retriever (Lightweight version already in retriever.py)
-        print("STARTUP: Initializing LIGHTWEIGHT Retriever...")
+        logger.info("STARTUP: Initializing LIGHTWEIGHT Retriever...")
         from app.services.retriever import HybridRetriever
         app.state.retriever = HybridRetriever(app.state.catalog_loader)
-        print(f"STARTUP: Retriever ready in {time.time() - start_time:.2f}s")
+        logger.info(f"STARTUP: Retriever ready in {time.time() - start_time:.2f}s")
 
         # 4. Initialize Ranker
-        print("STARTUP: Initializing Ranker...")
+        logger.info("STARTUP: Initializing Ranker...")
         from app.services.ranker import RecommendationRanker
         app.state.ranker = RecommendationRanker()
 
+        # 4b. Initialize Comparison Engine
+        logger.info("STARTUP: Initializing Comparison Engine...")
+        from app.services.comparison_engine import ComparisonEngine
+        app.state.comparison_engine = ComparisonEngine()
+
         # 5. Initialize Decision Engine
-        print("STARTUP: Initializing Decision Engine...")
+        logger.info("STARTUP: Initializing Decision Engine...")
         from app.agents.decision_engine import DecisionEngine
         app.state.decision_engine = DecisionEngine()
 
         # 6. Initialize Hallucination Checker
-        print("STARTUP: Initializing Hallucination Checker...")
+        logger.info("STARTUP: Initializing Hallucination Checker...")
         from app.utils.hallucination_checker import HallucinationChecker
         app.state.hallucination_checker = HallucinationChecker(app.state.catalog_loader)
 
-        print("="*60)
-        print(f"BACKEND STARTUP COMPLETE in {time.time() - start_time:.2f}s")
-        print(f"Final Memory Usage: {psutil.virtual_memory()}")
-        print("="*60)
-        
+        logger.info("BACKEND STARTUP COMPLETE")
+        logger.info(f"Startup time: {time.time() - start_time:.2f}s")
+        logger.debug(f"Final Memory Usage: {psutil.virtual_memory()}")
         logger.info("AssessIQ AI startup complete")
     except Exception as e:
-        print(f"CRITICAL STARTUP FAILURE: {e}")
-        import traceback
-        traceback.print_exc()
-        logger.error(f"Startup failed: {e}")
+        logger.exception(f"CRITICAL STARTUP FAILURE: {e}")
         raise
 
     yield
@@ -115,7 +120,14 @@ def create_app() -> FastAPI:
     @app.get("/health", response_model=HealthResponse)
     async def health_check():
         """Health check endpoint for readiness probes."""
-        return {"status": "ok"}
+        uptime_seconds = time.time() - getattr(app.state, "start_time", time.time())
+        memory_mb = psutil.virtual_memory().used / (1024 * 1024)
+        return {
+            "status": "ok",
+            "version": "1.0.0",
+            "uptime_seconds": uptime_seconds,
+            "memory_usage_mb": memory_mb,
+        }
 
     # Middleware for request/response logging
     @app.middleware("http")
@@ -136,18 +148,18 @@ def create_app() -> FastAPI:
     @app.exception_handler(ValueError)
     async def value_error_handler(request, exc):
         logger.error(f"Validation error: {exc}")
-        return {
+        return JSONResponse(status_code=400, content={
             "detail": str(exc),
             "error_type": "validation_error"
-        }
+        })
 
     @app.exception_handler(Exception)
     async def general_exception_handler(request, exc):
         logger.error(f"Unhandled error: {exc}", exc_info=True)
-        return {
+        return JSONResponse(status_code=500, content={
             "detail": "Internal server error",
             "error_type": "internal_error"
-        }
+        })
 
     return app
 

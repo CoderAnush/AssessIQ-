@@ -4,10 +4,10 @@ Reconstructs conversation state to understand user needs.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Set, Optional, Tuple
-from enum import Enum
+from typing import List, Set, Optional, Tuple, Dict
 import re
-from app.logging.logger import get_logger
+from enum import Enum
+from app.logger_config.logger import get_logger
 
 logger = get_logger("conversation_analyzer")
 
@@ -27,404 +27,207 @@ class UserIntent(str, Enum):
 class HiringContext:
     """
     Extracted hiring context from conversation.
-    Represents what we know about the hiring requirement.
+    Stateless reconstruction container.
     """
-
-    # Role/Title Information
     role: Optional[str] = None
-    tech_stack: Set[str] = field(default_factory=set)  # Java, Python, etc.
-    domain: Optional[str] = None  # e.g., backend, frontend, data
-
-    # Seniority
-    seniority: Optional[str] = None  # junior, mid, senior, lead
-    years_experience: Optional[int] = None
-
-    # Skills Required
-    soft_skills: Set[str] = field(default_factory=set)  # communication, leadership
+    tech_stack: Set[str] = field(default_factory=set)
+    domain: Optional[str] = None
+    seniority: Optional[str] = None
+    soft_skills: Set[str] = field(default_factory=set)
     technical_skills: Set[str] = field(default_factory=set)
-    cognitive_skills: Set[str] = field(default_factory=set)  # reasoning, problem-solving
-
-    # Personality/Traits
-    personality_traits: Set[str] = field(default_factory=set)  # extrovert, detail-oriented
-    communication_needs: Set[str] = field(default_factory=set)  # presentation, negotiation
     leadership_needs: bool = False
-
-    # Test Preferences
-    preferred_test_types: Set[str] = field(default_factory=set)  # K, A, P
-    max_duration_minutes: Optional[int] = None
-    avoid_test_types: Set[str] = field(default_factory=set)
-
-    # User Preferences
-    budget_constraints: Optional[str] = None
-    team_size: Optional[int] = None
-    company_culture: Optional[str] = None
-
-    def is_sufficient(self, min_role: bool = True) -> bool:
-        """
-        Check if we have enough context to recommend.
-
-        Requires:
-        - At least role or domain
-        - At least one of: skill, seniority, or personality need
-        """
-        has_role = bool(self.role or self.domain or self.tech_stack)
-        has_specificity = (
-            bool(self.soft_skills)
-            or bool(self.technical_skills)
-            or bool(self.seniority)
-            or self.leadership_needs
-        )
-
-        return has_role and has_specificity
+    workflow_mode: str = "detailed"
+    refinement_filters: Set[str] = field(default_factory=set)
+    preferred_test_types: Set[str] = field(default_factory=set)
 
     def get_missing_info(self) -> List[str]:
-        """Identify missing high-value information."""
         missing = []
-
-        if not (self.role or self.domain):
-            missing.append("role")
-
-        if not self.seniority:
-            missing.append("seniority")
-
-        if not (self.soft_skills or self.technical_skills):
+        if not (self.role or self.domain): missing.append("role")
+        if not self.seniority: missing.append("seniority")
+        if not (self.soft_skills or self.technical_skills or self.tech_stack or self.preferred_test_types):
             missing.append("skills")
-
-        # Only ask about personality if we're assessing soft requirements
-        if self.soft_skills and "communication" in self.soft_skills and not self.personality_traits:
-            missing.append("personality_traits")
-
         return missing
 
+    def is_sufficient(self) -> bool:
+        """Check if enough context for a recommendation (Phase 3)."""
+        has_role = bool(self.role or self.domain or self.tech_stack)
+        has_spec = bool(self.seniority) or bool(self.soft_skills) or bool(self.preferred_test_types) or self.leadership_needs
+        if not (has_role and has_spec):
+            return False
+
+        role_text = f"{self.role or ''} {self.domain or ''}".lower()
+        broad_signals = ["sales", "support", "operations", "leadership", "finance", "graduate", "assistant", "marketing"]
+        if any(signal in role_text for signal in broad_signals):
+            has_precision = bool(self.soft_skills or self.technical_skills or self.tech_stack)
+            if not has_precision:
+                return False
+
+        return True
+
     def __str__(self) -> str:
-        """Human-readable context."""
         parts = []
-
-        if self.role:
-            parts.append(f"Role: {self.role}")
-        if self.tech_stack:
-            parts.append(f"Tech: {', '.join(self.tech_stack)}")
-        if self.seniority:
-            parts.append(f"Level: {self.seniority}")
-        if self.soft_skills:
-            parts.append(f"Soft skills: {', '.join(self.soft_skills)}")
-        if self.technical_skills:
-            parts.append(f"Tech skills: {', '.join(self.technical_skills)}")
-        if self.leadership_needs:
-            parts.append("Needs: Leadership")
-
-        return " | ".join(parts) if parts else "No context extracted"
+        if self.role: parts.append(f"Role: {self.role}")
+        if self.tech_stack: parts.append(f"Tech: {', '.join(self.tech_stack)}")
+        if self.seniority: parts.append(f"Level: {self.seniority}")
+        return " | ".join(parts) if parts else "No context"
 
 
 class ConversationAnalyzer:
     """Analyzes conversations to extract hiring context."""
 
-    # Patterns for common terms
     SENIORITY_KEYWORDS = {
-        "junior": ["junior", "entry-level", "fresh", "graduate", "entry level"],
-        "mid": ["mid-level", "intermediate", "mid level", "mid-level", "3-5 years", "4 years"],
+        "junior": ["junior", "entry-level", "fresh", "graduate", "entry level", "entrylevel"],
+        "mid": ["mid-level", "intermediate", "mid level", "mid-level", "3-5 years"],
         "senior": ["senior", "staff", "principal", "lead", "experienced", "10+ years"],
+        "executive": ["executive", "vp", "director", "head of", "cxo", "chief"]
     }
 
-    SOFT_SKILLS = {
-        "communication",
-        "negotiation",
-        "presentation",
-        "leadership",
-        "teamwork",
-        "collaboration",
-        "stakeholder",
-        "people",
-        "mentoring",
+    TECH_KEYWORDS = {"java", "python", "javascript", "typescript", "go", "react", "angular", "sql", "aws", "devops"}
+    BUSINESS_KEYWORDS = {"sales", "marketing", "finance", "operations", "hr", "product management"}
+    SOFT_SKILL_KEYWORDS = {
+        "communication", "empathy", "judgment", "stakeholder", "leadership", "execution",
+        "organization", "analytical", "problem solving", "learning agility", "persuasion",
+        "collaboration", "customer service", "attention to detail", "coordination", "adaptability",
+        "relationship building", "conflict resolution", "prioritization", "influence", "decision making",
     }
-
-    TECH_KEYWORDS = {
-        "java",
-        "python",
-        "javascript",
-        "typescript",
-        "go",
-        "rust",
-        "c++",
-        "c#",
-        ".net",
-        "nodejs",
-        "react",
-        "angular",
-        "vue",
-        "sql",
-        "nosql",
-        "aws",
-        "azure",
-        "gcp",
-        "kubernetes",
-        "docker",
-        "backend",
-        "frontend",
-        "fullstack",
-        "devops",
-    }
-
-    SENIORITY_KEYWORDS_REVERSE = {}  # Will be built in __init__
 
     def __init__(self):
-        """Initialize analyzer with keyword mappings."""
-        # Build reverse mapping
+        self.SENIORITY_KEYWORDS_REVERSE = {}
         for level, keywords in self.SENIORITY_KEYWORDS.items():
             for keyword in keywords:
                 self.SENIORITY_KEYWORDS_REVERSE[keyword] = level
 
-    def analyze_conversation(
-        self, messages: List[dict]
-    ) -> Tuple[HiringContext, UserIntent]:
-        """
-        Analyze full conversation to extract context.
-
-        Args:
-            messages: List of {"role": "user"/"assistant", "content": "..."}
-
-        Returns:
-            (HiringContext, UserIntent)
-        """
+    def analyze_conversation(self, messages: List[dict]) -> Tuple[HiringContext, UserIntent]:
+        """Statelessly reconstruct context from full message history (Phase 2)."""
         context = HiringContext()
-        intent = UserIntent.VAGUE_QUERY
-
-        # Analyze all user messages in order
         user_messages = [m["content"] for m in messages if m["role"] == "user"]
+        if not user_messages: return context, UserIntent.VAGUE_QUERY
 
-        if not user_messages:
-            return context, intent
-
-        # Get latest user message for intent detection
         latest_user_msg = user_messages[-1]
-
-        # Extract context first to build the current state
         for user_msg in user_messages:
             self._extract_context(user_msg, context)
 
-        # Detect intent using the extracted context
         intent = self._detect_intent(latest_user_msg, len(user_messages), context)
-
-        # SPECIAL CASE: Intent Merging for short follow-ups
-        # If the latest message is very short (1-2 words), it's likely a clarification
+        
+        # Heuristic for clarification merge
         if len(latest_user_msg.split()) <= 2 and intent == UserIntent.VAGUE_QUERY:
              intent = UserIntent.CLARIFICATION_PROVIDED
-
-        logger.debug(f"Analyzed context: {context}")
-        logger.debug(f"Detected intent: {intent}")
 
         return context, intent
 
     def _detect_intent(self, latest_message: str, message_count: int, context: HiringContext) -> UserIntent:
-        """Detect user's intent from latest message."""
-
         msg_lower = latest_message.lower()
+        if self._is_off_topic(msg_lower): return UserIntent.OFF_TOPIC
+        if self._is_prompt_injection(msg_lower): return UserIntent.PROMPT_INJECTION
 
-        # Check for off-topic (High Priority)
-        if self._is_off_topic(msg_lower):
-            return UserIntent.OFF_TOPIC
-
-        # Check for prompt injection patterns
-        if self._is_prompt_injection(msg_lower):
-            return UserIntent.PROMPT_INJECTION
-
-        # Check for comparison questions
-        if any(
-            phrase in msg_lower
-            for phrase in [
-                "difference between",
-                "compare",
-                "vs",
-                "versus",
-                "which is better",
-                "how does",
-                "differ from",
-            ]
-        ):
+        if any(p in msg_lower for p in ["compare", "vs ", "versus", "difference between"]):
             return UserIntent.COMPARISON
 
-        # Check for refinement (adding to previous request)
-        if any(
-            phrase in msg_lower
-            for phrase in [
-                "also add",
-                "additionally",
-                "plus",
-                "also need",
-                "don't forget",
-                "in addition",
-                "actually",
-            ]
-        ) and message_count > 1:
+        if any(p in msg_lower for p in ["also add", "additionally", "actually", "more"]) and message_count > 1:
             return UserIntent.REFINEMENT
 
-        # Check if this provides clear information
-        if any(
-            keyword in msg_lower
-            for keyword in ["years", "level", "need", "require", "must", "should", "seniority", "skills"]
-        ):
-            return UserIntent.CLARIFICATION_PROVIDED
-
-        # Check if still vague (Recruiter Discovery Flow)
-        # If we don't have a domain yet, it's vague
-        if not context.domain and not context.role_domain:
-             if any(term in msg_lower for term in ["developer", "engineer", "programmer", "specialist", "professional", "person", "someone"]):
-                 return UserIntent.VAGUE_QUERY
-        
-        # If we have a domain but no seniority and the message is short
-        if not context.seniority and len(latest_message.split()) < 4:
-            # But only if it's not a direct answer to a previous question
-            if message_count > 1:
+        if not context.role and not context.domain:
+            if any(term in msg_lower for term in ["developer", "engineer", "specialist", "test for"]):
                 return UserIntent.VAGUE_QUERY
 
         return UserIntent.CLEAR_REQUIREMENT
 
-    def _is_prompt_injection(self, text: str) -> bool:
-        """Detect prompt injection attempts."""
-        injection_patterns = [
-            "forget everything",
-            "ignore",
-            "disregard",
-            "system prompt",
-            "instructions",
-            "jailbreak",
-            "bypass",
-            "override",
-            "new instructions",
-            "tell me the prompt",
-            "what's your system",
-        ]
-
-        return any(pattern in text for pattern in injection_patterns)
-
     def _is_off_topic(self, text: str) -> bool:
-        """Detect off-topic queries with recruiter-grade precision."""
+        """Phase 6: Strict off-topic refusal."""
         off_topic_patterns = [
-            "joke", "weather", "movie", "music", "politics", "random chat",
-            "hello", "hi ", "how are you", "what's up",
-            "python tutorial", "how to code", "legal", "law", "contract",
-            "salary", "compensation", "market rate", "explain python",
-            "teach me", "recommend restaurants", "weather",
-            "movie", "song", "who are you", "tell me about yourself",
-            "what can you do", "help"
+            "joke", "weather", "movie", "music", "politics", "python tutorial",
+            "how to code", "coding help", "write code", "debug", "salary", "market rate",
+            "legal advice", "teach me", "restaurants", "who are you", "what can you do",
+            "prompt injection", "hello", "hi "
         ]
-
-        # Check for explicitly off-topic keywords
         for pattern in off_topic_patterns:
             if re.search(rf"\b{re.escape(pattern)}\b", text):
-                # Exception: allow greeting if it's the first message and followed by something relevant
-                if pattern in ["hello", "hi", "help"] and len(text.split()) > 4:
-                    continue
-                # Exception: allow "hire" or "legal" if "assessment" or "test" is present
-                if ("assessment" in text or "test" in text) and pattern in ["legal", "law"]:
-                    continue
+                # Exception: greetings are okay if followed by relevant content in same message
+                if pattern in ["hello", "hi"] and len(text.split()) > 5: continue
                 return True
-
-        # Check for generic "how to" or "tell me about" without relevant context
-        if any(text.startswith(pattern) for pattern in ["how to", "teach me", "tell me about", "explain"]):
-            if "role" not in text and "job" not in text and "assessment" not in text and "test" not in text:
-                return True
-
         return False
 
-    def _extract_context(self, message: str, context: HiringContext) -> None:
-        """Extract context fields from a single message without overwriting existing data with None."""
+    def _is_prompt_injection(self, text: str) -> bool:
+        return any(p in text for p in ["forget everything", "ignore", "system prompt", "jailbreak"])
 
+    def _extract_context(self, message: str, context: HiringContext) -> None:
         msg_lower = message.lower()
 
-        # 1. Extract seniority
-        for keyword, level in self.SENIORITY_KEYWORDS_REVERSE.items():
-            if re.search(rf"\b{re.escape(keyword)}\b", msg_lower):
+        # 1. Seniority
+        for kw, level in self.SENIORITY_KEYWORDS_REVERSE.items():
+            if re.search(rf"\b{re.escape(kw)}\b", msg_lower):
                 context.seniority = level
-                # Try to extract years
-                years_match = re.search(r"(\d+)\s*(?:years?|yrs?)", msg_lower)
-                if years_match:
-                    context.years_experience = int(years_match.group(1))
                 break
 
-        # 2. Extract role (Enhanced)
+        # 2. Role
         role_patterns = [
-            r"(?:hiring|looking for|need)s?\s+(?:a\s+)?(?:assessments?\s+for\s+)?(?:a\s+)?([^,\.!?]+?)(?:\s+(?:who|with|that|engineer|developer|manager))",
-            r"(?:hiring|looking for|need)s?\s+(?:a\s+)?([^,\.!?]+?)$",
-            r"([^,\.!?]+?)\s+(?:role|position|job|opening|vacancy)",
+            r"for (?:a|an)?\s+([^,\.!?]+?)(?:\s+role|\s+position|$)",
+            r"hiring (?:a|an)?\s+([^,\.!?]+)",
+            r"test for (?:a|an)?\s+([^,\.!?]+)",
+            r"need\s+([^,\.!?]+?)(?:\s+assessment|\s+test|\s+screening|$)",
         ]
-        
-        extracted_role = None
-        for pattern in role_patterns:
-            role_match = re.search(pattern, msg_lower)
-            if role_match:
-                role = role_match.group(1).strip()
-                role = re.sub(r"^(?:a|an|the|hiring)\s+", "", role)
-                role = re.sub(r"\s+role$", "", role)
-                if role and len(role.split()) < 5:
-                    extracted_role = role
-                    break
-        
-        # Direct Match for Roles (if message is just the role)
-        if not extracted_role and len(msg_lower.split()) <= 3:
-            # Check if it contains tech keywords + engineer/developer
-            tech_found = any(tech in msg_lower for tech in self.TECH_KEYWORDS)
-            if tech_found or any(kw in msg_lower for kw in ["engineer", "developer", "manager", "lead", "analyst"]):
-                extracted_role = msg_lower
+        for p in role_patterns:
+            m = re.search(p, msg_lower)
+            if m:
+                role = m.group(1).strip()
+                if len(role.split()) < 5: context.role = role; break
 
-        if extracted_role:
-            context.role = extracted_role
-
-        # 3. Extract tech stack (Merge, don't overwrite)
+        # 3. Keywords
         for tech in self.TECH_KEYWORDS:
-            if re.search(rf"\b{re.escape(tech)}\b", msg_lower):
-                context.tech_stack.add(tech)
+            if tech in msg_lower: context.tech_stack.add(tech)
+        for domain in self.BUSINESS_KEYWORDS:
+            if domain in msg_lower: context.domain = domain; context.role = context.role or domain
 
-        # 4. Extract soft skills (Merge)
-        for skill in self.SOFT_SKILLS:
-            if re.search(rf"\b{re.escape(skill)}\b", msg_lower):
-                context.soft_skills.add(skill)
-
-        # 5. Extract specific patterns
-        if any(kw in msg_lower for kw in ["leadership", "lead", "manage", "manager", "mentoring"]):
+        if "leadership" in msg_lower or "manager" in msg_lower or "executive" in msg_lower:
             context.leadership_needs = True
 
-        if "communication" in msg_lower or "speaking" in msg_lower:
-            context.soft_skills.add("communication")
+        for skill in self.SOFT_SKILL_KEYWORDS:
+            if skill in msg_lower:
+                context.soft_skills.add(skill)
 
-        if "problem solving" in msg_lower or "problem-solving" in msg_lower:
-            context.cognitive_skills.add("problem_solving")
+        if any(keyword in msg_lower for keyword in ["technical", "coding", "software"]):
+            context.preferred_test_types.update({"K", "A"})
 
-        if "creativity" in msg_lower or "creative" in msg_lower:
-            context.personality_traits.add("creative")
+        if any(keyword in msg_lower for keyword in ["behavioral", "personality", "soft skill", "culture fit"]):
+            context.preferred_test_types.add("P")
 
-        if "detail" in msg_lower:
-            context.personality_traits.add("detail_oriented")
+        if any(keyword in msg_lower for keyword in ["reasoning", "aptitude", "cognitive", "analytical", "logic"]):
+            context.preferred_test_types.add("A")
 
-        if "analytical" in msg_lower:
-            context.cognitive_skills.add("analytical")
+        if any(keyword in msg_lower for keyword in ["sales", "customer support", "support", "finance", "operations"]):
+            context.preferred_test_types.update({"P", "A"})
 
     def get_clarification_question(self, context: HiringContext) -> Optional[str]:
-        """Generate targeted recruiter-style follow-up questions."""
-        if not context.role and not context.domain:
-            return "What role are you looking to fill?"
-        
-        if not context.domain:
-            return f"What specific domain or tech stack is required for this {context.role or 'role'}? (e.g., Java, Python, Frontend, Data Science)"
-        
-        if not context.seniority:
-            return f"What seniority level are you hiring for? (e.g., Junior, Mid-level, Senior, Leadership)"
-        
-        if not context.soft_skills and not context.technical_skills:
-            return f"Are there any specific technical skills or frameworks you'd like to prioritize?"
+        """Multi-slot efficient clarification (Phase 3)."""
+        missing = context.get_missing_info()
+        if not missing: return None
 
-        if context.role and any(word in context.role.lower() for word in ["manager", "lead", "director", "head"]) and not context.leadership_needs:
-             return "Does this position require specific leadership or people management responsibilities?"
+        role_text = f"{context.role or ''} {context.domain or ''}".lower()
+        if any(keyword in role_text for keyword in ["sales", "support", "operations", "leadership", "finance", "marketing", "assistant"]):
+            if not context.seniority:
+                return "Is this for an individual contributor or leadership position, and what experience level are you hiring for?"
+            if not (context.soft_skills or context.technical_skills or context.tech_stack):
+                return "Are you prioritizing technical skills, behavioral fit, cognitive ability, or communication for this role?"
 
-        # No more questions - we have enough
+        if "role" in missing and "seniority" in missing and "skills" in missing:
+            return "What role are you hiring for, what seniority level is the target, and should the assessment emphasize technical, cognitive, or behavioral fit?"
+
+        if "role" in missing and "seniority" in missing:
+            return "What role are you hiring for and what seniority level should I target?"
+
+        if "role" in missing and "skills" in missing:
+            return "What role are you hiring for, and should I focus on technical, cognitive, or behavioral fit?"
+
+        if "seniority" in missing and "skills" in missing:
+            return f"What seniority level are you targeting for this {context.role or 'role'}, and should I prioritize technical, cognitive, or behavioral fit?"
+
+        if "role" in missing:
+            return "What role are you hiring for?"
+
+        if "seniority" in missing:
+            return f"What seniority level are you targeting for this {context.role or 'role'}?"
+
+        if "skills" in missing:
+            return f"Should I focus on technical, cognitive, or behavioral fit for this {context.role or 'role'} assessment?"
+
         return None
-
-    def compare_contexts(self, ctx1: HiringContext, ctx2: HiringContext) -> bool:
-        """Check if context has meaningfully changed."""
-        return (
-            ctx1.role != ctx2.role
-            or ctx1.seniority != ctx2.seniority
-            or ctx1.soft_skills != ctx2.soft_skills
-            or ctx1.technical_skills != ctx2.technical_skills
-            or ctx1.leadership_needs != ctx2.leadership_needs
-        )

@@ -12,11 +12,12 @@ NO generic filler language. Every explanation must:
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Set
 from app.models.assessment import AssessmentWithMetadata
+from app.models.ranking import RankingFactors
 from app.services.conversation_analyzer import HiringContext
 from app.core.assessment_taxonomy import (
     AssessmentTaxonomy, AssessmentDomain, RoleDomain, AssessmentClassification
 )
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 
 logger = get_logger("recruiter_reasoning")
 
@@ -179,69 +180,125 @@ class RecruiterExplanationEngine:
     
     def __init__(self, taxonomy: Optional[AssessmentTaxonomy] = None):
         self.taxonomy = taxonomy or AssessmentTaxonomy()
-    
-    def generate_explanation(
+        self._cache: Dict[str, Dict[str, str]] = {}
+
+    async def generate_explanation(
         self,
         assessment: AssessmentWithMetadata,
         context: HiringContext,
-        score_breakdown: Optional[Dict] = None,
-    ) -> str:
+        factors: Optional[RankingFactors] = None,
+    ) -> Dict[str, str]:
         """
-        Generate recruiter-grade explanation for an assessment recommendation.
-        
-        Returns unique, contextual explanation grounded in metadata.
+        Generate enterprise-grade recruiter reasoning for an assessment (Async).
         """
+        # Cache key based on assessment and high-level context
+        cache_key = f"{assessment.id}_{context.role}_{context.seniority}"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
         try:
-            # Build explanation context
+            # Simulate slight processing (or real LLM call if we were using it here)
+            # In our current logic it's deterministic but structured
             exp_context = self._build_explanation_context(context)
-            
-            # Get classification
             classification = self.taxonomy.get_assessment_classification(assessment.id)
             if not classification:
                 classification = self.taxonomy._classify_assessment(assessment)
             
-            # Generate explanation components
-            components = []
+            best_stage = self._determine_best_stage(exp_context, classification, factors)
+
+            # Use awaitable components if needed, or just execute
+            matches = self._generate_match_reasoning(assessment, exp_context, classification, factors, best_stage)
+            measures = self._generate_measurement_reasoning(assessment, classification, exp_context)
+            ranking = self._generate_ranking_reasoning(assessment, factors, exp_context, classification, best_stage)
+            use_case = self._generate_use_case_reasoning(assessment, exp_context, classification, best_stage)
             
-            # 1. Role-specific opening
-            opening = self._generate_opening(assessment, exp_context, classification)
-            if opening:
-                components.append(opening)
+            result = {
+                "why_it_matches": matches,
+                "what_it_measures": measures,
+                "why_ranked_higher": ranking,
+                "ideal_use_case": use_case,
+                "best_hiring_stage": best_stage,
+            }
             
-            # 2. Capability statement
-            capability = self._generate_capability_statement(
-                assessment, exp_context, classification
-            )
-            if capability:
-                components.append(capability)
-            
-            # 3. Why it matters
-            impact = self._generate_impact_statement(
-                assessment, exp_context, classification
-            )
-            if impact:
-                components.append(impact)
-            
-            # 4. Seniority calibration (if relevant)
-            seniority_note = self._generate_seniority_note(assessment, exp_context)
-            if seniority_note:
-                components.append(seniority_note)
-            
-            # Combine into final explanation
-            if len(components) >= 2:
-                explanation = ". ".join(components[:3]) + "."
-            elif components:
-                explanation = components[0] + "."
-            else:
-                explanation = self._generate_fallback_explanation(assessment, exp_context)
-            
-            # Clean up
-            explanation = self._clean_explanation(explanation)
-            
-            return explanation
+            self._cache[cache_key] = result
+            return result
         except Exception as e:
             logger.error(f"Explanation generation error: {e}", exc_info=True)
-            return f"This {assessment.test_type.value}-type assessment evaluates core competencies required for the {context.role or 'specified'} role."
+            return {
+                "why_it_matches": f"Directly aligns with {context.role or 'specified'} requirements.",
+                "what_it_measures": assessment.description[:100] + "...",
+                "why_ranked_higher": "Strong alignment with role seniority and domain.",
+                "ideal_use_case": f"Best used for screening {context.role} candidates.",
+                "best_hiring_stage": "screening",
+            }
+
+    def _generate_match_reasoning(self, assessment, context, classification, factors, stage) -> str:
+        """Section 1: Why it matches the recruiter's specific query."""
+        role_label = context.role or "this role"
+        if factors and factors.skill_overlap > 0.8 and context.tech_stack:
+            focus = ", ".join(list(context.tech_stack)[:2])
+            return f"Fits this {role_label} because it directly measures {focus} capability that the role profile prioritizes for screening."
+
+        if classification.primary_domain == AssessmentDomain.SALES:
+            return f"Fits this {role_label} because it measures sales performance signals such as persuasion and customer-facing effectiveness that matter early in screening."
+
+        if classification.primary_domain == AssessmentDomain.COMMUNICATION:
+            return f"Fits this {role_label} because it measures communication signals that influence coordination, stakeholder management, and candidate suitability."
+
+        if classification.primary_domain == AssessmentDomain.PERSONALITY:
+            return f"Fits this {role_label} because it measures behavioral style and work preferences that help shortlist candidates for team fit."
+
+        if classification.primary_domain == AssessmentDomain.LEADERSHIP:
+            return f"Fits this {role_label} because it measures leadership behaviors relevant to people management and senior responsibility screening."
+
+        if classification.primary_domain == AssessmentDomain.ANALYTICAL:
+            return f"Fits this {role_label} because it measures analytical problem solving and decision quality that are useful for recruiter screening."
+
+        if classification.primary_domain == AssessmentDomain.COGNITIVE:
+            return f"Fits this {role_label} because it measures learning agility and reasoning ability, which are important when the role needs fast ramp-up."
+
+        if classification.primary_domain == AssessmentDomain.TECHNICAL:
+            tech_focus = self._extract_primary_technology(assessment) or "technical"
+            return f"Fits this {role_label} because it measures {tech_focus} capability aligned to the role requirements and the assessment catalog metadata."
+
+        return f"Fits this {role_label} because it measures the role-aligned competencies identified in the catalog metadata."
+
+    def _generate_measurement_reasoning(self, assessment, classification, context) -> str:
+        """Section 2: What specific capabilities are being tested."""
+        capabilities = classification.key_capabilities[:3]
+        if capabilities:
+            return f"Measures {', '.join(capabilities)} from the catalog metadata, which gives a concrete hiring signal for this role."
+        return f"Measures the core capability described in the catalog entry and helps compare candidates at the screening stage for {context.role}."
+
+    def _generate_ranking_reasoning(self, assessment, factors, context, classification, stage) -> str:
+        """Section 3: Competitive ranking justification."""
+        if not factors:
+            return f"Ranked above alternatives because the catalog metadata better matches the {context.role or 'target'} role and is most suitable for {stage} screening."
+            
+        reasons = []
+        if factors.domain_match > 0.8:
+            reasons.append("strong domain alignment")
+        if factors.skill_overlap > 0.7:
+            reasons.append("specific skill coverage")
+        if factors.seniority_fit > 0.8:
+            reasons.append("seniority fit")
+        if classification and classification.primary_domain in {AssessmentDomain.LEADERSHIP, AssessmentDomain.COMMUNICATION, AssessmentDomain.PERSONALITY}:
+            reasons.append("better recruiter-stage fit")
+            
+        if not reasons:
+            return f"Ranked higher than alternatives because its catalog signals are more relevant to {context.role or 'the role'} and it fits the {stage} stage better."
+            
+        return f"Ranked higher than alternatives due to its {' and '.join(reasons[:2])} for this specific hiring context and the {stage} stage."
+
+    def _generate_use_case_reasoning(self, assessment, context, classification, stage) -> str:
+        """Section 4: Strategic recruiter advice."""
+        if classification.primary_domain == AssessmentDomain.TECHNICAL:
+            return f"Best used for {stage} screening of {context.seniority} engineering candidates when hands-on execution matters."
+            
+        if classification.primary_domain == AssessmentDomain.COGNITIVE:
+            return f"Ideal for early {stage} screening to identify candidates with the strongest learning agility and problem-solving potential."
+            
+        return f"Strategic choice for {stage} screening when you need to compare {context.role} candidates on the role signals described in the catalog metadata."
     
     def _build_explanation_context(self, context: HiringContext) -> ExplanationContext:
         """Build explanation context from hiring context."""
@@ -271,6 +328,20 @@ class RecruiterExplanationEngine:
             leadership_needed=context.leadership_needs,
             communication_needed="communication" in [s.lower() for s in context.soft_skills]
         )
+
+    def _determine_best_stage(
+        self,
+        context: ExplanationContext,
+        classification: AssessmentClassification,
+        factors: Optional[RankingFactors],
+    ) -> str:
+        if classification.primary_domain in {AssessmentDomain.TECHNICAL, AssessmentDomain.ANALYTICAL, AssessmentDomain.COGNITIVE}:
+            return "screening"
+        if classification.primary_domain in {AssessmentDomain.LEADERSHIP, AssessmentDomain.PERSONALITY, AssessmentDomain.BEHAVIORAL, AssessmentDomain.COMMUNICATION, AssessmentDomain.SALES}:
+            return "shortlist"
+        if factors and factors.seniority_fit >= 0.9:
+            return "final shortlist"
+        return "screening"
     
     def _generate_opening(
         self,
@@ -321,9 +392,8 @@ class RecruiterExplanationEngine:
         if not templates:
             return ""
         
-        # Select template and fill in context
-        import random
-        template = random.choice(templates)
+        # Select the first grounded template for deterministic output.
+        template = templates[0]
         
         # Fill placeholders
         tech = context.tech_stack[0] if context.tech_stack else "technical"
@@ -348,8 +418,7 @@ class RecruiterExplanationEngine:
         if not templates:
             return ""
         
-        import random
-        return random.choice(templates)
+        return templates[0]
     
     def _generate_seniority_note(
         self,

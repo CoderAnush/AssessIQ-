@@ -3,13 +3,14 @@ REBUILT Ranking Engine - Phase 2 Architectural Refinement.
 
 RECRUITER-STYLE SCORING MODEL:
 FinalScore = 
-    0.35 semantic retrieval relevance
-    0.20 explicit skill overlap
-    0.15 role-domain alignment (from taxonomy)
-    0.10 seniority alignment
-    0.10 assessment-category fit
-    0.05 recruiter intent modifiers
-    0.05 diversity balancing
+    0.25 Domain Match (Taxonomy)
+    0.15 Seniority Alignment
+    0.15 Assessment Type Alignment (Focus)
+    0.15 Explicit Skill Overlap (Tech Stack)
+    0.10 Soft-Skill Alignment
+    0.10 Role Completeness (Requirement coverage)
+    0.10 Semantic/Contextual Relevance
+    - Diversity Penalty (Negative modifier)
 
 Key Improvements:
 1. Integrates with AssessmentTaxonomy for domain classification
@@ -21,52 +22,20 @@ Key Improvements:
 """
 
 from typing import List, Dict, Set, Optional, Tuple
-from dataclasses import dataclass, field
+import re
+import time
 from app.models.assessment import AssessmentWithMetadata
+from app.models.ranking import RankingFactors, RankedAssessment
 from app.services.conversation_analyzer import HiringContext
+from app.services.recruiter_reasoning import RecruiterExplanationEngine
 from app.core.assessment_taxonomy import AssessmentTaxonomy, AssessmentDomain, RoleDomain, AssessmentClassification
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 import numpy as np
 
 logger = get_logger("ranker_v2")
 
 
-@dataclass
-class RankingFactors:
-    """All scoring factors for transparency."""
-    semantic_score: float = 0.0
-    skill_overlap_score: float = 0.0
-    role_domain_alignment: float = 0.0
-    seniority_alignment: float = 0.0
-    category_fit: float = 0.0
-    intent_modifier: float = 0.0
-    diversity_penalty: float = 0.0
-    
-    def calculate_final(self) -> float:
-        """Calculate weighted final score."""
-        return (
-            self.semantic_score * 0.35 +
-            self.skill_overlap_score * 0.20 +
-            self.role_domain_alignment * 0.15 +
-            self.seniority_alignment * 0.10 +
-            self.category_fit * 0.10 +
-            self.intent_modifier * 0.05 +
-            self.diversity_penalty * 0.05
-        )
-
-
-@dataclass
-class RankedAssessment:
-    """Complete ranking result with metadata."""
-    assessment: AssessmentWithMetadata
-    final_score: float
-    raw_score: float
-    confidence_label: str
-    factors: RankingFactors
-    explanation: str
-    rank_position: int
-    domain: AssessmentDomain
-    category: str
+# RankingFactors and RankedAssessment moved to app.models.ranking
 
 
 class DiversityBalancer:
@@ -118,19 +87,44 @@ class RecruiterRanker:
     def __init__(self, taxonomy: Optional[AssessmentTaxonomy] = None):
         self.taxonomy = taxonomy or AssessmentTaxonomy()
         self.diversity_balancer = DiversityBalancer()
+        self.explanation_engine = RecruiterExplanationEngine(self.taxonomy)
+
+    def _build_context_terms(self, context: HiringContext) -> Set[str]:
+        terms: Set[str] = set()
+
+        def add_text(text: Optional[str]) -> None:
+            if not text:
+                return
+            for token in re.findall(r"[a-z0-9]+", text.lower()):
+                if len(token) > 1:
+                    terms.add(token)
+
+        add_text(context.role)
+        add_text(context.domain)
+        add_text(context.seniority)
+
+        for skill in context.tech_stack:
+            add_text(skill)
+        for skill in context.soft_skills:
+            add_text(skill)
+        for skill in getattr(context, "technical_skills", set()):
+            add_text(skill)
+        for filt in context.refinement_filters:
+            add_text(filt)
+
+        return terms
     
-    def rank(
+    async def rank(
         self,
         retrieved_results: List[Dict],
         context: HiringContext,
         catalog_assessments: Dict[str, AssessmentWithMetadata],
         top_k: int = 10
-    ) -> List[RankedAssessment]:
+    ) -> Tuple[List[RankedAssessment], List[Tuple[AssessmentWithMetadata, RankingFactors, float]]]:
         """
-        Rank assessments using recruiter-style scoring.
-        
-        Returns naturally spread scores (96, 92, 89, 84, 79, 73...)
+        Rank assessments using recruiter-style scoring (Async).
         """
+        start_time = time.time()
         try:
             logger.info(f"Ranking {len(retrieved_results)} assessments for role: {context.role}")
             
@@ -144,11 +138,17 @@ class RecruiterRanker:
                 list(context.tech_stack or [])
             )
             logger.info(f"Role classified as: {role_domain.value}")
+            role_profile = self.taxonomy.get_role_intelligence_profile(role_domain)
             
-            # Score all assessments
+            # PRE-FILTERING (Priority 1 Optimization)
+            # Shortlist only the strongest 20 retrieval candidates before deep scoring.
+            candidate_pool = retrieved_results[:20]
+            logger.info(f"Shortlisted {len(candidate_pool)} candidates for deep scoring")
+            
+            # Score shortlisted assessments
             scored_assessments: List[Tuple[AssessmentWithMetadata, RankingFactors, float]] = []
             
-            for result in retrieved_results:
+            for result in candidate_pool:
                 assessment_id = result.get("id")
                 if not assessment_id:
                     continue
@@ -158,9 +158,7 @@ class RecruiterRanker:
                 if not assessment:
                     continue
                 
-                factors = self._calculate_factors(
-                    assessment, context, role_domain, result
-                )
+                factors = self._calculate_factors(assessment, context, role_domain, result)
                 raw_score = factors.calculate_final()
                 
                 scored_assessments.append((assessment, factors, raw_score))
@@ -169,19 +167,28 @@ class RecruiterRanker:
             scored_assessments.sort(key=lambda x: x[2], reverse=True)
             
             # Apply diversity balancing during selection
-            ranked_results = self._apply_diversity_and_finalize(
-                scored_assessments, role_domain, top_k
-            )
+            ranked_results = self._apply_diversity_and_finalize(scored_assessments, role_domain, top_k, role_profile)
             
             # Normalize to natural spread
             final_results = self._normalize_to_natural_spread(ranked_results)
             
-            logger.info(f"Completed ranking with {len(final_results)} results")
-            return final_results
+            # Deterministic explanation generation for the final shortlist.
+            for result in final_results:
+                result.explanation = await self.explanation_engine.generate_explanation(
+                    result.assessment,
+                    context,
+                    result.factors,
+                )
+
+            self._log_quality_diagnostics(final_results, context, role_profile)
+            
+            latency = time.time() - start_time
+            logger.info(f"Completed async ranking in {latency:.3f}s")
+            return final_results, scored_assessments
         except Exception as e:
             logger.error(f"Ranking error: {e}", exc_info=True)
             # Return minimal safe results instead of crashing
-            return []
+            return [], []
     
     def _calculate_factors(
         self,
@@ -192,47 +199,253 @@ class RecruiterRanker:
     ) -> RankingFactors:
         """Calculate all ranking factors for an assessment."""
         factors = RankingFactors()
+        context_terms = self._build_context_terms(context)
         
-        # 1. Semantic retrieval relevance (35%)
-        factors.semantic_score = retrieval_result.get("hybrid_score", 0.5)
+        # 1. Semantic Relevance (10%)
+        factors.semantic_relevance = retrieval_result.get("hybrid_score", 0.5)
+
+        # Keyword overlap from query reconstruction and catalog metadata.
+        candidate_text = " ".join(
+            [
+                assessment.name,
+                assessment.description,
+                " ".join(assessment.skills or []),
+                " ".join(assessment.ideal_roles or []),
+                " ".join(assessment.skill_tags or []),
+            ]
+        ).lower()
+        if context_terms:
+            hits = sum(1 for term in context_terms if term in candidate_text)
+            overlap = hits / max(1, min(len(context_terms), 8))
+            factors.semantic_relevance = max(factors.semantic_relevance, min(1.0, 0.35 + overlap * 0.65))
         
-        # 2. Explicit skill overlap (20%)
-        factors.skill_overlap_score = self._calculate_skill_overlap(assessment, context)
-        
-        # 3. Role-domain alignment (15%) - from taxonomy
+        # 2. Domain Match (30% - Boosted)
         alignment_score, _ = self.taxonomy.calculate_domain_alignment(
             assessment.id, role_domain
         )
-        factors.role_domain_alignment = alignment_score
+        factors.domain_match = alignment_score
         
-        # DOMAIN PENALTY (Critical Fix): If primary domain is a total mismatch, apply heavy penalty
+        # Phase 4: Strict Domain Penalty
         classification = self.taxonomy.get_assessment_classification(assessment.id)
-        if classification and role_domain != RoleDomain.GENERAL:
-            # Check for high-level domain mismatch (e.g. Technical test for Sales role)
-            mismatch = False
-            if role_domain in [RoleDomain.BACKEND_ENGINEER, RoleDomain.FRONTEND_ENGINEER, RoleDomain.FULLSTACK_ENGINEER]:
-                if classification.primary_domain not in [AssessmentDomain.TECHNICAL, AssessmentDomain.COGNITIVE, AssessmentDomain.ANALYTICAL]:
-                    mismatch = True
-            elif role_domain in [RoleDomain.DATA_SCIENTIST, RoleDomain.DATA_ANALYST]:
-                if classification.primary_domain not in [AssessmentDomain.ANALYTICAL, AssessmentDomain.TECHNICAL, AssessmentDomain.COGNITIVE]:
-                    mismatch = True
-            
-            if mismatch:
-                factors.intent_modifier += self.DOMAIN_MISMATCH_PENALTY
+        if classification:
+            if role_domain == RoleDomain.BACKEND_ENGINEER and classification.primary_domain not in [AssessmentDomain.TECHNICAL, AssessmentDomain.COGNITIVE]:
+                factors.domain_match *= 0.3 # Heavy penalty for non-technical tests in eng roles
+            if role_domain == RoleDomain.SALES_REP and classification.primary_domain == AssessmentDomain.TECHNICAL:
+                factors.domain_match *= 0.2
+
+        role_profile = self.taxonomy.get_role_intelligence_profile(role_domain)
+        preferred_domains = set(role_profile.get("preferred_domains", []))
+        support_domains = set(role_profile.get("support_domains", []))
+        discouraged_domains = set(role_profile.get("discouraged_domains", []))
+        anchor_terms = [term.lower() for term in role_profile.get("anchor_terms", [])]
+
+        if classification:
+            if classification.primary_domain in preferred_domains:
+                factors.domain_match = min(1.0, factors.domain_match + 0.18)
+            elif classification.primary_domain in support_domains:
+                factors.domain_match = min(1.0, factors.domain_match + 0.05)
+            elif classification.primary_domain in discouraged_domains:
+                factors.domain_match *= 0.18
+            elif classification.primary_domain == AssessmentDomain.GENERAL and role_domain != RoleDomain.GENERAL:
+                factors.domain_match *= 0.12
+
+            if classification.category == "General Assessment" and role_domain != RoleDomain.GENERAL:
+                factors.domain_match *= 0.2
+
+        if self._is_generic_assessment(assessment):
+            if role_domain == RoleDomain.GENERAL:
+                factors.semantic_relevance = max(0.0, factors.semantic_relevance - 0.05)
+            else:
+                factors.semantic_relevance = max(0.0, factors.semantic_relevance - 0.35)
+                factors.role_completeness = max(0.0, factors.role_completeness - 0.20)
+
+        if anchor_terms:
+            candidate_text = f"{assessment.name} {assessment.description}".lower()
+            anchor_hits = sum(1 for term in anchor_terms if term in candidate_text)
+            if anchor_hits:
+                factors.semantic_relevance = min(1.0, factors.semantic_relevance + 0.12 + min(0.12, anchor_hits * 0.04))
+                factors.role_completeness = min(1.0, factors.role_completeness + 0.08)
+            elif role_domain != RoleDomain.GENERAL:
+                factors.semantic_relevance = max(0.0, factors.semantic_relevance - 0.18)
+                factors.domain_match *= 0.85
+
+        if role_domain in {RoleDomain.SALES_REP, RoleDomain.SALES_MANAGER, RoleDomain.CUSTOMER_SUPPORT} and classification:
+            candidate_text = f"{assessment.name} {assessment.description}".lower()
+            if any(term in candidate_text for term in ["sales", "customer", "communication", "empathy", "service", "negotiation"]):
+                factors.domain_match = min(1.0, factors.domain_match + 0.12)
+            elif classification.primary_domain == AssessmentDomain.PERSONALITY:
+                factors.domain_match = min(1.0, factors.domain_match + 0.06)
+
+        if role_domain in {
+            RoleDomain.SALES_REP,
+            RoleDomain.SALES_MANAGER,
+            RoleDomain.CUSTOMER_SUPPORT,
+            RoleDomain.OPERATIONS_MANAGER,
+            RoleDomain.FINANCE_ANALYST,
+            RoleDomain.MARKETING_MANAGER,
+            RoleDomain.EXECUTIVE_ASSISTANT,
+            RoleDomain.GRADUATE_TRAINEE,
+        } and classification and classification.primary_domain == AssessmentDomain.TECHNICAL:
+            factors.domain_match *= 0.25
+            factors.semantic_relevance = max(0.0, factors.semantic_relevance - 0.15)
+
+        if context.tech_stack and classification and classification.primary_domain == AssessmentDomain.TECHNICAL:
+            tech_terms = {tech.lower() for tech in context.tech_stack}
+            if tech_terms:
+                exact_tech_hits = sum(1 for tech in tech_terms if tech in assessment.name.lower() or tech in assessment.description.lower())
+                if exact_tech_hits == 0 and role_domain not in {
+                    RoleDomain.BACKEND_ENGINEER,
+                    RoleDomain.FRONTEND_ENGINEER,
+                    RoleDomain.FULLSTACK_ENGINEER,
+                    RoleDomain.DEVOPS_ENGINEER,
+                    RoleDomain.MOBILE_DEVELOPER,
+                    RoleDomain.QA_ENGINEER,
+                    RoleDomain.CYBERSECURITY_ANALYST,
+                    RoleDomain.CLOUD_ENGINEER,
+                }:
+                    factors.domain_match *= 0.35
+
+        if getattr(context, "preferred_test_types", None):
+            if assessment.test_type.value in context.preferred_test_types:
+                factors.type_alignment = min(1.0, factors.type_alignment + 0.2)
+            else:
+                factors.type_alignment = max(0.0, factors.type_alignment - 0.1)
+
+        preferred_types = set(role_profile.get("preferred_types", set()))
+        if preferred_types:
+            if assessment.test_type.value in preferred_types:
+                factors.type_alignment = min(1.0, factors.type_alignment + 0.15)
+            else:
+                factors.type_alignment = max(0.0, factors.type_alignment - 0.15)
         
-        # 4. Seniority alignment (10%)
-        factors.seniority_alignment = self._calculate_seniority_alignment(
-            assessment, context
-        )
+        # 3. Seniority Fit (20% - Boosted)
+        factors.seniority_fit = self._calculate_seniority_alignment(assessment, context)
         
-        # 5. Category fit (10%)
-        factors.category_fit = self._calculate_category_fit(assessment, context)
+        # 4. Type Alignment (15%)
+        factors.type_alignment = self._calculate_category_fit(assessment, context)
         
-        # 6. Recruiter intent modifiers (5%)
-        # factors.intent_modifier = self._calculate_intent_modifiers(assessment, context)
-        # Combined above for clarity
+        # 5. Skill Overlap (15%)
+        # Check tech stack directly in assessment name/desc
+        skill_score = 0.0
+        if context.tech_stack:
+            matches = sum(1 for tech in context.tech_stack if tech.lower() in assessment.name.lower() or tech.lower() in assessment.description.lower())
+            skill_score = min(1.0, matches / max(1, len(context.tech_stack)))
+        if context_terms:
+            metadata_tokens = set(re.findall(r"[a-z0-9]+", candidate_text))
+            keyword_hits = len(context_terms.intersection(metadata_tokens))
+            keyword_score = min(1.0, keyword_hits / max(1, min(len(context_terms), 6)))
+            skill_score = max(skill_score, keyword_score)
+        factors.skill_overlap = skill_score
+        
+        # 6. Soft-Skill Match (10%)
+        factors.soft_skill_match = self._calculate_soft_skill_match(assessment, context)
+        
+        # 7. Role Completeness (10%)
+        factors.role_completeness = self._calculate_role_completeness(assessment, context, factors)
+        
+        # --- RECRUITER WORKFLOW INTELLIGENCE (Priority 2 & 4) ---
+        
+        # A. Workflow Modes Bias
+        if context.workflow_mode == "leadership":
+            if classification and classification.primary_domain in [AssessmentDomain.LEADERSHIP, AssessmentDomain.PERSONALITY]:
+                factors.role_completeness = min(1.0, factors.role_completeness + 0.2)
+                factors.domain_match = min(1.0, factors.domain_match + 0.1)
+        elif context.workflow_mode == "graduate":
+            if classification and classification.primary_domain in [AssessmentDomain.COGNITIVE, AssessmentDomain.ANALYTICAL]:
+                factors.type_alignment = min(1.0, factors.type_alignment + 0.2)
+        elif context.workflow_mode == "quick":
+            # Prefer shorter assessments
+            duration = getattr(assessment, 'duration_minutes', 30)
+            if duration <= 20:
+                factors.role_completeness = min(1.0, factors.role_completeness + 0.15)
+        
+        # B. Smart Refinement Filters
+        if "technical+" in context.refinement_filters:
+            if classification and classification.primary_domain == AssessmentDomain.TECHNICAL:
+                factors.domain_match = min(1.0, factors.domain_match + 0.2)
+        if "personality-" in context.refinement_filters:
+            if classification and classification.primary_domain == AssessmentDomain.PERSONALITY:
+                factors.domain_match = max(0.0, factors.domain_match - 0.4)
+        if "shorter" in context.refinement_filters:
+            duration = getattr(assessment, 'duration_minutes', 30)
+            if duration > 45:
+                factors.type_alignment = max(0.0, factors.type_alignment - 0.3)
+        if "cognitive-only" in context.refinement_filters:
+            if classification and classification.primary_domain != AssessmentDomain.COGNITIVE:
+                factors.domain_match = max(0.0, factors.domain_match - 0.5)
         
         return factors
+
+    def _is_generic_assessment(self, assessment: AssessmentWithMetadata) -> bool:
+        name = assessment.name.lower()
+        generic_markers = [
+            "global skills",
+            "general skills",
+            "general assessment",
+            "skills development report",
+            "skills assessment",
+            "report",
+            "inventory",
+            "basic",
+            "general ability",
+        ]
+        return any(marker in name for marker in generic_markers)
+
+    def _calculate_soft_skill_match(
+        self,
+        assessment: AssessmentWithMetadata,
+        context: HiringContext
+    ) -> float:
+        """Calculate alignment with soft-skill requirements."""
+        if not context.soft_skills:
+            return 0.5
+            
+        soft_skills_lower = {s.lower() for s in context.soft_skills}
+        assess_skills = {s.lower() for s in (assessment.skills or [])}
+        
+        matches = len(soft_skills_lower.intersection(assess_skills))
+        if matches > 0:
+            return 0.7 + (0.3 * (matches / len(soft_skills_lower)))
+            
+        # Check domain for soft skill relevance
+        classification = self.taxonomy.get_assessment_classification(assessment.id)
+        if classification:
+            if "communication" in soft_skills_lower and classification.primary_domain == AssessmentDomain.COMMUNICATION:
+                return 0.9
+            if "leadership" in soft_skills_lower and classification.primary_domain == AssessmentDomain.LEADERSHIP:
+                return 0.9
+            if "teamwork" in soft_skills_lower and classification.primary_domain == AssessmentDomain.PERSONALITY:
+                return 0.8
+                
+        return 0.4
+
+    def _calculate_role_completeness(
+        self,
+        assessment: AssessmentWithMetadata,
+        context: HiringContext,
+        factors: RankingFactors
+    ) -> float:
+        """Calculate how many distinct recruiter requirements this assessment covers."""
+        score = 0.0
+        requirements_covered = 0
+        total_requirements = 0
+        
+        # Count requirements
+        if context.tech_stack: total_requirements += 1
+        if context.soft_skills: total_requirements += 1
+        if context.seniority: total_requirements += 1
+        if context.leadership_needs: total_requirements += 1
+        
+        if total_requirements == 0:
+            return 0.8
+            
+        # Check coverage
+        if factors.skill_overlap > 0.7: requirements_covered += 1
+        if factors.soft_skill_match > 0.7: requirements_covered += 1
+        if factors.seniority_fit > 0.8: requirements_covered += 1
+        if context.leadership_needs and factors.type_alignment > 0.8: requirements_covered += 1
+        
+        return requirements_covered / total_requirements
     
     def _calculate_skill_overlap(
         self, 
@@ -344,6 +557,9 @@ class RecruiterRanker:
         if context.leadership_needs:
             if hasattr(assessment, 'leadership_focus') and assessment.leadership_focus:
                 modifier += 0.2
+
+        if getattr(context, "preferred_test_types", None) and assessment.test_type.value in context.preferred_test_types:
+            modifier += 0.15
         
         return min(modifier, 1.0)
     
@@ -351,60 +567,146 @@ class RecruiterRanker:
         self,
         scored_assessments: List[Tuple[AssessmentWithMetadata, RankingFactors, float]],
         role_domain: RoleDomain,
-        top_k: int
+        top_k: int,
+        role_profile: Optional[Dict[str, object]] = None,
     ) -> List[RankedAssessment]:
-        """Apply diversity balancing and create ranked results."""
+        """
+        Apply diversity balancing and create ranked results.
+        Enforces a balanced mix: (e.g. 1 Tech, 1 Cognitive, 1 Personality).
+        """
         results = []
-        diversity_balancer = DiversityBalancer()
+        diversity_balancer = DiversityBalancer(max_per_category=1, max_per_domain=2)
         
-        for assessment, factors, raw_score in scored_assessments:
-            # Get classification
+        # 1. First pass: Select the absolute top candidate (anchoring)
+        if scored_assessments:
+            assessment, factors, raw_score = scored_assessments[0]
             classification = self.taxonomy.get_assessment_classification(assessment.id)
-            if not classification:
-                continue
-            
-            # Calculate diversity penalty
-            diversity_penalty = diversity_balancer.calculate_penalty(
-                assessment,
-                classification.primary_domain,
-                classification.category
-            )
-            
-            # Apply penalty
-            factors.diversity_penalty = diversity_penalty
-            adjusted_score = factors.calculate_final()
-            
-            # Record selection for diversity tracking
-            diversity_balancer.record_selection(
-                classification.primary_domain,
-                classification.category
-            )
-            
-            # Generate explanation
-            try:
-                explanation = self._generate_recruiter_explanation(
-                    assessment, factors, role_domain, classification
-                )
-            except Exception as e:
-                logger.error(f"Error generating explanation for {assessment.id}: {e}")
-                explanation = f"{assessment.name} evaluates core competencies for the {role_domain.value} role."
-            
-            results.append(RankedAssessment(
-                assessment=assessment,
-                final_score=adjusted_score,
-                raw_score=raw_score,
-                confidence_label="",  # Will be set after normalization
-                factors=factors,
-                explanation=explanation,
-                rank_position=0,  # Will be set after normalization
-                domain=classification.primary_domain,
-                category=classification.category
-            ))
-            
-            if len(results) >= top_k * 2:  # Get extra for final selection
-                break
+            if classification:
+                diversity_balancer.record_selection(classification.primary_domain, classification.category)
+                results.append(self._create_ranked_assessment(assessment, factors, raw_score, classification))
+
+        # 2. Subsequent passes: Prioritize unrepresented domains
+        preferred_domains = list(role_profile.get("preferred_domains", [])) if role_profile else []
+        support_domains = list(role_profile.get("support_domains", [])) if role_profile else []
+        target_domains = preferred_domains + [domain for domain in support_domains if domain not in preferred_domains]
+        if not target_domains:
+            target_domains = [AssessmentDomain.TECHNICAL, AssessmentDomain.COGNITIVE, AssessmentDomain.PERSONALITY, AssessmentDomain.LEADERSHIP, AssessmentDomain.ANALYTICAL]
         
+        # Try to fill slots with diverse domains
+        for _ in range(top_k - 1):
+            best_candidate = None
+            best_candidate_idx = -1
+            max_adjusted_score = -1.0
+            
+            for i, (assessment, factors, raw_score) in enumerate(scored_assessments):
+                if any(r.assessment.id == assessment.id for r in results):
+                    continue
+                    
+                classification = self.taxonomy.get_assessment_classification(assessment.id)
+                if not classification: continue
+                
+                # Boost if domain is not yet in results
+                domain_penalty = diversity_balancer.calculate_penalty(
+                    assessment, classification.primary_domain, classification.category
+                )
+                
+                # Active diversity boost
+                domain_already_present = any(r.domain == classification.primary_domain for r in results)
+                diversity_boost = 0.15 if not domain_already_present else 0.0
+
+                if classification.primary_domain in target_domains:
+                    target_index = target_domains.index(classification.primary_domain)
+                    diversity_boost += max(0.18 - (target_index * 0.03), 0.05)
+
+                if role_profile and classification.primary_domain == AssessmentDomain.GENERAL and role_domain != RoleDomain.GENERAL:
+                    diversity_boost -= 0.25
+
+                if role_profile:
+                    anchor_terms = [term.lower() for term in role_profile.get("anchor_terms", [])]
+                    candidate_text = f"{assessment.name} {assessment.description}".lower()
+                    if anchor_terms and any(term in candidate_text for term in anchor_terms):
+                        diversity_boost += 0.10
+                    elif anchor_terms and role_domain != RoleDomain.GENERAL:
+                        diversity_boost -= 0.12
+                
+                adjusted_score = factors.calculate_final() + domain_penalty + diversity_boost
+                
+                if adjusted_score > max_adjusted_score:
+                    max_adjusted_score = adjusted_score
+                    best_candidate = (assessment, factors, raw_score, classification)
+                    best_candidate_idx = i
+            
+            if best_candidate:
+                assessment, factors, raw_score, classification = best_candidate
+                diversity_balancer.record_selection(classification.primary_domain, classification.category)
+                results.append(self._create_ranked_assessment(assessment, factors, raw_score, classification))
+            else:
+                break
+                
         return results
+
+    def _score_quality(
+        self,
+        result: RankedAssessment,
+        context: HiringContext,
+        role_profile: Optional[Dict[str, object]] = None,
+    ) -> float:
+        explanation_text = " ".join(result.explanation.values()).lower() if result.explanation else ""
+        explanation_quality = 0.0
+        if explanation_text:
+            required_fragments = ["role", "measures", "ranks", "stage"]
+            explanation_quality = sum(1 for fragment in required_fragments if fragment in explanation_text) / len(required_fragments)
+
+        preferred_domains = set(role_profile.get("preferred_domains", [])) if role_profile else set()
+        support_domains = set(role_profile.get("support_domains", [])) if role_profile else set()
+        domain_score = 1.0 if result.domain in preferred_domains else 0.75 if result.domain in support_domains else 0.4
+
+        seniority_score = result.factors.seniority_fit
+        relevance_score = max(result.factors.domain_match, result.factors.semantic_relevance, result.factors.skill_overlap)
+
+        diversity_score = 1.0
+        if result.category == "General Assessment" and result.domain != AssessmentDomain.GENERAL:
+            diversity_score = 0.7
+
+        return round(
+            (relevance_score * 0.35)
+            + (diversity_score * 0.15)
+            + (domain_score * 0.25)
+            + (seniority_score * 0.15)
+            + (explanation_quality * 0.10),
+            3,
+        )
+
+    def _log_quality_diagnostics(
+        self,
+        ranked_results: List[RankedAssessment],
+        context: HiringContext,
+        role_profile: Optional[Dict[str, object]] = None,
+    ) -> None:
+        if not ranked_results:
+            return
+
+        scores = [self._score_quality(result, context, role_profile) for result in ranked_results]
+        average_quality = sum(scores) / len(scores)
+        top_names = ", ".join(result.assessment.name for result in ranked_results[:3])
+        logger.info(
+            f"Quality diagnostics: avg={average_quality:.3f} top={top_names} "
+            f"domains={[result.domain.value for result in ranked_results[:3]]}"
+        )
+
+    def _create_ranked_assessment(self, assessment, factors, raw_score, classification) -> RankedAssessment:
+        """Helper to create RankedAssessment object."""
+        return RankedAssessment(
+            assessment=assessment,
+            final_score=factors.calculate_final(),
+            raw_score=raw_score,
+            confidence_label="",
+            factors=factors,
+            explanation={}, # Will be populated by engine
+            rank_position=0,
+            domain=classification.primary_domain,
+            category=classification.category
+        )
     
     def _normalize_to_natural_spread(
         self, 
@@ -492,37 +794,44 @@ class RecruiterRanker:
     ) -> str:
         """Generate high-fidelity recruiter-grade contextual explanation."""
         parts = []
+        stage = "screening"
         
         if classification is None:
             classification = self.taxonomy.get_assessment_classification(assessment.id)
         
         role_name = role_domain.value.replace('_', ' ')
+        role_profile = self.taxonomy.get_role_intelligence_profile(role_domain)
+        preferred_domains = set(role_profile.get("preferred_domains", []))
+        support_domains = set(role_profile.get("support_domains", []))
         
         # 1. Role/Domain Alignment
-        if factors.role_domain_alignment > 0.8:
-            parts.append(f"Exceptional fit for {role_name} hiring as it directly evaluates domain-specific competencies")
-        elif factors.role_domain_alignment > 0.6:
-            parts.append(f"Strongly relevant for assessing {role_name} requirements")
+        if classification and classification.primary_domain in preferred_domains:
+            parts.append(f"Directly fits {role_name} hiring because it evaluates {classification.primary_domain.value} capabilities relevant to the role")
+            stage = "shortlist"
+        elif classification and classification.primary_domain in support_domains:
+            parts.append(f"Provides supporting evidence for {role_name} selection by measuring {classification.primary_domain.value} capabilities")
         
         # 2. Technical Depth (Recruiter-Grade)
-        if classification.technical_depth > 7:
-            parts.append(f"Evaluates advanced technical proficiency and system-level reasoning")
-        elif classification.technical_depth > 4:
-            parts.append(f"Measures core technical knowledge and practical application")
+        if classification and classification.technical_depth > 7:
+            parts.append("Measures advanced problem solving and technical depth needed to differentiate stronger candidates")
+        elif classification and classification.technical_depth > 4:
+            parts.append("Measures practical capability that is useful for screening before deeper interviews")
             
         # 3. Behavioral/Soft Skills
-        if classification.behavioral_relevance > 7:
-            parts.append(f"Provides deep insights into workplace behavior and collaborative potential")
+        if classification and classification.behavioral_relevance > 7:
+            parts.append("Captures behavioral signals that matter for team fit and day-to-day working style")
         
         # 4. Seniority match
-        if factors.seniority_alignment > 0.9:
-            parts.append(f"Tailored for the expectations of a {assessment.seniority_levels[0] if assessment.seniority_levels else 'professional'} role")
+        if factors.seniority_fit > 0.9:
+            parts.append(f"Matches the expected seniority level for this role and is best used in {stage} screening")
+        else:
+            parts.append(f"Best used during {stage} screening to compare candidates against the core role requirements")
 
         # Combine
         if len(parts) >= 2:
-            explanation = ". ".join(parts[:3]) + "."
+            explanation = ". ".join(parts[:4]) + "."
         else:
-            explanation = f"Recommended assessment for {role_name} based on skill profile and role taxonomy."
+            explanation = f"Recommended assessment for {role_name} based on grounded role taxonomy and catalog metadata."
             
         return explanation
     
@@ -575,31 +884,43 @@ class RecruiterRanker:
     def get_recommendations_for_api(
         self, 
         ranked_results: List[RankedAssessment],
-        top_k: int = 5
-    ) -> List[Dict]:
-        """Convert ranked results to API response format."""
+        top_k: int = 5,
+        candidate_pool: Optional[List[Tuple[AssessmentWithMetadata, RankingFactors, float]]] = None
+    ) -> Dict:
+        """
+        STRICT COMPLIANCE VERSION (Phase 1 & 5).
+        Returns ONLY name, url, and test_type as required by the evaluator.
+        """
         recommendations = []
         
-        for result in ranked_results[:top_k]:
-            # ENSURE ALL FIELDS REQUIRED BY Recommendation Pydantic model exist
-            # Recommendation(id, name, url, test_type, score, match_label, category, explanation)
+        # Limit to 1-10 (Phase 1)
+        count = min(10, max(1, len(ranked_results)))
+        if not ranked_results: count = 0
+
+        for result in ranked_results[:count]:
+            # PHASE 5: Grounded from catalog only
+            # PHASE 1: name, url, test_type only
             rec = {
-                "id": str(result.assessment.id) if result.assessment.id else "unknown",
-                "name": str(result.assessment.name) if result.assessment.name else "SHL Assessment",
-                "url": str(result.assessment.url) if result.assessment.url else "https://www.shl.com/solutions/products/",
-                "test_type": str(result.assessment.test_type.value) if hasattr(result.assessment.test_type, 'value') else "K",
-                "score": float(result.final_score) if isinstance(result.final_score, (int, float)) else 0.85,
-                "match_label": str(result.confidence_label) if result.confidence_label else "Strong Match",
-                "category": str(result.category) if result.category else "Professional Assessment",
-                "explanation": str(result.explanation) if result.explanation else "Recommended based on role requirements.",
+                "name": str(result.assessment.name),
+                "url": str(result.assessment.url),
+                "test_type": str(result.assessment.test_type.value) if hasattr(result.assessment.test_type, 'value') else "K"
             }
-            
-            # Final safety check for score range
-            rec["score"] = max(0.0, min(1.0, rec["score"]))
-            
             recommendations.append(rec)
-        
-        return recommendations
+            
+        return {
+            "recommendations": recommendations,
+            "reply": "Based on your requirements, here are the most relevant SHL assessments from our grounded catalog:"
+        }
+
+    def _determine_exclusion_reason(self, assessment, factors) -> Optional[str]:
+        """Strategic reason why a high-quality test was not selected (Priority 6)."""
+        if factors.domain_match < 0.4:
+            return "Excluded due to domain misalignment."
+        if factors.seniority_fit < 0.5:
+            return "Lower seniority alignment for this role level."
+        if factors.type_alignment < 0.5:
+            return "Assessment type did not match requested focus."
+        return "Ranked lower than the top selections for this specific query."
 
 
 # Backward compatibility - maintain existing interface

@@ -10,7 +10,7 @@ import google.generativeai as genai
 from google.api_core import exceptions as google_exceptions
 
 from app.config import settings
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 
 logger = get_logger("llm_service")
 
@@ -23,8 +23,19 @@ class LLMService:
 
     def __init__(self):
         """Initialize Gemini client."""
-        if not settings.gemini_api_key:
-            raise ValueError("GEMINI_API_KEY environment variable not set")
+        self.disabled = not bool(settings.gemini_api_key and settings.gemini_api_key != "your_gemini_api_key_here")
+        if self.disabled:
+            logger.warning("Gemini API key not configured; LLM service is running in disabled mode")
+            self.model = settings.gemini_model
+            self.max_retries = 0
+            self.retry_delay = 0.0
+            self.timeout = settings.gemini_timeout_seconds
+            self.generation_config = {
+                "temperature": settings.gemini_temperature,
+                "top_p": settings.gemini_top_p,
+                "max_output_tokens": settings.gemini_max_tokens,
+            }
+            return
 
         genai.configure(api_key=settings.gemini_api_key)
         self.model = settings.gemini_model
@@ -51,6 +62,9 @@ class LLMService:
         Returns:
             Parsed response dict with reply, recommendations, end_of_conversation
         """
+
+        if getattr(self, "disabled", False):
+            return self._get_safe_default(has_recommendations=False)
 
         if conversation_context:
             system_prompt += f"\n\nCONTEXT:\n{conversation_context}"
@@ -193,6 +207,9 @@ class LLMService:
         self, missing_info: List[str], context_str: str
     ) -> str:
         """Generate a clarification question using Gemini."""
+
+        if getattr(self, "disabled", False):
+            return "Could you clarify the role, seniority, and assessment focus?"
 
         prompt = f"""Generate ONE natural clarification question.
 

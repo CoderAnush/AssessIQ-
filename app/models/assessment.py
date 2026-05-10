@@ -4,7 +4,7 @@ Used throughout the system for type safety.
 """
 
 from pydantic import BaseModel, Field, validator
-from typing import List, Optional
+from typing import List, Optional, Dict
 from enum import Enum
 
 
@@ -49,9 +49,33 @@ class AssessmentWithMetadata(Assessment):
         default_factory=list,
         description="Recommended for these roles"
     )
+    ideal_roles: List[str] = Field(
+        default_factory=list,
+        description="Ideal roles from catalog"
+    )
+    inferred_roles: List[str] = Field(
+        default_factory=list,
+        description="Roles inferred during processing"
+    )
+    skill_tags: List[str] = Field(
+        default_factory=list,
+        description="Tags from catalog"
+    )
     seniority_levels: List[str] = Field(
         default_factory=list,
         description="Recommended seniority levels: junior, mid, senior"
+    )
+    seniority_fit: List[str] = Field(
+        default_factory=list,
+        description="Seniority fit from catalog"
+    )
+    difficulty_level: Optional[str] = Field(
+        default=None,
+        description="Difficulty level: entry, intermediate, advanced"
+    )
+    relevance_scores: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Relevance scores for various focuses"
     )
     communication_focus: bool = Field(
         default=False,

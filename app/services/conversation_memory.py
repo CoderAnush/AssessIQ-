@@ -21,7 +21,7 @@ from typing import Dict, List, Optional, Any, Set
 from datetime import datetime, timedelta
 from app.models.assessment import AssessmentWithMetadata
 from app.services.conversation_analyzer import HiringContext
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 
 logger = get_logger("conversation_memory")
 

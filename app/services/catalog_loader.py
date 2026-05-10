@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import List, Dict, Optional
 from app.models.assessment import AssessmentWithMetadata
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 
 logger = get_logger("catalog_loader")
 

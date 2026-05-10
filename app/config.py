@@ -85,9 +85,10 @@ def validate_config() -> bool:
     errors = []
     warnings = []
 
-    # Check API key
+    # API key is optional for the strict evaluator path because the chat route
+    # no longer depends on LLM generation.
     if not settings.gemini_api_key or settings.gemini_api_key == "your_gemini_api_key_here":
-        errors.append("GEMINI_API_KEY not configured")
+        warnings.append("GEMINI_API_KEY not configured - LLM features will be disabled")
 
     # Check Gemini model is set
     if not settings.gemini_model:

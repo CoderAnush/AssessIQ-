@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from app.models.assessment import AssessmentWithMetadata
 from app.services.conversation_analyzer import HiringContext
 from app.core.assessment_taxonomy import AssessmentTaxonomy, AssessmentDomain, RoleDomain
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 import numpy as np
 
 logger = get_logger("ranker_v2")

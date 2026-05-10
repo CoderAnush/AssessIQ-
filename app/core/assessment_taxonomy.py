@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Set, Optional, Tuple
 from enum import Enum
 from app.models.assessment import AssessmentWithMetadata
-from app.logging.logger import get_logger
+from app.logger_config.logger import get_logger
 
 logger = get_logger("assessment_taxonomy")
 
@@ -43,6 +43,14 @@ class RoleDomain(str, Enum):
     PRODUCT_MANAGER = "product_manager"
     SALES_REP = "sales_rep"
     SALES_MANAGER = "sales_manager"
+    CUSTOMER_SUPPORT = "customer_support"
+    OPERATIONS_MANAGER = "operations_manager"
+    FINANCE_ANALYST = "finance_analyst"
+    MARKETING_MANAGER = "marketing_manager"
+    CYBERSECURITY_ANALYST = "cybersecurity_analyst"
+    CLOUD_ENGINEER = "cloud_engineer"
+    EXECUTIVE_ASSISTANT = "executive_assistant"
+    GRADUATE_TRAINEE = "graduate_trainee"
     EXECUTIVE = "executive"
     HR_PROFESSIONAL = "hr_professional"
     GENERAL = "general"
@@ -189,6 +197,78 @@ class AssessmentTaxonomy:
             AssessmentDomain.BEHAVIORAL: 0.70,
             AssessmentDomain.COGNITIVE: 0.55,
             AssessmentDomain.TECHNICAL: 0.25,
+        },
+        RoleDomain.CUSTOMER_SUPPORT: {
+            AssessmentDomain.COMMUNICATION: 0.95,
+            AssessmentDomain.BEHAVIORAL: 0.90,
+            AssessmentDomain.PERSONALITY: 0.85,
+            AssessmentDomain.COGNITIVE: 0.70,
+            AssessmentDomain.SALES: 0.45,
+            AssessmentDomain.LEADERSHIP: 0.35,
+            AssessmentDomain.TECHNICAL: 0.20,
+        },
+        RoleDomain.OPERATIONS_MANAGER: {
+            AssessmentDomain.ANALYTICAL: 0.95,
+            AssessmentDomain.BEHAVIORAL: 0.85,
+            AssessmentDomain.COMMUNICATION: 0.75,
+            AssessmentDomain.LEADERSHIP: 0.80,
+            AssessmentDomain.COGNITIVE: 0.75,
+            AssessmentDomain.PERSONALITY: 0.55,
+            AssessmentDomain.TECHNICAL: 0.35,
+        },
+        RoleDomain.FINANCE_ANALYST: {
+            AssessmentDomain.ANALYTICAL: 1.0,
+            AssessmentDomain.COGNITIVE: 0.90,
+            AssessmentDomain.COMMUNICATION: 0.55,
+            AssessmentDomain.BEHAVIORAL: 0.40,
+            AssessmentDomain.PERSONALITY: 0.30,
+            AssessmentDomain.TECHNICAL: 0.25,
+            AssessmentDomain.LEADERSHIP: 0.20,
+        },
+        RoleDomain.MARKETING_MANAGER: {
+            AssessmentDomain.COMMUNICATION: 0.95,
+            AssessmentDomain.PERSONALITY: 0.80,
+            AssessmentDomain.ANALYTICAL: 0.80,
+            AssessmentDomain.LEADERSHIP: 0.75,
+            AssessmentDomain.BEHAVIORAL: 0.65,
+            AssessmentDomain.COGNITIVE: 0.60,
+            AssessmentDomain.SALES: 0.35,
+        },
+        RoleDomain.CYBERSECURITY_ANALYST: {
+            AssessmentDomain.TECHNICAL: 0.95,
+            AssessmentDomain.COGNITIVE: 0.90,
+            AssessmentDomain.ANALYTICAL: 0.85,
+            AssessmentDomain.BEHAVIORAL: 0.55,
+            AssessmentDomain.COMMUNICATION: 0.45,
+            AssessmentDomain.PERSONALITY: 0.30,
+            AssessmentDomain.LEADERSHIP: 0.20,
+        },
+        RoleDomain.CLOUD_ENGINEER: {
+            AssessmentDomain.TECHNICAL: 1.0,
+            AssessmentDomain.COGNITIVE: 0.85,
+            AssessmentDomain.ANALYTICAL: 0.80,
+            AssessmentDomain.COMMUNICATION: 0.50,
+            AssessmentDomain.BEHAVIORAL: 0.40,
+            AssessmentDomain.LEADERSHIP: 0.25,
+            AssessmentDomain.PERSONALITY: 0.25,
+        },
+        RoleDomain.EXECUTIVE_ASSISTANT: {
+            AssessmentDomain.COMMUNICATION: 1.0,
+            AssessmentDomain.BEHAVIORAL: 0.90,
+            AssessmentDomain.PERSONALITY: 0.85,
+            AssessmentDomain.ANALYTICAL: 0.65,
+            AssessmentDomain.COGNITIVE: 0.60,
+            AssessmentDomain.LEADERSHIP: 0.30,
+            AssessmentDomain.TECHNICAL: 0.20,
+        },
+        RoleDomain.GRADUATE_TRAINEE: {
+            AssessmentDomain.COGNITIVE: 1.0,
+            AssessmentDomain.ANALYTICAL: 0.90,
+            AssessmentDomain.PERSONALITY: 0.70,
+            AssessmentDomain.BEHAVIORAL: 0.65,
+            AssessmentDomain.COMMUNICATION: 0.55,
+            AssessmentDomain.TECHNICAL: 0.50,
+            AssessmentDomain.LEADERSHIP: 0.20,
         },
         RoleDomain.EXECUTIVE: {
             AssessmentDomain.LEADERSHIP: 1.0,
@@ -603,6 +683,54 @@ class AssessmentTaxonomy:
                 "boost": ["team management", "revenue", "quota"],
                 "weight": 1.0
             },
+            RoleDomain.CUSTOMER_SUPPORT: {
+                "exact": ["customer support", "customer service", "support specialist", "call center", "contact center", "service desk"],
+                "strong": ["support", "service", "customer care", "help desk"],
+                "boost": ["crm", "zendesk", "intercom", "salesforce"],
+                "weight": 1.0
+            },
+            RoleDomain.OPERATIONS_MANAGER: {
+                "exact": ["operations manager", "ops manager", "operations lead", "process manager"],
+                "strong": ["operations", "process", "workflow", "logistics", "fulfillment"],
+                "boost": ["analytics", "continuous improvement", "sla", "kpi"],
+                "weight": 1.0
+            },
+            RoleDomain.FINANCE_ANALYST: {
+                "exact": ["finance analyst", "financial analyst", "fp&a", "fp and a", "accounting analyst"],
+                "strong": ["finance", "financial", "accounting", "audit", "budget"],
+                "boost": ["excel", "sql", "modeling", "forecasting"],
+                "weight": 1.0
+            },
+            RoleDomain.MARKETING_MANAGER: {
+                "exact": ["marketing manager", "brand manager", "growth manager", "demand generation"],
+                "strong": ["marketing", "brand", "campaign", "growth"],
+                "boost": ["analytics", "content", "seo", "sem"],
+                "weight": 1.0
+            },
+            RoleDomain.CYBERSECURITY_ANALYST: {
+                "exact": ["cybersecurity analyst", "security analyst", "information security analyst"],
+                "strong": ["cybersecurity", "security", "infosec", "threat", "vulnerability"],
+                "boost": ["network", "cloud", "incident response", "risk"],
+                "weight": 1.0
+            },
+            RoleDomain.CLOUD_ENGINEER: {
+                "exact": ["cloud engineer", "cloud architect", "platform engineer"],
+                "strong": ["cloud", "aws", "azure", "gcp", "infrastructure"],
+                "boost": ["kubernetes", "terraform", "docker", "devops"],
+                "weight": 1.0
+            },
+            RoleDomain.EXECUTIVE_ASSISTANT: {
+                "exact": ["executive assistant", "ea", "administrative assistant", "chief of staff"],
+                "strong": ["assistant", "administrative", "calendar", "coordination"],
+                "boost": ["communication", "organization", "planning"],
+                "weight": 1.0
+            },
+            RoleDomain.GRADUATE_TRAINEE: {
+                "exact": ["graduate trainee", "graduate analyst", "trainee", "entry level", "entry-level"],
+                "strong": ["graduate", "entry", "junior", "early career"],
+                "boost": ["learning", "aptitude", "reasoning"],
+                "weight": 1.0
+            },
             RoleDomain.EXECUTIVE: {
                 "exact": ["chief executive officer", "chief technology officer", "chief operating officer"],
                 "strong": ["ceo", "cto", "cfo", "coo", "chief", "vp", "vice president", "director"],
@@ -711,6 +839,130 @@ class AssessmentTaxonomy:
             "fallback": "general"
         }
         return RoleDomain.GENERAL
+
+    def get_role_intelligence_profile(self, role_domain: RoleDomain) -> Dict[str, object]:
+        """Return a compact role profile for ranking and clarification logic."""
+        profiles: Dict[RoleDomain, Dict[str, object]] = {
+            RoleDomain.SALES_REP: {
+                "preferred_domains": [AssessmentDomain.SALES, AssessmentDomain.COMMUNICATION, AssessmentDomain.PERSONALITY, AssessmentDomain.BEHAVIORAL],
+                "support_domains": [AssessmentDomain.COGNITIVE, AssessmentDomain.LEADERSHIP],
+                "discouraged_domains": [AssessmentDomain.TECHNICAL],
+                "preferred_types": {"P", "A"},
+                "anchor_terms": ["sales", "communication", "persuasion", "customer", "negotiation", "quota", "revenue"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.SALES_MANAGER: {
+                "preferred_domains": [AssessmentDomain.SALES, AssessmentDomain.LEADERSHIP, AssessmentDomain.COMMUNICATION, AssessmentDomain.PERSONALITY, AssessmentDomain.BEHAVIORAL],
+                "support_domains": [AssessmentDomain.COGNITIVE],
+                "discouraged_domains": [AssessmentDomain.TECHNICAL],
+                "preferred_types": {"P", "A"},
+                "anchor_terms": ["sales", "leadership", "communication", "persuasion", "customer", "quota", "revenue"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.CUSTOMER_SUPPORT: {
+                "preferred_domains": [AssessmentDomain.COMMUNICATION, AssessmentDomain.BEHAVIORAL, AssessmentDomain.PERSONALITY, AssessmentDomain.COGNITIVE],
+                "support_domains": [AssessmentDomain.SALES],
+                "discouraged_domains": [AssessmentDomain.TECHNICAL],
+                "preferred_types": {"P", "A"},
+                "anchor_terms": ["support", "customer", "service", "communication", "empathy", "call center", "contact center"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.OPERATIONS_MANAGER: {
+                "preferred_domains": [AssessmentDomain.ANALYTICAL, AssessmentDomain.BEHAVIORAL, AssessmentDomain.COMMUNICATION, AssessmentDomain.LEADERSHIP],
+                "support_domains": [AssessmentDomain.COGNITIVE, AssessmentDomain.PERSONALITY],
+                "discouraged_domains": [AssessmentDomain.TECHNICAL],
+                "preferred_types": {"A", "P"},
+                "anchor_terms": ["operations", "process", "workflow", "execution", "logistics", "prioritization"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.FINANCE_ANALYST: {
+                "preferred_domains": [AssessmentDomain.ANALYTICAL, AssessmentDomain.COGNITIVE, AssessmentDomain.COMMUNICATION],
+                "support_domains": [AssessmentDomain.BEHAVIORAL, AssessmentDomain.PERSONALITY],
+                "discouraged_domains": [AssessmentDomain.SALES],
+                "preferred_types": {"A", "K"},
+                "anchor_terms": ["finance", "analytical", "numerical", "modeling", "excel", "sql", "budget"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.MARKETING_MANAGER: {
+                "preferred_domains": [AssessmentDomain.COMMUNICATION, AssessmentDomain.ANALYTICAL, AssessmentDomain.LEADERSHIP, AssessmentDomain.PERSONALITY],
+                "support_domains": [AssessmentDomain.BEHAVIORAL, AssessmentDomain.COGNITIVE],
+                "discouraged_domains": [AssessmentDomain.TECHNICAL],
+                "preferred_types": {"P", "A"},
+                "anchor_terms": ["marketing", "communication", "analytics", "campaign", "brand", "growth", "cross-functional"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.CYBERSECURITY_ANALYST: {
+                "preferred_domains": [AssessmentDomain.TECHNICAL, AssessmentDomain.COGNITIVE, AssessmentDomain.ANALYTICAL],
+                "support_domains": [AssessmentDomain.BEHAVIORAL, AssessmentDomain.COMMUNICATION],
+                "discouraged_domains": [AssessmentDomain.SALES, AssessmentDomain.PERSONALITY],
+                "preferred_types": {"K", "A"},
+                "anchor_terms": ["security", "cyber", "threat", "risk", "network", "incident", "vulnerability"],
+                "clarify_on_broad": False,
+            },
+            RoleDomain.CLOUD_ENGINEER: {
+                "preferred_domains": [AssessmentDomain.TECHNICAL, AssessmentDomain.COGNITIVE, AssessmentDomain.ANALYTICAL],
+                "support_domains": [AssessmentDomain.COMMUNICATION, AssessmentDomain.BEHAVIORAL],
+                "discouraged_domains": [AssessmentDomain.SALES, AssessmentDomain.PERSONALITY],
+                "preferred_types": {"K", "A"},
+                "anchor_terms": ["cloud", "aws", "azure", "kubernetes", "infrastructure", "devops"],
+                "clarify_on_broad": False,
+            },
+            RoleDomain.EXECUTIVE_ASSISTANT: {
+                "preferred_domains": [AssessmentDomain.COMMUNICATION, AssessmentDomain.BEHAVIORAL, AssessmentDomain.PERSONALITY, AssessmentDomain.COGNITIVE],
+                "support_domains": [AssessmentDomain.ANALYTICAL, AssessmentDomain.LEADERSHIP],
+                "discouraged_domains": [AssessmentDomain.TECHNICAL],
+                "preferred_types": {"P", "A"},
+                "anchor_terms": ["assistant", "executive", "communication", "organization", "calendar", "coordination", "support"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.GRADUATE_TRAINEE: {
+                "preferred_domains": [AssessmentDomain.COGNITIVE, AssessmentDomain.ANALYTICAL, AssessmentDomain.BEHAVIORAL, AssessmentDomain.PERSONALITY],
+                "support_domains": [AssessmentDomain.COMMUNICATION, AssessmentDomain.TECHNICAL],
+                "discouraged_domains": [AssessmentDomain.SALES],
+                "preferred_types": {"A", "P"},
+                "anchor_terms": ["graduate", "trainee", "learning", "agility", "reasoning", "analytical"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.ENGINEERING_MANAGER: {
+                "preferred_domains": [AssessmentDomain.LEADERSHIP, AssessmentDomain.BEHAVIORAL, AssessmentDomain.COMMUNICATION, AssessmentDomain.TECHNICAL],
+                "support_domains": [AssessmentDomain.COGNITIVE, AssessmentDomain.PERSONALITY],
+                "discouraged_domains": [AssessmentDomain.SALES],
+                "preferred_types": {"P", "A", "K"},
+                "anchor_terms": ["engineering", "manager", "leadership", "communication", "team", "technical"],
+                "clarify_on_broad": False,
+            },
+            RoleDomain.EXECUTIVE: {
+                "preferred_domains": [AssessmentDomain.LEADERSHIP, AssessmentDomain.PERSONALITY, AssessmentDomain.COMMUNICATION, AssessmentDomain.BEHAVIORAL],
+                "support_domains": [AssessmentDomain.ANALYTICAL, AssessmentDomain.COGNITIVE],
+                "discouraged_domains": [AssessmentDomain.TECHNICAL],
+                "preferred_types": {"P", "A"},
+                "anchor_terms": ["executive", "leadership", "strategy", "communication", "management"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.HR_PROFESSIONAL: {
+                "preferred_domains": [AssessmentDomain.PERSONALITY, AssessmentDomain.COMMUNICATION, AssessmentDomain.BEHAVIORAL],
+                "support_domains": [AssessmentDomain.LEADERSHIP, AssessmentDomain.ANALYTICAL],
+                "discouraged_domains": [AssessmentDomain.TECHNICAL],
+                "preferred_types": {"P", "A"},
+                "anchor_terms": ["hr", "human resources", "talent", "communication", "stakeholder", "people"],
+                "clarify_on_broad": True,
+            },
+            RoleDomain.GENERAL: {
+                "preferred_domains": [AssessmentDomain.COGNITIVE, AssessmentDomain.BEHAVIORAL, AssessmentDomain.COMMUNICATION],
+                "support_domains": [AssessmentDomain.ANALYTICAL, AssessmentDomain.PERSONALITY],
+                "discouraged_domains": [],
+                "preferred_types": {"A", "P"},
+                "anchor_terms": ["general", "ability", "reasoning", "behavioral"],
+                "clarify_on_broad": True,
+            },
+        }
+        return profiles.get(role_domain, {
+            "preferred_domains": [AssessmentDomain.COGNITIVE, AssessmentDomain.BEHAVIORAL, AssessmentDomain.COMMUNICATION],
+            "support_domains": [AssessmentDomain.ANALYTICAL, AssessmentDomain.PERSONALITY],
+            "discouraged_domains": [],
+            "preferred_types": {"A", "P"},
+            "clarify_on_broad": True,
+        })
     
     def get_last_classification_debug(self) -> Dict:
         """Get debug info from last role classification."""
