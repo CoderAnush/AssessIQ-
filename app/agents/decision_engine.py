@@ -77,7 +77,7 @@ class DecisionEngine:
 
         # 2. COMPARE if requested
         if intent == UserIntent.COMPARISON:
-            comparison_items = self._extract_comparison_items(messages[-1]["content"])
+            comparison_items = self._extract_comparison_items(messages)
             return Decision(
                 action=AgentAction.COMPARE,
                 reasoning="User asked to compare assessments",
@@ -122,13 +122,34 @@ class DecisionEngine:
 
         return None
 
-    def _extract_comparison_items(self, message: str) -> List[str]:
-        """Extract what user wants to compare."""
-
+    def _extract_comparison_items(self, messages: List[dict]) -> List[str]:
+        """
+        Extract what user wants to compare.
+        Now supports relative references like 'top 2', 'first two', 'them'.
+        """
+        message = messages[-1]["content"]
         msg_lower = message.lower()
         items = []
 
-        # 1. Pattern matching: "between X and Y"
+        # 1. Resolve relative references (e.g., "top 2", "first two", "them")
+        relative_refs = ["top 2", "top two", "first 2", "first two", "compare them", "both of them", "top recommendations"]
+        if any(ref in msg_lower for ref in relative_refs) or msg_lower.strip() in ["which is better?", "difference?"]:
+            # Look back for previous recommendations
+            for msg in reversed(messages[:-1]):
+                if msg["role"] == "assistant" and "recommendations" in msg.get("metadata", {}):
+                    recs = msg["metadata"]["recommendations"]
+                    if len(recs) >= 2:
+                        return [recs[0]["id"], recs[1]["id"]]
+                # Fallback: check text if metadata missing
+                if msg["role"] == "assistant" and ("#" in msg["content"] or "1." in msg["content"]):
+                    # This is harder without structured data, but let's try to find names
+                    import re
+                    # Look for names after numbers like "1. OPQ32r"
+                    names = re.findall(r"\d+\.\s+([A-Z][\w\-]+(?:\s+[A-Z][\w\-]+)*)", msg["content"])
+                    if len(names) >= 2:
+                        return names[:2]
+
+        # 2. Pattern matching: "between X and Y"
         import re
         between_match = re.search(r"between\s+([^,]+?)\s+and\s+([^?\.!]+)", msg_lower)
         if between_match:
@@ -136,23 +157,21 @@ class DecisionEngine:
             items.append(between_match.group(2).strip())
             return items
 
-        # 2. Pattern matching: "X vs Y"
+        # 3. Pattern matching: "X vs Y"
         vs_match = re.search(r"(\w+)\s+vs\s+(\w+)", msg_lower)
         if vs_match:
             items.append(vs_match.group(1).strip())
             items.append(vs_match.group(2).strip())
             return items
 
-        # 3. Capitalized words (Potential Assessment Names)
-        # For "Compare OPQ32r and Verify Interactive"
-        # We need to be careful not to catch "Compare" itself if it's at the start
+        # 4. Capitalized words (Potential Assessment Names)
         temp_message = re.sub(r"^[Cc]ompare\s+", "", message)
         cap_words = re.findall(r"([A-Z][\w\-]+(?:\s+[A-Z][\w\-]+)*)", temp_message)
         for word in cap_words:
-            if word.lower() not in ["and", "vs", "versus", "between"]:
+            if word.lower() not in ["and", "vs", "versus", "between", "the", "top"]:
                 items.append(word)
 
-        # 4. Fallback: Hardcoded list
+        # 5. Fallback: Hardcoded list
         known_assessments = ["opq", "gsa", "16pf", "java", "python", "leadership", "verbal", "verify"]
         for assessment in known_assessments:
             if assessment in msg_lower and assessment not in [i.lower() for i in items]:

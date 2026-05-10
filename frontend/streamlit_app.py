@@ -82,15 +82,28 @@ st.markdown(textwrap.dedent("""
         .badge-type {
             background-color: #f1f5f9;
             color: #475569;
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             border: 1px solid #e2e8f0;
+            margin-right: 6px;
         }
 
+        .badge-category {
+            background-color: #eff6ff;
+            color: #2563eb;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 1px solid #dbeafe;
+        }
+
+        .confidence-exceptional { color: #059669; font-weight: 800; }
         .confidence-high { color: #10b981; font-weight: 800; }
         .confidence-medium { color: #f59e0b; font-weight: 800; }
         .confidence-low { color: #ef4444; font-weight: 800; }
@@ -200,24 +213,29 @@ def clean_html(html: str) -> str:
 
 def render_recommendation_card(rec: Dict, index: int) -> None:
     """Render a premium enterprise-grade recommendation card."""
-    # Score mapping
-    conf_pct = int(rec.get("score", 0.85) * 100)
+    # Use backend-provided score and label
+    score = rec.get("score", 0.85)
+    conf_pct = int(score * 100)
+    match_label = rec.get("match_label", "Strong Match")
     
-    if conf_pct >= 85:
+    # Visual style mapping
+    if conf_pct >= 90:
+        conf_style = "confidence-exceptional"
+    elif conf_pct >= 80:
         conf_style = "confidence-high"
-        match_label = "Strong Fit"
     elif conf_pct >= 70:
         conf_style = "confidence-medium"
-        match_label = "Moderate Fit"
     else:
         conf_style = "confidence-low"
-        match_label = "Potential Match"
 
     html = f"""
     <div class="recommendation-card">
         <div class="card-header">
             <div>
-                <span class="badge-type">{rec.get('test_type', 'Assessment')}</span>
+                <div style="margin-bottom: 8px;">
+                    <span class="badge-type">{rec.get('test_type', 'A')}</span>
+                    <span class="badge-category">{rec.get('category', 'Assessment')}</span>
+                </div>
                 <div class="assessment-title">#{index} {rec.get('name')}</div>
                 <p style="margin: 0; color: #94a3b8; font-size: 0.8rem; font-family: monospace;">
                     ID: {rec.get('id', 'N/A')}
@@ -229,8 +247,9 @@ def render_recommendation_card(rec: Dict, index: int) -> None:
             </div>
         </div>
         
-        <div class="explanation-text">
-            {rec.get('description', rec.get('explanation', 'Professional assessment grounded in requirements.'))}
+        <div class="explanation-text" style="background: #f8fafc; padding: 12px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 16px 0;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Recruiter Reasoning</div>
+            {rec.get('explanation', 'Strategic recommendation based on multi-factor role alignment.')}
         </div>
         
         <div style="margin-top: 20px;">

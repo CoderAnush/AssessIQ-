@@ -4,357 +4,119 @@
       "name": "OPQ32r",
       "url": "https://www.shl.com/solutions/products/opq32r",
       "description": "The OPQ32r is a comprehensive personality assessment that measures 32 different personality scales, providing detailed insights into how candidates are likely to behave at work. It assesses communication style, leadership potential, teamwork orientation, and many other workplace behaviors.",
-      "skills": [
-        "communication",
-        "leadership",
-        "teamwork",
-        "personality"
-      ],
+      "skills": ["communication", "leadership", "teamwork", "personality"],
       "duration_minutes": 30,
       "test_type": "P",
       "id": "opq32r",
-      "seniority_levels": [
-        "mid",
-        "senior"
-      ],
-      "inferred_skills": {
-        "communication": [
-          "communication"
-        ],
-        "leadership": [
-          "leadership"
-        ],
-        "technical": [
-          "it"
-        ],
-        "personality": [
-          "opq",
-          "personality",
-          "behavior",
-          "style"
-        ]
-      },
-      "inferred_roles": [
-        "customer service",
-        "executive",
-        "hr",
-        "manager",
-        "sales",
-        "team lead"
-      ],
-      "inferred_seniority_levels": [
-        "executive",
-        "junior",
-        "mid",
-        "senior"
-      ],
+      "seniority_levels": ["mid", "senior"],
       "category": "personality",
-      "relevance_scores": {
-        "communication_focus": 0.3333333333333333,
-        "leadership_focus": 0.3333333333333333,
-        "technical_focus": 0.3333333333333333,
-        "personality_focus": 1.0,
-        "cognitive_focus": 0.0
-      },
-      "assessment_id": "opq32r"
+      "leadership_focus": true,
+      "communication_focus": true
     },
     {
       "name": "General Ability Assessment (GSA)",
       "url": "https://www.shl.com/solutions/products/gsa",
       "description": "The GSA assesses general mental ability and reasoning skills. It evaluates verbal reasoning, numerical reasoning, and abstract reasoning - core cognitive abilities important for most professional roles.",
-      "skills": [
-        "reasoning",
-        "critical_thinking",
-        "problem_solving"
-      ],
+      "skills": ["reasoning", "critical_thinking", "problem_solving"],
       "duration_minutes": 25,
       "test_type": "A",
       "id": "gsa",
-      "seniority_levels": [
-        "junior",
-        "mid",
-        "senior"
-      ],
-      "inferred_skills": {
-        "communication": [
-          "verbal"
-        ],
-        "technical": [
-          "it"
-        ],
-        "cognitive": [
-          "reasoning",
-          "cognitive",
-          "numerical",
-          "verbal"
-        ]
-      },
-      "inferred_roles": [
-        "analyst",
-        "developer",
-        "executive"
-      ],
-      "inferred_seniority_levels": [
-        "executive",
-        "junior",
-        "mid",
-        "senior"
-      ],
-      "category": "ability",
-      "relevance_scores": {
-        "communication_focus": 0.3333333333333333,
-        "leadership_focus": 0.0,
-        "technical_focus": 0.3333333333333333,
-        "personality_focus": 0.0,
-        "cognitive_focus": 1.0
-      },
-      "assessment_id": "gsa"
+      "seniority_levels": ["junior", "mid", "senior"],
+      "category": "ability"
     },
     {
       "name": "Java 8 Knowledge Test",
       "url": "https://www.shl.com/solutions/products/java-8-knowledge-test",
       "description": "Measures practical knowledge of Java 8 programming language, including syntax, core libraries, and common frameworks. Assesses understanding of OOP principles, functional programming features, and Java best practices.",
-      "skills": [
-        "Java",
-        "programming",
-        "backend_development",
-        "OOP"
-      ],
+      "skills": ["Java", "programming", "backend_development", "OOP"],
       "duration_minutes": 45,
       "test_type": "K",
       "id": "java_8",
-      "seniority_levels": [
-        "junior",
-        "mid",
-        "senior"
-      ],
-      "inferred_skills": {
-        "technical": [
-          "programming",
-          "development",
-          "java"
-        ]
-      },
-      "inferred_roles": [
-        "analyst",
-        "developer"
-      ],
-      "inferred_seniority_levels": [
-        "executive",
-        "junior",
-        "mid",
-        "senior"
-      ],
+      "seniority_levels": ["junior", "mid", "senior"],
       "category": "knowledge",
-      "relevance_scores": {
-        "communication_focus": 0.0,
-        "leadership_focus": 0.0,
-        "technical_focus": 1.0,
-        "personality_focus": 0.0,
-        "cognitive_focus": 0.0
-      },
-      "assessment_id": "java-8-knowledge-test"
+      "technical_focus": true
     },
     {
       "name": "16PF Personality Inventory",
       "url": "https://www.shl.com/solutions/products/16pf",
       "description": "The 16 Personality Factor Inventory provides in-depth personality assessment across 16 dimensions. Useful for understanding individual differences, team dynamics, and coaching potential.",
-      "skills": [
-        "personality",
-        "communication",
-        "teamwork"
-      ],
+      "skills": ["personality", "communication", "teamwork"],
       "duration_minutes": 45,
       "test_type": "P",
       "id": "16pf",
-      "seniority_levels": [
-        "mid",
-        "senior"
-      ],
-      "inferred_skills": {
-        "communication": [
-          "communication"
-        ],
-        "technical": [
-          "it"
-        ],
-        "personality": [
-          "16pf",
-          "personality"
-        ]
-      },
-      "inferred_roles": [
-        "customer service",
-        "executive",
-        "hr",
-        "manager",
-        "sales",
-        "team lead"
-      ],
-      "inferred_seniority_levels": [
-        "executive",
-        "junior",
-        "mid",
-        "senior"
-      ],
-      "category": "personality",
-      "relevance_scores": {
-        "communication_focus": 0.3333333333333333,
-        "leadership_focus": 0.0,
-        "technical_focus": 0.3333333333333333,
-        "personality_focus": 0.6666666666666666,
-        "cognitive_focus": 0.0
-      },
-      "assessment_id": "16pf"
+      "seniority_levels": ["mid", "senior"],
+      "category": "personality"
     },
     {
       "name": "CEB Verbal Reasoning",
       "url": "https://www.shl.com/solutions/products/verbal-reasoning",
       "description": "Assesses verbal reasoning ability - the capacity to understand written information and draw logical conclusions. Useful for roles requiring reading comprehension and analytical thinking.",
-      "skills": [
-        "communication",
-        "reasoning",
-        "reading_comprehension"
-      ],
+      "skills": ["communication", "reasoning", "reading_comprehension"],
       "duration_minutes": 20,
       "test_type": "A",
       "id": "ceb_verbal",
-      "seniority_levels": [
-        "junior",
-        "mid"
-      ],
-      "inferred_skills": {
-        "communication": [
-          "communication",
-          "verbal"
-        ],
-        "technical": [
-          "it"
-        ],
-        "cognitive": [
-          "reasoning",
-          "logic",
-          "verbal"
-        ]
-      },
-      "inferred_roles": [
-        "analyst",
-        "customer service",
-        "developer",
-        "executive",
-        "hr",
-        "manager",
-        "sales",
-        "team lead"
-      ],
-      "inferred_seniority_levels": [
-        "executive",
-        "junior",
-        "mid",
-        "senior"
-      ],
-      "category": "ability",
-      "relevance_scores": {
-        "communication_focus": 0.6666666666666666,
-        "leadership_focus": 0.0,
-        "technical_focus": 0.3333333333333333,
-        "personality_focus": 0.0,
-        "cognitive_focus": 1.0
-      },
-      "assessment_id": "verbal-reasoning"
+      "seniority_levels": ["junior", "mid"],
+      "category": "ability"
     },
     {
       "name": "Leadership 7",
       "url": "https://www.shl.com/solutions/products/leadership-7",
       "description": "Specifically designed to assess leadership potential and readiness. Evaluates strategic thinking, decision-making, team development capability, and executive presence.",
-      "skills": [
-        "leadership",
-        "decision_making",
-        "strategic_thinking",
-        "team_management"
-      ],
+      "skills": ["leadership", "decision_making", "strategic_thinking", "team_management"],
       "duration_minutes": 35,
       "test_type": "A",
       "id": "leadership_7",
-      "seniority_levels": [
-        "mid",
-        "senior"
-      ],
-      "inferred_skills": {
-        "leadership": [
-          "executive",
-          "leadership",
-          "management",
-          "strategic",
-          "decision-making"
-        ],
-        "technical": [
-          "it",
-          "development"
-        ]
-      },
-      "inferred_roles": [
-        "executive",
-        "hr",
-        "manager",
-        "team lead"
-      ],
-      "inferred_seniority_levels": [
-        "executive"
-      ],
+      "seniority_levels": ["mid", "senior"],
       "category": "ability",
-      "relevance_scores": {
-        "communication_focus": 0.0,
-        "leadership_focus": 1.0,
-        "technical_focus": 0.6666666666666666,
-        "personality_focus": 0.0,
-        "cognitive_focus": 0.0
-      },
-      "assessment_id": "leadership-7"
+      "leadership_focus": true
     },
     {
       "name": "Advanced Python Assessment",
       "url": "https://www.shl.com/solutions/products/python-advanced",
       "description": "Tests advanced Python programming knowledge including decorators, metaclasses, async programming, and design patterns. Suited for mid to senior Python developers.",
-      "skills": [
-        "Python",
-        "programming",
-        "backend_development",
-        "design_patterns"
-      ],
+      "skills": ["Python", "programming", "backend_development", "design_patterns"],
       "duration_minutes": 50,
       "test_type": "K",
       "id": "python_adv",
-      "seniority_levels": [
-        "mid",
-        "senior"
-      ],
-      "inferred_skills": {
-        "technical": [
-          "it",
-          "python",
-          "programming",
-          "development"
-        ]
-      },
-      "inferred_roles": [
-        "analyst",
-        "developer"
-      ],
-      "inferred_seniority_levels": [
-        "mid",
-        "senior"
-      ],
+      "seniority_levels": ["mid", "senior"],
       "category": "knowledge",
-      "relevance_scores": {
-        "communication_focus": 0.0,
-        "leadership_focus": 0.0,
-        "technical_focus": 1.0,
-        "personality_focus": 0.0,
-        "cognitive_focus": 0.0
-      },
-      "assessment_id": "python-advanced"
+      "technical_focus": true
+    },
+    {
+      "name": "React Frontend Assessment",
+      "url": "https://www.shl.com/solutions/products/react-frontend-dev",
+      "description": "Comprehensive evaluation of React.js expertise, including hooks, state management (Redux/Context), component lifecycle, and performance optimization. Measures ability to build modern, responsive web interfaces.",
+      "skills": ["React", "frontend", "javascript", "web_development", "collaboration"],
+      "duration_minutes": 40,
+      "test_type": "K",
+      "id": "react_frontend",
+      "seniority_levels": ["mid", "senior"],
+      "category": "knowledge",
+      "technical_focus": true
+    },
+    {
+      "name": "Data Science & Machine Learning",
+      "url": "https://www.shl.com/solutions/products/data-science-ml",
+      "description": "Evaluates proficiency in data science workflows, machine learning algorithms, statistical modeling, and data visualization using Python and common libraries (scikit-learn, pandas).",
+      "skills": ["Python", "ML", "statistics", "data_science", "analytical"],
+      "duration_minutes": 60,
+      "test_type": "K",
+      "id": "data_science_ml",
+      "seniority_levels": ["mid", "senior"],
+      "category": "knowledge",
+      "technical_focus": true
+    },
+    {
+      "name": "Verify Interactive - G+ (General Ability)",
+      "url": "https://www.shl.com/solutions/products/verify-interactive-g-plus",
+      "description": "A modern, game-like interactive assessment of general cognitive ability. Measures verbal, numerical, and inductive reasoning through engaging interactive tasks.",
+      "skills": ["cognitive", "reasoning", "problem_solving", "numerical"],
+      "duration_minutes": 35,
+      "test_type": "A",
+      "id": "verify_interactive",
+      "seniority_levels": ["junior", "mid", "senior"],
+      "category": "ability"
     }
   ],
-  "count": 7
+  "count": 10
 }

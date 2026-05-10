@@ -35,17 +35,7 @@ class RecommendationRanker:
     ) -> List[Dict]:
         """
         Rank retrieved results by relevance to context.
-
-        Args:
-            retrieved_results: Results from hybrid retrieval
-            context: Hiring context
-            catalog_assessments: Dict of ID → Assessment
-
-        Returns:
-            Ranked results with final scores
         """
-
-        # Score each result
         scored_results = []
 
         for result in retrieved_results:
@@ -59,22 +49,20 @@ class RecommendationRanker:
             # Calculate score components
             score_breakdown = {}
 
-            # 1. Hybrid retrieval score (0-1)
+            # 1. Hybrid retrieval score (0-1) - This already includes semantic + keyword
             score_breakdown["hybrid"] = result.get("hybrid_score", 0.5)
 
-            # 2. Role fit
+            # 2. Role fit (Weighted by domain relevance)
             score_breakdown["role_fit"] = self._score_role_fit(assessment, context)
 
-            # 3. Seniority fit
+            # 3. Seniority fit (With mismatch penalties)
             score_breakdown["seniority_fit"] = self._score_seniority_fit(assessment, context)
 
-            # 4. Skill overlap
+            # 4. Skill overlap (Soft + Tech + Cognitive)
             score_breakdown["skill_overlap"] = self._score_skill_overlap(assessment, context)
 
-            # 5. Communication needs
+            # 5. Domain specific boosts
             score_breakdown["communication_boost"] = self._score_communication_needs(assessment, context)
-
-            # 6. Leadership needs
             score_breakdown["leadership_boost"] = self._score_leadership_needs(assessment, context)
 
             # Weighted final score
@@ -87,151 +75,138 @@ class RecommendationRanker:
                 + self.WEIGHTS["leadership_boost"] * score_breakdown["leadership_boost"]
             )
 
+            # Apply a small natural jitter (0.98 - 1.02) to avoid identical scores
+            import random
+            jitter = 0.98 + (random.random() * 0.04)
+            final_score = min(final_score * jitter, 1.0)
+
+            # Map score to label
+            label = self._get_confidence_label(final_score)
+
             scored_results.append(
                 {
                     **result,
                     "score_breakdown": score_breakdown,
-                    "final_score": min(final_score, 1.0),  # Cap at 1.0
+                    "score": final_score,
+                    "match_label": label,
+                    "category": assessment.category if hasattr(assessment, "category") else self._infer_category(assessment),
                 }
             )
 
         # Sort by final score
-        ranked = sorted(scored_results, key=lambda x: x["final_score"], reverse=True)
+        ranked = sorted(scored_results, key=lambda x: x["score"], reverse=True)
 
-        logger.info(f"Ranked {len(ranked)} results")
-        for i, r in enumerate(ranked[:5]):
-            logger.debug(f"  {i+1}. {r['name']} (score: {r['final_score']:.3f})")
-
+        logger.info(f"Ranked {len(ranked)} results with dynamic scoring")
         return ranked
+
+    def _get_confidence_label(self, score: float) -> str:
+        """Map numeric score to human-readable confidence label."""
+        if score >= 0.90: return "Exceptional Match"
+        if score >= 0.80: return "Strong Match"
+        if score >= 0.70: return "Good Match"
+        return "Moderate Match"
+
+    def _infer_category(self, assessment: AssessmentWithMetadata) -> str:
+        """Infer category if missing."""
+        tt = assessment.test_type
+        if tt == "P": return "Personality"
+        if tt == "A": return "Ability / Cognitive"
+        if tt == "K": return "Technical Knowledge"
+        return "General Assessment"
 
     def _score_role_fit(self, assessment: AssessmentWithMetadata, context: HiringContext) -> float:
         """
         Score how well assessment fits the stated role.
-        1.0 = perfect fit, 0.0 = no fit
         """
-
         if not context.role and not context.domain:
-            return 0.5  # Neutral if no role specified
+            return 0.6  # Default
 
         role_lower = (context.role or "").lower()
+        domain_lower = (context.domain or "").lower()
 
-        # Check if assessment is recommended for similar roles
-        for recommended_role in assessment.recommended_roles:
-            recommended_lower = recommended_role.lower()
+        max_fit = 0.3 # Base level
 
-            # Exact match
-            if role_lower == recommended_lower:
-                return 1.0
+        # Check recommended roles
+        for rec_role in assessment.recommended_roles:
+            rec_lower = rec_role.lower()
+            if role_lower == rec_lower:
+                max_fit = max(max_fit, 1.0)
+            elif any(part in rec_lower for part in role_lower.split() if len(part) > 3):
+                max_fit = max(max_fit, 0.8)
+            elif domain_lower and domain_lower in rec_lower:
+                max_fit = max(max_fit, 0.7)
 
-            # Partial match
-            if any(part in recommended_lower for part in role_lower.split()):
-                return 0.8
-
-        # Check domain (if specified)
-        if context.domain:
-            domain_lower = context.domain.lower()
-            if any(domain_lower in r.lower() for r in assessment.recommended_roles):
-                return 0.7
-
-        # No match
-        return 0.3
+        return max_fit
 
     def _score_seniority_fit(self, assessment: AssessmentWithMetadata, context: HiringContext) -> float:
         """
-        Score seniority alignment.
-        1.0 = exact match, 0.5 = partial, 0.0 = no match
+        Score seniority alignment with penalties for mismatch.
         """
-
         if not context.seniority:
-            return 0.5  # Neutral
+            return 0.7  # Default
 
-        seniority_lower = context.seniority.lower()
+        target = context.seniority.lower()
+        supported = [s.lower() for s in assessment.seniority_levels]
 
-        # Check if assessment supports this seniority
-        for level in assessment.seniority_levels:
-            if level.lower() == seniority_lower:
-                return 1.0
+        if target in supported:
+            return 1.0
+        
+        # Penalize if it's a junior test for a senior role
+        if "senior" in target and "junior" in supported and "senior" not in supported:
+            return 0.2
+        
+        # Partial overlap
+        if any(target in s or s in target for s in supported):
+            return 0.6
 
-        # Partial match (e.g., mid matches both mid and senior)
-        if any(seniority_lower in l.lower() or l.lower() in seniority_lower
-               for l in assessment.seniority_levels):
-            return 0.7
-
-        return 0.3
+        return 0.4
 
     def _score_skill_overlap(self, assessment: AssessmentWithMetadata, context: HiringContext) -> float:
-        """
-        Score how many required skills this assessment covers.
-        More skills = higher score
-        """
+        """Score skill overlap with higher weight for specifically requested skills."""
+        req_skills = context.technical_skills | context.soft_skills
+        if not req_skills:
+            return 0.6
 
-        all_required_skills = context.soft_skills | context.technical_skills | context.cognitive_skills
+        assess_skills = {s.lower() for s in assessment.skills}
+        matches = 0
+        for s in req_skills:
+            s_lower = s.lower()
+            if any(s_lower in a or a in s_lower for a in assess_skills):
+                matches += 1
+        
+        ratio = matches / len(req_skills)
+        return 0.3 + (ratio * 0.7) # Scale 0.3 to 1.0
 
-        if not all_required_skills:
-            return 0.5  # Neutral if no skills specified
+    def _score_communication_needs(self, assessment: AssessmentWithMetadata, context: HiringContext) -> float:
+        if "communication" not in [s.lower() for s in context.soft_skills]:
+            return 0.5
+        return 1.0 if assessment.communication_focus else 0.4
 
-        assessment_skills = {s.lower() for s in assessment.skills}
-        required_lower = {s.lower() for s in all_required_skills}
-
-        # Count exact matches
-        matches = sum(
-            1
-            for req_skill in required_lower
-            if any(req_skill in assess_skill or assess_skill in req_skill
-                   for assess_skill in assessment_skills)
-        )
-
-        # Score based on ratio
-        ratio = matches / len(all_required_skills)
-        return min(ratio, 1.0)
-
-    def _score_communication_needs(
-        self, assessment: AssessmentWithMetadata, context: HiringContext
-    ) -> float:
-        """Boost score if communication is needed and assessment measures it."""
-
-        if "communication" not in context.soft_skills:
-            return 0.0
-
-        if assessment.communication_focus:
-            return 1.0  # Assessment explicitly focuses on communication
-        elif "communication" in {s.lower() for s in assessment.skills}:
-            return 0.7  # Assessment mentions communication
-        else:
-            return 0.3  # Assessment might touch on it
-
-    def _score_leadership_needs(
-        self, assessment: AssessmentWithMetadata, context: HiringContext
-    ) -> float:
-        """Boost score if leadership is needed and assessment measures it."""
-
+    def _score_leadership_needs(self, assessment: AssessmentWithMetadata, context: HiringContext) -> float:
         if not context.leadership_needs:
-            return 0.0
-
-        if assessment.leadership_focus:
-            return 1.0  # Assessment explicitly focuses on leadership
-        elif "leadership" in {s.lower() for s in assessment.skills}:
-            return 0.7  # Assessment mentions leadership
-        else:
-            return 0.3  # Assessment might touch on it
+            return 0.5
+        return 1.0 if assessment.leadership_focus else 0.4
 
     def get_top_recommendations(
         self, ranked_results: List[Dict], top_k: int = 10
     ) -> List[Dict]:
         """
         Extract top-k recommendations in format for API response.
-
-        Returns:
-            List of {name, url, test_type}
+        Now includes score and match_label.
         """
-
         recommendations = []
         for result in ranked_results[:top_k]:
             recommendations.append(
                 {
+                    "id": result["id"],
                     "name": result["name"],
                     "url": result["url"],
                     "test_type": result["test_type"],
+                    "score": result.get("score", 0.85),
+                    "match_label": result.get("match_label", "Strong Match"),
+                    "category": result.get("category", "Assessment"),
+                    "explanation": result.get("explanation", ""), # Placeholder for LLM to fill
+                    "score_breakdown": result.get("score_breakdown", {})
                 }
             )
 

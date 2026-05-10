@@ -189,7 +189,7 @@ def get_recommendation_prompt(
 ) -> str:
     """Prompt for generating strategic recommendations."""
     return f"""You are an expert hiring consultant providing assessment recommendations.
-
+    
 HIRING CONTEXT:
 {context}
 
@@ -197,29 +197,44 @@ AVAILABLE SHL ASSESSMENTS (from verified catalog):
 {_format_assessment_list(retrieved_assessments)}
 
 TASK - Generate Strategic Recommendations:
-1. Select the BEST assessments that fit this specific context (1-10 maximum)
-2. For each, explain exactly WHY it fits in 1-2 sentences
-3. Use the exact name, URL, and test_type from the provided list
-4. ONLY recommend from this list - never invent assessments
+1. Select the BEST assessments that fit this specific context (1-5 maximum).
+2. For each, generate a dynamic 2-3 line "recruiter reasoning" explanation.
+3. This explanation MUST explicitly connect the assessment's purpose to the user's role, seniority, and specific skills.
+4. Use the score breakdown provided in the list to justify your reasoning (e.g., "Exceptional role fit" or "Strong skill alignment").
+5. Use the exact name, URL, and test_type from the provided list.
+6. NEVER hallucinate features not present in the description.
+
+REASONING GUIDELINES:
+- Generic: "Recommended for personality assessment." (BAD)
+- Strategic: "Recommended because this assessment evaluates Java programming proficiency, backend problem-solving ability, and logical reasoning required for senior engineering collaboration in cross-functional teams." (GOOD)
+- Strategic: "Leadership 7 is recommended because the role requires team management, strategic decision-making, and executive presence competencies specified in your requirements." (GOOD)
 
 QUALITY CRITERIA:
-- Prefer 3 perfect matches over 10 mediocre ones
-- Only include assessments that clearly address their needs
-- Rank by strategic fit (best first)
-- Explain the reasoning, not just the recommendation
+- Prefer 3 perfect matches over 10 mediocre ones.
+- Only include assessments that clearly address their needs.
+- Rank by strategic fit (best first).
 
-RECOMMENDATION FORMAT:
-"[Assessment Name] (Type: X) - Recommended because [specific reason connected to their context]."
+RETURN FORMAT:
+Always return valid JSON with 1-5 recommendations.
+Each recommendation object in the "recommendations" list must include:
+- "name", "url", "test_type", "score", "match_label", "category", "explanation" (your 2-3 line reasoning).
 
-Examples:
-✅ "OPQ32r - Recommended for personality assessment given your focus on team culture fit and leadership capability for this manager role."
-✅ "Java 8 Technical - Ideal for evaluating backend technical depth, directly addressing your requirement for advanced Java expertise."
-❌ "GSA - Good ability test." (too generic)
-❌ "Personality Test XYZ" (not from catalog)
-
-Be specific, strategic, and grounded in their actual context.
-
-Return valid JSON with 1-10 recommendations, ranked by fit."""
+Example JSON:
+{{
+  "reply": "Strategic overview of the selection...",
+  "recommendations": [
+    {{
+      "name": "OPQ32r",
+      "url": "https://www.shl.com/...",
+      "test_type": "P",
+      "score": 0.92,
+      "match_label": "Exceptional Match",
+      "category": "Personality",
+      "explanation": "..."
+    }}
+  ],
+  "end_of_conversation": false
+}}"""
 
 
 def get_comparison_prompt(assessment1: str, assessment2: str, catalog_data: dict) -> str:
@@ -289,15 +304,15 @@ However, if you're looking for assessments for this role, I'd be happy to help!"
 
 
 def _format_assessment_list(assessments: list) -> str:
-    """Format assessment list for prompts."""
+    """Format assessment list for prompts with full metadata."""
     lines = []
     for i, assessment in enumerate(assessments, 1):
-        lines.append(f"{i}. {assessment.get('name')} (Type: {assessment.get('test_type')})")
+        lines.append(f"{i}. {assessment.get('name')} (ID: {assessment.get('id')})")
+        lines.append(f"   Category: {assessment.get('category')}")
+        lines.append(f"   Match: {assessment.get('match_label')} ({int(assessment.get('score', 0.8)*100)}%)")
+        lines.append(f"   Description: {assessment.get('description', '')}")
+        lines.append(f"   Score Breakdown: {assessment.get('score_breakdown', {})}")
         lines.append(f"   URL: {assessment.get('url')}")
-        lines.append(f"   Duration: {assessment.get('duration_minutes')}min")
-        desc = assessment.get('description', '')
-        if desc:
-            lines.append(f"   Description: {desc[:100]}...")
     return "\n".join(lines)
 
 
