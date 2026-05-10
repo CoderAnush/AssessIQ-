@@ -21,7 +21,7 @@ Key Improvements:
 6. Natural score decay: 96, 92, 89, 84, 79, 73
 """
 
-from typing import List, Dict, Set, Optional, Tuple
+from typing import List, Dict, Set, Optional, Tuple, Any
 import re
 import time
 from app.models.assessment import AssessmentWithMetadata
