@@ -65,8 +65,9 @@ class TestType(str, Enum):
 
 
 class Recommendation(BaseModel):
-    """A single assessment recommendation."""
+    """A single assessment recommendation with high-fidelity metadata."""
 
+    id: Optional[str] = Field(None, description="Assessment unique ID")
     name: str = Field(
         ..., description="Assessment name from catalog", min_length=1
     )
@@ -75,6 +76,18 @@ class Recommendation(BaseModel):
     )
     test_type: TestType = Field(
         ..., description="Assessment type: K (Knowledge), A (Ability), P (Personality)"
+    )
+    score: float = Field(
+        0.85, description="Matching confidence score (0-1)", ge=0, le=1
+    )
+    match_label: str = Field(
+        "Strong Match", description="Human-readable confidence label"
+    )
+    category: str = Field(
+        "Assessment", description="Assessment category (e.g. Personality, Technical)"
+    )
+    explanation: str = Field(
+        "", description="Grounded recruiter-grade reasoning"
     )
 
     @validator("url")
@@ -87,9 +100,14 @@ class Recommendation(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
+                "id": "opq32r",
                 "name": "OPQ32r",
                 "url": "https://www.shl.com/solutions/products/opq32r/",
-                "test_type": "P"
+                "test_type": "P",
+                "score": 0.94,
+                "match_label": "Exceptional Match",
+                "category": "Personality",
+                "explanation": "Recommended for evaluating behavior and leadership potential..."
             }
         }
 

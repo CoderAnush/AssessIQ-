@@ -263,25 +263,32 @@ def _handle_refinement(context, messages: List) -> ChatResponse:
         raise HTTPException(status_code=500, detail="Response validation failed")
 
     # Generate LLM response
+    # Pass the full ranked metadata for grounded reasoning
     prompt = get_recommendation_prompt(
         str(context),
-        [{"name": a["name"], "url": a["url"], "test_type": a["test_type"]} for a in retrieved],
+        recommendations,
     )
 
     llm_response = llm_service.generate_response(
         system_prompt=get_system_prompt(),
-        user_message=f"Based on the updates, here's the refined list: {recommendations}",
+        user_message=prompt,
         conversation_context=str(context),
     )
 
     # Use LLM reply but keep our ranked recommendations
+    # This preserves the dynamic scores and categories
     llm_response["recommendations"] = recommendations
 
     # Validate schema
     is_valid, error = SchemaValidator.validate_chat_response(llm_response)
     if not is_valid:
         logger.error(f"Response schema invalid: {error}")
-        raise HTTPException(status_code=500, detail="Response validation failed")
+        # Fallback to simple valid response if LLM failed schema
+        return ChatResponse(
+            reply=llm_response.get("reply", "Here are the refined recommendations based on your updates."),
+            recommendations=recommendations,
+            end_of_conversation=False
+        )
 
     return ChatResponse(**llm_response)
 
@@ -326,9 +333,10 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
         raise HTTPException(status_code=500, detail="Response validation failed")
 
     # Generate response via LLM
+    # Pass the full recommendations list (which now includes score, match_label, category, etc.)
     prompt = get_recommendation_prompt(
         str(context),
-        [{"name": a["name"], "url": a["url"], "test_type": a["test_type"], "duration_minutes": retriever.get_assessment_by_name(a["name"]).duration_minutes} for a in retrieved[:10]],
+        recommendations,
     )
 
     llm_response = llm_service.generate_response(
@@ -337,14 +345,19 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
         conversation_context=str(context),
     )
 
-    # Use LLM reply but keep our ranked recommendations
+    # Use LLM reply but keep our ranked recommendations (preserving scores/labels)
     llm_response["recommendations"] = recommendations
 
     # Validate schema
     is_valid, error = SchemaValidator.validate_chat_response(llm_response)
     if not is_valid:
         logger.error(f"Response schema invalid: {error}")
-        raise HTTPException(status_code=500, detail="Response validation failed")
+        # Fallback to ensure we don't crash the UI
+        return ChatResponse(
+            reply=llm_response.get("reply", "Based on your requirements, I've selected the most relevant SHL assessments."),
+            recommendations=recommendations,
+            end_of_conversation=decision_engine.is_conversation_complete(messages)
+        )
 
     # Check if conversation should end
     llm_response["end_of_conversation"] = decision_engine.is_conversation_complete(messages)
