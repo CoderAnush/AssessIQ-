@@ -370,7 +370,8 @@ def render_empty_state() -> None:
     render_summary_metrics()
     render_workflow_section()
     render_sample_prompts()
-    render_workflow_examples()
+    # Removed inline workflow examples to avoid duplication with sidebar
+    # render_workflow_examples()
 
 
 def _format_recommendation_table(recommendations: List[Dict[str, Any]]) -> str:
