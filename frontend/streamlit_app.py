@@ -191,49 +191,87 @@ def init_session_state():
         st.session_state.messages = []
     if "conversation_id" not in st.session_state:
         st.session_state.conversation_id = f"conv_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if "request_in_progress" not in st.session_state:
+        st.session_state.request_in_progress = False
 
 
 def get_api_response(messages: List[Dict]) -> Optional[Dict]:
     """Call AssessIQ Production API with robust error handling and logging."""
+    import traceback
+    import json
+    
+    # PREVENT CONCURRENT REQUESTS
+    if st.session_state.get("request_in_progress"):
+        st.warning("⚠️ Request already in progress...")
+        return None
+        
+    st.session_state["request_in_progress"] = True
+    
     try:
-        # 1. PREPARE PAYLOAD
-        api_payload = {"messages": messages}
+        # STEP 1: FORCE SIMPLE TEST REQUEST (As requested for debugging)
+        st.write("🛠️ **DEBUG: Using Forced Simple Payload**")
+        api_payload = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "ping"
+                }
+            ]
+        }
         
-        # 2. FRONTEND DEBUGGING (Visible in Streamlit UI)
-        st.write("🔍 **DEBUG: Request Initiation**")
-        st.write(f"Endpoint: `{BACKEND_URL}/chat`")
-        st.json(api_payload)
+        # STEP 2: SERIALIZATION TEST
+        st.write("📦 **DEBUG: Testing JSON Serialization...**")
+        try:
+            serialized_data = json.dumps(api_payload)
+            st.write("✅ **DEBUG: Serialization Success**")
+        except Exception as ser_err:
+            st.error(f"❌ SERIALIZATION FAILURE: {ser_err}")
+            st.session_state["request_in_progress"] = False
+            return None
+
+        # STEP 3: EXECUTE REQUEST WITH HARD TIMEOUT
+        st.write(f"🚀 **DEBUG: Executing requests.post to {BACKEND_URL}/chat...**")
+        st.write("*(Timeout set to 15s)*")
         
-        # 3. EXECUTE REQUEST
-        st.write("🚀 **DEBUG: Executing requests.post...**")
+        headers = {"Content-Type": "application/json"}
+        
+        # Use raw data to bypass requests' internal json encoding for maximum isolation
         response = requests.post(
             f"{BACKEND_URL}/chat",
-            json=api_payload,
-            timeout=50,
-            headers={"Content-Type": "application/json"}
+            data=serialized_data,
+            headers=headers,
+            timeout=15
         )
         
-        # 4. TRACE RESPONSE
+        # STEP 4: TRACE RESPONSE
         st.write(f"✅ **DEBUG: Response Received (Status: {response.status_code})**")
         st.code(response.text[:1000], language="json")
 
         if response.status_code == 429:
             st.warning("⚠️ Rate limit reached (Gemini Free Tier). Please wait a few seconds.")
+            st.session_state["request_in_progress"] = False
             return None
             
         response.raise_for_status()
+        st.session_state["request_in_progress"] = False
         return response.json()
         
     except requests.exceptions.Timeout:
-        st.error("🕒 Connection timed out. The backend is waking up from a cold start. Please try again.")
+        st.error("🕒 TIMEOUT FAILURE: The request took longer than 15s. This suggests the network path is blocked or the backend is hanging.")
+        st.session_state["request_in_progress"] = False
         return None
-    except requests.exceptions.ConnectionError:
-        st.error(f"🌐 Connectivity Error: Could not reach AssessIQ at {BACKEND_URL}")
+    except requests.exceptions.ConnectionError as conn_err:
+        st.error(f"🌐 CONNECTION ERROR: Could not reach AssessIQ at {BACKEND_URL}")
+        st.code(str(conn_err))
+        st.session_state["request_in_progress"] = False
         return None
     except Exception as e:
-        st.error(f"❌ CRITICAL FRONTEND ERROR: {str(e)}")
+        st.error(f"❌ CRITICAL NETWORK FAILURE: {str(e)}")
         st.code(traceback.format_exc())
+        st.session_state["request_in_progress"] = False
         return None
+    finally:
+        st.session_state["request_in_progress"] = False
 
 
 def clean_html(html: str) -> str:
@@ -428,24 +466,35 @@ def main():
             st.rerun()
 
         st.markdown("---")
-        st.subheader("📡 Connectivity Test")
-        if st.button("Test Backend Health", key="test_health_btn", use_container_width=True):
+        if st.button("LOW LEVEL TEST (GET)", key="test_health_btn", use_container_width=True):
+            import requests
             try:
+                st.write("📡 Testing Health GET...")
                 r = requests.get(f"{BACKEND_URL}/health", timeout=10)
-                st.write(f"Health Status: {r.status_code}")
-                st.write(f"Health Response: {r.text}")
+                st.success(f"Health Status: {r.status_code}")
+                st.code(r.text)
             except Exception as e:
                 st.error(f"Health Test Failed: {str(e)}")
+                st.code(traceback.format_exc())
         
-        if st.button("Test Direct /chat", key="test_chat_btn", use_container_width=True):
+        if st.button("LOW LEVEL TEST (POST PING)", key="test_chat_btn", use_container_width=True):
+            import requests
+            import json
             try:
-                payload = {"message": "ping"}
-                st.write(f"Testing POST {BACKEND_URL}/chat")
-                r = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=10)
-                st.write(f"Chat Status: {r.status_code}")
-                st.write(f"Chat Response: {r.text}")
+                payload = {"messages": [{"role": "user", "content": "ping"}]}
+                headers = {"Content-Type": "application/json"}
+                st.write(f"📡 Testing Raw POST to {BACKEND_URL}/chat")
+                r = requests.post(
+                    f"{BACKEND_URL}/chat", 
+                    data=json.dumps(payload), 
+                    headers=headers,
+                    timeout=15
+                )
+                st.success(f"Chat Status: {r.status_code}")
+                st.code(r.text)
             except Exception as e:
                 st.error(f"Chat Test Failed: {str(e)}")
+                st.code(traceback.format_exc())
 
         st.markdown("---")
         st.info("💡 **Grounded Retrieval**: All recommendations are verified against the SHL Individual Test Solutions catalog.")
