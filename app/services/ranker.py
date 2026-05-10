@@ -405,8 +405,8 @@ class RecruiterRanker:
         # Normalize with natural spread transformation
         normalized = []
         for i, result in enumerate(ranked_results):
-            # Apply position-based decay
-            position_factor = 1.0 - (i * 0.04)  # 4% decay per position
+            # Apply position-based decay (6% per position for natural recruiter spread)
+            position_factor = 1.0 - (i * 0.06)  
             
             # Apply score-based transformation
             if result.raw_score >= max_score * 0.95:

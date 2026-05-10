@@ -170,7 +170,7 @@ class AssessIQValidationSuite(unittest.TestCase):
         if scores[0] < 0.90:
             issues.append(f"Top score too low: {scores[0]:.0%} (expected >90%)")
         
-        if len(set(f"{s:.0f}" for s in scores)) < 3:
+        if len(set(f"{s*100:.0f}" for s in scores)) < 3:
             issues.append(f"Poor score diversity - scores too similar: {[f'{s:.0%}' for s in scores]}")
         else:
             notes.append(f"✓ Good score spread: {[f'{s:.0%}' for s in scores[:3]]}")
@@ -652,7 +652,7 @@ def run_validation_suite():
         result = test_func()
         results.append(result)
         
-        status = "✅ PASS" if result.passed else "❌ FAIL"
+        status = "[PASS]" if result.passed else "[FAIL]"
         print(f"{status} - {result.test_name} ({result.score:.0f}%)")
         
         for note in result.notes:

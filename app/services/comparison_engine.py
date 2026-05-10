@@ -484,9 +484,9 @@ class ComparisonEngine:
             p2 = priorities.get(c2.primary_domain, 0.5)
             
             if p1 > p2:
-                score1 += 2
+                score1 += 5  # Increased from 2 to 5 for decisive domain match
             elif p2 > p1:
-                score2 += 2
+                score2 += 5
         
         # Determine winner
         if abs(score1 - score2) < 1:
@@ -543,37 +543,43 @@ class ComparisonEngine:
         overall_winner: str,
         context: Optional[HiringContext]
     ) -> str:
-        """Generate recruiter-grade summary text."""
+        """Generate recruiter-grade summary text with nuanced reasoning."""
         # Get key differences
         non_ties = [m for m in matrix if m.winner != "tie"]
         
         if not non_ties:
-            return f"{a1.name} and {a2.name} are comparable assessments with similar capabilities. Choose based on specific competency focus."
+            return f"Both **{a1.name}** and **{a2.name}** offer highly comparable psychometric properties. Your selection should depend on minor preference for either {a1.test_type.value}-type or {a2.test_type.value}-type assessments within your specific workflow."
         
-        # Top 3 differentiating dimensions
-        top_diffs = non_ties[:3]
+        # Determine the primary differentiator
+        top_diff = non_ties[0]
+        winner_name = a1.name if top_diff.winner == "assessment_1" else a2.name
+        loser_name = a2.name if top_diff.winner == "assessment_1" else a1.name
         
-        summary_parts = []
+        summary = f"While both assessments are grounded in SHL standards, **{winner_name}** provides a distinct advantage in **{top_diff.dimension.value.replace('_', ' ').title()}**. "
         
-        # Opening
-        summary_parts.append(f"**{a1.name}** vs **{a2.name}**")
+        if len(non_ties) > 1:
+            second_diff = non_ties[1]
+            s_winner = a1.name if second_diff.winner == "assessment_1" else a2.name
+            if s_winner == winner_name:
+                summary += f"It also demonstrates stronger alignment in {second_diff.dimension.value.replace('_', ' ')}. "
+            else:
+                summary += f"Conversely, **{s_winner}** performs better for {second_diff.dimension.value.replace('_', ' ')} requirements. "
         
-        # Key differences
-        diff_texts = []
-        for diff in top_diffs:
-            winner_name = a1.name if diff.winner == "assessment_1" else a2.name
-            diff_texts.append(f"{diff.dimension.value.replace('_', ' ').title()}: {winner_name} leads")
-        
-        summary_parts.append("; ".join(diff_texts))
-        
-        # Overall recommendation
-        if overall_winner == "tie":
-            summary_parts.append("Both assessments are viable. Consider administering together for comprehensive evaluation.")
+        # Context-aware closing
+        if context and context.role:
+            if overall_winner == "tie":
+                summary += f"For a {context.role} role, either option is strategically sound depending on whether you prioritize technical depth or behavioral fit."
+            else:
+                final_winner = a1.name if overall_winner == "assessment_1" else a2.name
+                summary += f"Ultimately, for the {context.role} position, **{final_winner}** is the more robust choice due to its superior alignment with the core competencies identified."
         else:
-            winner_name = a1.name if overall_winner == "assessment_1" else a2.name
-            summary_parts.append(f"Recommend {winner_name} based on overall dimensional analysis.")
+            if overall_winner == "tie":
+                summary += "Both options are viable; consider the specific seniority of your candidate pool when making the final selection."
+            else:
+                final_winner = a1.name if overall_winner == "assessment_1" else a2.name
+                summary += f"Based on this dimensional analysis, **{final_winner}** is the recommended strategic choice."
         
-        return "\n\n".join(summary_parts)
+        return summary
     
     def format_for_frontend(self, result: ComparisonResult) -> Dict:
         """Format comparison result for frontend display."""

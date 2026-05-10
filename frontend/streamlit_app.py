@@ -457,7 +457,7 @@ def main():
                     render_recommendation_card(rec, i)
 
     # Chat Input
-    if prompt := st.chat_input("Ask about assessments, roles, or compare SHL products..."):
+    if prompt := st.chat_input("Ask about assessments, roles, or compare SHL products...", key="chat_input_main"):
         # Add and display user message
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.rerun()
@@ -489,6 +489,7 @@ def main():
                         "content": reply,
                         "recommendations": recs
                     })
+                    st.rerun()
                 else:
                     st.error("Failed to retrieve response from backend.")
 

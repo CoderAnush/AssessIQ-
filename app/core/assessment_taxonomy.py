@@ -532,15 +532,15 @@ class AssessmentTaxonomy:
         # Weighted keyword patterns with scores
         ROLE_PATTERNS = {
             RoleDomain.BACKEND_ENGINEER: {
-                "exact": ["backend engineer", "backend developer", "server-side developer", "api engineer"],
-                "strong": ["backend", "back-end", "server-side", "api developer", "systems engineer"],
-                "boost": ["java", "python", "go", "rust", "c++", "node.js", "database", "microservices"],
+                "exact": ["backend engineer", "backend developer", "server-side developer", "api engineer", "java developer", "python developer", "go developer", "node developer"],
+                "strong": ["backend", "back-end", "server-side", "api developer", "systems engineer", "database engineer", "distributed systems"],
+                "boost": ["java", "python", "go", "rust", "c++", "node.js", "database", "microservices", "sql", "nosql", "redis", "kafka"],
                 "weight": 1.0
             },
             RoleDomain.FRONTEND_ENGINEER: {
-                "exact": ["frontend engineer", "frontend developer", "ui engineer", "client-side developer"],
-                "strong": ["frontend", "front-end", "ui developer", "web developer", "css", "html"],
-                "boost": ["react", "angular", "vue", "javascript", "typescript", "webpack"],
+                "exact": ["frontend engineer", "frontend developer", "ui engineer", "client-side developer", "react developer", "angular developer", "vue developer", "javascript developer"],
+                "strong": ["frontend", "front-end", "ui developer", "web developer", "css", "html", "spa", "pwa"],
+                "boost": ["react", "angular", "vue", "javascript", "typescript", "webpack", "sass", "less", "tailwind"],
                 "weight": 1.0
             },
             RoleDomain.FULLSTACK_ENGINEER: {
@@ -688,13 +688,13 @@ class AssessmentTaxonomy:
         # Fallback: General developer/engineer classification
         if any(term in role_lower for term in ["developer", "engineer", "programmer", "software"]):
             # Check tech stack for domain clues
-            if any(t in tech_text for t in ["react", "angular", "vue", "frontend", "css", "html"]):
+            if any(t in tech_text for t in ["react", "angular", "vue", "frontend", "css", "html", "javascript", "typescript"]):
                 self._last_classification_debug = {
                     "input": role_title,
                     "fallback": "frontend_from_tech_stack"
                 }
                 return RoleDomain.FRONTEND_ENGINEER
-            if any(t in tech_text for t in ["node", "java", "python backend", "go", "rust", "database"]):
+            if any(t in tech_text for t in ["node", "java", "python", "go", "rust", "database", "sql", "nosql"]):
                 self._last_classification_debug = {
                     "input": role_title,
                     "fallback": "backend_from_tech_stack"
