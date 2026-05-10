@@ -7,6 +7,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
+import psutil
+import time
+import os
 
 from app.config import settings, validate_config
 from app.logging.logger import setup_logging
@@ -23,16 +26,61 @@ async def lifespan(app: FastAPI):
 
     # STARTUP
     logger.info("Starting AssessIQ AI...")
+    print("="*60)
+    print("BACKEND STARTUP INITIATED")
+    print(f"Memory Usage: {psutil.virtual_memory()}")
+    print("="*60)
+    
+    start_time = time.time()
+    
     try:
         validate_config()
         logger.info("Configuration validated")
 
-        # Load catalog (happens in routes lazily or here)
-        logger.info(f"Catalog will be loaded from {settings.catalog_path}")
-        logger.info(f"FAISS index will be loaded from {settings.faiss_index_path}")
+        # 1. Load Catalog
+        print("STARTUP: Loading Catalog...")
+        from app.services.catalog_loader import CatalogLoader
+        catalog_path = getattr(settings, "catalog_path", "data/processed/catalog_processed.json")
+        app.state.catalog_loader = CatalogLoader(catalog_path)
+        print(f"STARTUP: Catalog loaded in {time.time() - start_time:.2f}s")
 
+        # 2. Initialize LLM
+        print("STARTUP: Initializing LLM Service...")
+        from app.services.llm_service import LLMService
+        app.state.llm_service = LLMService()
+        print(f"STARTUP: LLM Service ready in {time.time() - start_time:.2f}s")
+
+        # 3. Initialize Retriever (Lightweight version already in retriever.py)
+        print("STARTUP: Initializing LIGHTWEIGHT Retriever...")
+        from app.services.retriever import HybridRetriever
+        app.state.retriever = HybridRetriever(app.state.catalog_loader)
+        print(f"STARTUP: Retriever ready in {time.time() - start_time:.2f}s")
+
+        # 4. Initialize Ranker
+        print("STARTUP: Initializing Ranker...")
+        from app.services.ranker import RecommendationRanker
+        app.state.ranker = RecommendationRanker()
+
+        # 5. Initialize Decision Engine
+        print("STARTUP: Initializing Decision Engine...")
+        from app.agents.decision_engine import DecisionEngine
+        app.state.decision_engine = DecisionEngine()
+
+        # 6. Initialize Hallucination Checker
+        print("STARTUP: Initializing Hallucination Checker...")
+        from app.utils.hallucination_checker import HallucinationChecker
+        app.state.hallucination_checker = HallucinationChecker(app.state.catalog_loader)
+
+        print("="*60)
+        print(f"BACKEND STARTUP COMPLETE in {time.time() - start_time:.2f}s")
+        print(f"Final Memory Usage: {psutil.virtual_memory()}")
+        print("="*60)
+        
         logger.info("AssessIQ AI startup complete")
     except Exception as e:
+        print(f"CRITICAL STARTUP FAILURE: {e}")
+        import traceback
+        traceback.print_exc()
         logger.error(f"Startup failed: {e}")
         raise
 
