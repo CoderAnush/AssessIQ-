@@ -52,10 +52,16 @@ class HiringContext:
         """Check if enough context for a recommendation (Phase 3)."""
         has_role = bool(self.role or self.domain or self.tech_stack)
         has_spec = bool(self.seniority) or bool(self.soft_skills) or bool(self.preferred_test_types) or self.leadership_needs
+        
+        # If we have a very clear technical role/domain, we can recommend without seniority
+        role_text = f"{self.role or ''} {self.domain or ''}".lower()
+        clear_tech_signals = ["java", "python", "react", "data scientist", "machine learning", "sql", "devops", "cloud engineer"]
+        if has_role and any(signal in role_text for signal in clear_tech_signals):
+            return True
+
         if not (has_role and has_spec):
             return False
 
-        role_text = f"{self.role or ''} {self.domain or ''}".lower()
         broad_signals = ["sales", "support", "operations", "leadership", "finance", "graduate", "assistant", "marketing"]
         if any(signal in role_text for signal in broad_signals):
             has_precision = bool(self.soft_skills or self.technical_skills or self.tech_stack)
@@ -82,8 +88,23 @@ class ConversationAnalyzer:
         "executive": ["executive", "vp", "director", "head of", "cxo", "chief"]
     }
 
-    TECH_KEYWORDS = {"java", "python", "javascript", "typescript", "go", "react", "angular", "sql", "aws", "devops"}
-    BUSINESS_KEYWORDS = {"sales", "marketing", "finance", "operations", "hr", "product management"}
+    TECH_KEYWORDS = {
+        "java", "spring", "j2ee", "hibernate", 
+        "python", "django", "flask", "asyncio", "scikit-learn", "tensorflow", "pytorch",
+        "javascript", "typescript", "react", "angular", "vue", "frontend", "ui", "client-side",
+        "go", "golang", "sql", "postgres", "nosql", "mongodb",
+        "aws", "azure", "gcp", "docker", "kubernetes", "devops", "cicd", "terraform",
+        "machine learning", "ml", "ai", "data science", "analytics", "nlp", "computer vision"
+    }
+    BUSINESS_KEYWORDS = {
+        "sales": ["sales", "account executive", "business development", "sdr", "bdr", "quota", "persuasion"],
+        "marketing": ["marketing", "growth", "campaign", "seo", "branding"],
+        "finance": ["finance", "accounting", "audit", "tax", "banking"],
+        "operations": ["operations", "logistics", "supply chain", "process"],
+        "hr": ["hr", "recruiting", "talent acquisition", "human resources"],
+        "product": ["product management", "product owner", "product manager"],
+        "support": ["customer support", "support", "service desk", "customer care"]
+    }
     SOFT_SKILL_KEYWORDS = {
         "communication", "empathy", "judgment", "stakeholder", "leadership", "execution",
         "organization", "analytical", "problem solving", "learning agility", "persuasion",
@@ -164,22 +185,59 @@ class ConversationAnalyzer:
             r"for (?:a|an)?\s+([^,\.!?]+?)(?:\s+role|\s+position|$)",
             r"hiring (?:a|an)?\s+([^,\.!?]+)",
             r"test for (?:a|an)?\s+([^,\.!?]+)",
-            r"need\s+([^,\.!?]+?)(?:\s+assessment|\s+test|\s+screening|$)",
+            r"need (?:a|an)?\s+([^,\.!?]+?)(?:\s+assessment|\s+test|\s+screening|$)",
         ]
         for p in role_patterns:
             m = re.search(p, msg_lower)
             if m:
                 role = m.group(1).strip()
-                if len(role.split()) < 5: context.role = role; break
+                # If role is too long, it might contain skills; try to truncate at "with" or "and"
+                if len(role.split()) >= 5:
+                    role = re.split(r'\s+(?:with|and|who|for)\s+', role)[0].strip()
+                
+                if len(role.split()) < 5: 
+                    context.role = role
+                    break
 
         # 3. Keywords
         for tech in self.TECH_KEYWORDS:
-            if tech in msg_lower: context.tech_stack.add(tech)
-        for domain in self.BUSINESS_KEYWORDS:
-            if domain in msg_lower: context.domain = domain; context.role = context.role or domain
+            if tech in msg_lower: 
+                context.tech_stack.add(tech)
+                # Assign specific domain and default role if it's a strong indicator
+                if tech in ["java", "spring", "hibernate"]: 
+                    context.domain = "java"
+                    context.role = context.role or "Java Developer"
+                elif tech in ["python", "django", "flask"]: 
+                    context.domain = "python"
+                    context.role = context.role or "Python Developer"
+                elif tech in ["react", "angular", "frontend"]: 
+                    context.domain = "frontend"
+                    context.role = context.role or "Frontend Engineer"
+                elif tech in ["machine learning", "data science", "ml"]: 
+                    context.domain = "data_science"
+                    context.role = context.role or "Data Scientist"
+                elif tech in ["docker", "kubernetes", "devops"]: 
+                    context.domain = "devops"
+                    context.role = context.role or "DevOps Engineer"
+
+        for domain, keywords in self.BUSINESS_KEYWORDS.items():
+            # If domain is a dict key, check its keywords
+            if isinstance(keywords, list):
+                if any(kw in msg_lower for kw in keywords) or domain in msg_lower:
+                    context.domain = domain
+                    context.role = context.role or domain
+            elif domain in msg_lower:
+                context.domain = domain
+                context.role = context.role or domain
 
         if "leadership" in msg_lower or "manager" in msg_lower or "executive" in msg_lower:
             context.leadership_needs = True
+            context.domain = context.domain or "leadership"
+
+        if "sales" in msg_lower:
+            context.domain = "sales"
+        elif "support" in msg_lower:
+            context.domain = "support"
 
         for skill in self.SOFT_SKILL_KEYWORDS:
             if skill in msg_lower:

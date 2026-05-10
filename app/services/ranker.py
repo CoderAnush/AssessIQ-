@@ -201,10 +201,20 @@ class RecruiterRanker:
         factors = RankingFactors()
         context_terms = self._build_context_terms(context)
         
-        # 1. Semantic Relevance (10%)
-        factors.semantic_relevance = retrieval_result.get("hybrid_score", 0.5)
-
-        # Keyword overlap from query reconstruction and catalog metadata.
+        # Determine Recruiter Domains for hard penalties
+        TECH_DOMAINS = {
+            "java": ["java", "spring", "j2ee", "hibernate"],
+            "python": ["python", "django", "flask", "asyncio"],
+            "frontend": ["react", "javascript", "typescript", "frontend"],
+            "data_science": ["machine learning", "ml", "ai", "sql", "data science", "analytics"],
+            "devops": ["docker", "kubernetes", "aws", "devops"],
+            "sales": ["sales", "account executive", "business development"],
+            "support": ["customer support", "support", "service desk"],
+            "leadership": ["manager", "leadership", "director", "vp"]
+        }
+        
+        # Identify the Recruiter Domain from context
+        recruiter_domain = str(context.domain or "").lower()
         candidate_text = " ".join(
             [
                 assessment.name,
@@ -214,6 +224,10 @@ class RecruiterRanker:
                 " ".join(assessment.skill_tags or []),
             ]
         ).lower()
+        
+        # 1. Semantic Relevance (10%)
+        factors.semantic_relevance = retrieval_result.get("hybrid_score", 0.5)
+
         if context_terms:
             hits = sum(1 for term in context_terms if term in candidate_text)
             overlap = hits / max(1, min(len(context_terms), 8))
@@ -225,13 +239,59 @@ class RecruiterRanker:
         )
         factors.domain_match = alignment_score
         
-        # Phase 4: Strict Domain Penalty
+        # Phase 5: HARD DOMAIN PENALTIES & BOOSTS
         classification = self.taxonomy.get_assessment_classification(assessment.id)
         if classification:
-            if role_domain == RoleDomain.BACKEND_ENGINEER and classification.primary_domain not in [AssessmentDomain.TECHNICAL, AssessmentDomain.COGNITIVE]:
-                factors.domain_match *= 0.3 # Heavy penalty for non-technical tests in eng roles
-            if role_domain == RoleDomain.SALES_REP and classification.primary_domain == AssessmentDomain.TECHNICAL:
-                factors.domain_match *= 0.2
+            # A. CROSS-DOMAIN MISMATCH PENALTY
+            # If recruiter domain is explicitly set and doesn't match the assessment domain/keywords
+            if recruiter_domain:
+                is_match = False
+                # If we know the domain keywords, check if the assessment matches ANY of them
+                if recruiter_domain in TECH_DOMAINS:
+                    domain_keywords = TECH_DOMAINS[recruiter_domain]
+                    if any(kw in candidate_text for kw in domain_keywords):
+                        is_match = True
+                        factors.domain_match = min(1.0, factors.domain_match + 0.40) # BOOST Exact Match
+                
+                # B. SPECIFIC CROSS-PENALTIES
+                if recruiter_domain == "python" and ("java" in candidate_text or "j2ee" in candidate_text):
+                    factors.domain_match -= 0.70 # Severe Java penalty for Python
+                
+                if recruiter_domain == "java" and ("python" in candidate_text or "django" in candidate_text):
+                    factors.domain_match -= 0.70 # Severe Python penalty for Java
+
+                # If it's a known domain but the assessment is for a DIFFERENT known domain
+                if recruiter_domain and not is_match:
+                    for other_domain, other_kws in TECH_DOMAINS.items():
+                        if other_domain != recruiter_domain and any(kw in candidate_text for kw in other_kws):
+                            # This is a different domain assessment!
+                            factors.domain_match -= 0.60 # HUGE PENALTY
+                            break
+                
+                # If no match found for a specific tech domain, penalize "Generic" knowledge tests
+                if not is_match and recruiter_domain in ["java", "python", "data_science", "devops", "frontend"]:
+                    if classification.primary_domain in [AssessmentDomain.GENERAL, AssessmentDomain.PERSONALITY] and role_domain != RoleDomain.GENERAL:
+                         factors.domain_match -= 0.25 # Technical roles want technical tests
+
+            # C. SPECIFIC ROLE-BASED PENALTIES
+            if role_domain in [RoleDomain.DATA_SCIENTIST, RoleDomain.DATA_ANALYST]:
+                if "java" in candidate_text or "spring" in candidate_text:
+                    factors.domain_match -= 0.50 # Java is irrelevant for DS/Analytics
+                if any(kw in candidate_text for kw in ["sql", "analytics", "machine learning", "data science", "statistics"]):
+                    factors.domain_match += 0.35
+            
+            if role_domain in [RoleDomain.SALES_REP, RoleDomain.CUSTOMER_SUPPORT, RoleDomain.HR_PROFESSIONAL]:
+                if classification.primary_domain == AssessmentDomain.TECHNICAL:
+                    factors.domain_match -= 0.80 # No coding tests for sales/HR
+            
+            if role_domain == RoleDomain.ENGINEERING_MANAGER:
+                if classification.primary_domain == AssessmentDomain.TECHNICAL and "management" not in candidate_text:
+                    factors.domain_match -= 0.20 # EM needs less focus on syntax
+                if classification.primary_domain in [AssessmentDomain.LEADERSHIP, AssessmentDomain.BEHAVIORAL]:
+                    factors.domain_match += 0.30
+
+        # Natural Score Normalization
+        factors.domain_match = max(0.0, min(1.0, factors.domain_match))
 
         role_profile = self.taxonomy.get_role_intelligence_profile(role_domain)
         preferred_domains = set(role_profile.get("preferred_domains", []))
@@ -260,89 +320,26 @@ class RecruiterRanker:
                 factors.role_completeness = max(0.0, factors.role_completeness - 0.20)
 
         if anchor_terms:
-            candidate_text = f"{assessment.name} {assessment.description}".lower()
             anchor_hits = sum(1 for term in anchor_terms if term in candidate_text)
             if anchor_hits:
-                factors.semantic_relevance = min(1.0, factors.semantic_relevance + 0.12 + min(0.12, anchor_hits * 0.04))
-                factors.role_completeness = min(1.0, factors.role_completeness + 0.08)
+                factors.semantic_relevance = min(1.0, factors.semantic_relevance + 0.15 + min(0.15, anchor_hits * 0.05))
+                factors.role_completeness = min(1.0, factors.role_completeness + 0.10)
             elif role_domain != RoleDomain.GENERAL:
                 factors.semantic_relevance = max(0.0, factors.semantic_relevance - 0.18)
                 factors.domain_match *= 0.85
 
-        if role_domain in {RoleDomain.SALES_REP, RoleDomain.SALES_MANAGER, RoleDomain.CUSTOMER_SUPPORT} and classification:
-            candidate_text = f"{assessment.name} {assessment.description}".lower()
-            if any(term in candidate_text for term in ["sales", "customer", "communication", "empathy", "service", "negotiation"]):
-                factors.domain_match = min(1.0, factors.domain_match + 0.12)
-            elif classification.primary_domain == AssessmentDomain.PERSONALITY:
-                factors.domain_match = min(1.0, factors.domain_match + 0.06)
-
-        if role_domain in {
-            RoleDomain.SALES_REP,
-            RoleDomain.SALES_MANAGER,
-            RoleDomain.CUSTOMER_SUPPORT,
-            RoleDomain.OPERATIONS_MANAGER,
-            RoleDomain.FINANCE_ANALYST,
-            RoleDomain.MARKETING_MANAGER,
-            RoleDomain.EXECUTIVE_ASSISTANT,
-            RoleDomain.GRADUATE_TRAINEE,
-        } and classification and classification.primary_domain == AssessmentDomain.TECHNICAL:
-            factors.domain_match *= 0.25
-            factors.semantic_relevance = max(0.0, factors.semantic_relevance - 0.15)
-
-        if context.tech_stack and classification and classification.primary_domain == AssessmentDomain.TECHNICAL:
-            tech_terms = {tech.lower() for tech in context.tech_stack}
-            if tech_terms:
-                exact_tech_hits = sum(1 for tech in tech_terms if tech in assessment.name.lower() or tech in assessment.description.lower())
-                if exact_tech_hits == 0 and role_domain not in {
-                    RoleDomain.BACKEND_ENGINEER,
-                    RoleDomain.FRONTEND_ENGINEER,
-                    RoleDomain.FULLSTACK_ENGINEER,
-                    RoleDomain.DEVOPS_ENGINEER,
-                    RoleDomain.MOBILE_DEVELOPER,
-                    RoleDomain.QA_ENGINEER,
-                    RoleDomain.CYBERSECURITY_ANALYST,
-                    RoleDomain.CLOUD_ENGINEER,
-                }:
-                    factors.domain_match *= 0.35
-
-        if getattr(context, "preferred_test_types", None):
-            if assessment.test_type.value in context.preferred_test_types:
-                factors.type_alignment = min(1.0, factors.type_alignment + 0.2)
-            else:
-                factors.type_alignment = max(0.0, factors.type_alignment - 0.1)
-
-        preferred_types = set(role_profile.get("preferred_types", set()))
-        if preferred_types:
-            if assessment.test_type.value in preferred_types:
-                factors.type_alignment = min(1.0, factors.type_alignment + 0.15)
-            else:
-                factors.type_alignment = max(0.0, factors.type_alignment - 0.15)
-        
-        # 3. Seniority Fit (20% - Boosted)
-        factors.seniority_fit = self._calculate_seniority_alignment(assessment, context)
-        
-        # 4. Type Alignment (15%)
-        factors.type_alignment = self._calculate_category_fit(assessment, context)
-        
-        # 5. Skill Overlap (15%)
-        # Check tech stack directly in assessment name/desc
-        skill_score = 0.0
+        # Explicit relevance boosts for exact keyword matches
         if context.tech_stack:
-            matches = sum(1 for tech in context.tech_stack if tech.lower() in assessment.name.lower() or tech.lower() in assessment.description.lower())
-            skill_score = min(1.0, matches / max(1, len(context.tech_stack)))
-        if context_terms:
-            metadata_tokens = set(re.findall(r"[a-z0-9]+", candidate_text))
-            keyword_hits = len(context_terms.intersection(metadata_tokens))
-            keyword_score = min(1.0, keyword_hits / max(1, min(len(context_terms), 6)))
-            skill_score = max(skill_score, keyword_score)
-        factors.skill_overlap = skill_score
+            tech_hits = sum(1 for tech in context.tech_stack if tech.lower() in candidate_text)
+            if tech_hits:
+                factors.skill_overlap = min(1.0, 0.4 + (tech_hits * 0.3))
+                factors.semantic_relevance = min(1.0, factors.semantic_relevance + 0.2)
+
+        # DEBUG RANKING LOG
+        score = factors.calculate_final()
+        print(f"[RANK] {assessment.name} | domain={recruiter_domain} | role={role_domain.value} | score={score:.3f}")
         
-        # 6. Soft-Skill Match (10%)
-        factors.soft_skill_match = self._calculate_soft_skill_match(assessment, context)
-        
-        # 7. Role Completeness (10%)
-        factors.role_completeness = self._calculate_role_completeness(assessment, context, factors)
-        
+
         # --- RECRUITER WORKFLOW INTELLIGENCE (Priority 2 & 4) ---
         
         # A. Workflow Modes Bias

@@ -303,10 +303,12 @@ class AssessmentTaxonomy:
     DOMAIN_KEYWORDS: Dict[AssessmentDomain, List[str]] = {
         AssessmentDomain.TECHNICAL: [
             "programming", "code", "software", "development", "technical",
-            "java", "python", "javascript", "react", "angular", "node",
-            "backend", "frontend", "fullstack", "devops", "database",
-            "api", "framework", "library", "system", "architecture",
-            "engineering", "implementation", "coding", "debugging"
+            "java", "spring", "j2ee", "hibernate", "jvm",
+            "python", "django", "flask", "asyncio", "numpy", "pandas",
+            "javascript", "typescript", "react", "angular", "vue", "frontend",
+            "node", "api", "framework", "library", "system", "architecture",
+            "engineering", "implementation", "coding", "debugging",
+            "go", "golang", "rust", "c++", "c#", ".net"
         ],
         AssessmentDomain.COGNITIVE: [
             "reasoning", "problem solving", "logical", "analytical thinking",
@@ -343,7 +345,8 @@ class AssessmentTaxonomy:
             "analysis", "analytical", "data", "statistics", "quantitative",
             "research", "investigation", "evaluation", "assessment",
             "diagnostic", "interpretation", "synthesis", "modeling",
-            "data science", "machine learning", "algorithm", "pattern"
+            "data science", "machine learning", "algorithm", "pattern",
+            "ai", "artificial intelligence", "sql", "analytics"
         ],
         AssessmentDomain.SALES: [
             "sales", "selling", "commercial", "revenue", "business development",
@@ -779,15 +782,24 @@ class AssessmentTaxonomy:
         
         # Special handling: Backend boost for Java/Python/Go WITHOUT frontend indicators
         backend_indicators = ["java", "python", "go", "rust", "c++", "node", "backend"]
-        frontend_indicators = ["react", "angular", "vue", "frontend", "css", "html"]
+        frontend_indicators = ["react", "angular", "vue", "frontend", "css", "html", "javascript"]
+        data_indicators = ["data", "science", "analytics", "machine learning", "ml", "sql"]
         
         has_backend_tech = any(tech in role_lower or tech in tech_text for tech in backend_indicators)
         has_frontend_tech = any(tech in role_lower or tech in tech_text for tech in frontend_indicators)
+        has_data_tech = any(tech in role_lower or tech in tech_text for tech in data_indicators)
         
+        # If we have data tech, strongly boost data scientist/analyst
+        if has_data_tech and not has_backend_tech and not has_frontend_tech:
+             if scores.get(RoleDomain.DATA_SCIENTIST, 0) > 0:
+                 scores[RoleDomain.DATA_SCIENTIST] += 3.0
+             if scores.get(RoleDomain.DATA_ANALYST, 0) > 0:
+                 scores[RoleDomain.DATA_ANALYST] += 2.0
+
         # If we have backend tech but no explicit frontend indicators, boost backend
         if has_backend_tech and not has_frontend_tech and "fullstack" not in role_lower:
             if scores.get(RoleDomain.BACKEND_ENGINEER, 0) > 0:
-                scores[RoleDomain.BACKEND_ENGINEER] += 2.0
+                scores[RoleDomain.BACKEND_ENGINEER] += 2.5
                 debug_info[RoleDomain.BACKEND_ENGINEER]["matches"].append("backend_tech_boost")
             elif scores.get(RoleDomain.GENERAL, 0) == 0:
                 # No strong match yet, check if this is an engineer/developer role
@@ -797,6 +809,11 @@ class AssessmentTaxonomy:
                         "score": 1.5,
                         "matches": ["inferred_from_backend_tech"]
                     }
+        
+        # Ensure non-tech roles don't get accidentally classified as backend due to generic terms
+        if any(term in role_lower for term in ["sales", "support", "manager", "leadership", "executive"]):
+            scores[RoleDomain.BACKEND_ENGINEER] = min(scores.get(RoleDomain.BACKEND_ENGINEER, 0), 1.0)
+            scores[RoleDomain.FRONTEND_ENGINEER] = min(scores.get(RoleDomain.FRONTEND_ENGINEER, 0), 1.0)
         
         # Find highest scoring domain
         if scores:

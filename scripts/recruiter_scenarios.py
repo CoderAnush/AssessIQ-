@@ -90,6 +90,30 @@ SCENARIOS = [
         expect_min_recommendations=1,
         expect_reply_not_contains=["Global Skills Development Report", ".NET Framework 4.5"],
     ),
+    Scenario(
+        name="Data Science",
+        messages=[{"role": "user", "content": "Need a data scientist with machine learning and SQL skills"}],
+        expect_min_recommendations=1,
+        expect_reply_not_contains=["Java", "Spring", "J2EE"],
+    ),
+    Scenario(
+        name="Python Backend",
+        messages=[{"role": "user", "content": "Need a senior Python backend engineer"}],
+        expect_min_recommendations=1,
+        expect_reply_not_contains=["Java", "Spring", "J2EE"],
+    ),
+    Scenario(
+        name="Sales Personality",
+        messages=[{"role": "user", "content": "Need personality tests for sales hiring"}],
+        expect_min_recommendations=1,
+        expect_reply_not_contains=["Coding", "Programming", "Java", "Python"],
+    ),
+    Scenario(
+        name="Engineering Leadership",
+        messages=[{"role": "user", "content": "Need assessments for engineering managers"}],
+        expect_min_recommendations=1,
+        expect_reply_not_contains=["Coding", "Multiple Choice", "Java"],
+    ),
 ]
 
 GENERIC_FALLBACK_NAMES = {
