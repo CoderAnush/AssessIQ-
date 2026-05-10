@@ -144,10 +144,12 @@ class DecisionEngine:
             return items
 
         # 3. Capitalized words (Potential Assessment Names)
-        # For "Compare OPQ and Verify Interactive"
-        cap_words = re.findall(r"([A-Z][\w\-]+(?:\s+[A-Z][\w\-]+)*)", message)
+        # For "Compare OPQ32r and Verify Interactive"
+        # We need to be careful not to catch "Compare" itself if it's at the start
+        temp_message = re.sub(r"^[Cc]ompare\s+", "", message)
+        cap_words = re.findall(r"([A-Z][\w\-]+(?:\s+[A-Z][\w\-]+)*)", temp_message)
         for word in cap_words:
-            if word.lower() not in ["compare", "and", "vs", "versus", "between"]:
+            if word.lower() not in ["and", "vs", "versus", "between"]:
                 items.append(word)
 
         # 4. Fallback: Hardcoded list
