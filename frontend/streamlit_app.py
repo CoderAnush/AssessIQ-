@@ -1,6 +1,6 @@
 """
 AssessIQ AI - Enterprise Assessment Selection Intelligence.
-Clean production-ready frontend using proven network logic.
+Clean production-ready frontend with robust response parsing.
 """
 
 import streamlit as st
@@ -72,11 +72,16 @@ def init_session():
 
 def send_chat_request(user_message: str):
     """Proven lightweight request logic."""
-    payload = {
-        "messages": [
-            {"role": "user", "content": user_message}
-        ]
-    }
+    # Build payload from full history for context
+    history = []
+    for msg in st.session_state.messages:
+        history.append({"role": msg["role"], "content": msg["content"]})
+    
+    # Add current message if not already there (though usually it is added to state first)
+    # But for this clean implementation, we'll assume state is already updated.
+    
+    payload = {"messages": history}
+    
     try:
         response = requests.post(
             f"{BACKEND_URL}/chat",
@@ -91,6 +96,7 @@ def send_chat_request(user_message: str):
 
 def render_recommendation(rec: Dict, index: int):
     score_pct = int(rec.get("score", 0.85) * 100)
+    name = rec.get('name', 'Assessment')
     
     html = f"""
     <div class="recommendation-card">
@@ -98,7 +104,7 @@ def render_recommendation(rec: Dict, index: int):
             <div>
                 <span class="badge-type">{rec.get('test_type', 'K')}</span>
                 <span class="badge-category">{rec.get('category', 'Assessment')}</span>
-                <div class="assessment-title">#{index} {rec.get('name')}</div>
+                <div class="assessment-title">#{index} {name}</div>
             </div>
             <div class="score-box">
                 <div class="score-value">{score_pct}%</div>
@@ -107,10 +113,10 @@ def render_recommendation(rec: Dict, index: int):
         </div>
         <div class="explanation-box">
             <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Recruiter Insight</div>
-            <div style="color: #334155; font-size: 0.95rem;">{rec.get('explanation')}</div>
+            <div style="color: #3341155; font-size: 0.95rem;">{rec.get('explanation')}</div>
         </div>
         <div style="margin-top: 15px;">
-            <a href="{rec.get('url')}" target="_blank" class="shl-button">View on SHL.com ↗</a>
+            <a href="{rec.get('url')}" target="_blank" class="shl-button" id="btn_{index}_{name.replace(' ', '_')}">View on SHL.com ↗</a>
         </div>
     </div>
     """
@@ -125,7 +131,7 @@ def main():
         st.markdown("---")
         st.info("Enterprise AI for SHL assessment selection. Grounded in SHL individual solutions catalog.")
         
-        if st.button("🗑️ Clear Conversation", use_container_width=True, key="clear_conv"):
+        if st.button("🗑️ Clear Conversation", use_container_width=True, key="clear_conv_sidebar"):
             st.session_state.messages = []
             st.rerun()
         
@@ -135,6 +141,25 @@ def main():
     # Header
     st.markdown('<h1 class="main-header">AssessIQ AI</h1>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Strategic Conversational Intelligence for Assessment Selection</p>', unsafe_allow_html=True)
+
+    # Empty State Welcome
+    if not st.session_state.messages:
+        st.markdown("""
+        ### Welcome, Recruiter
+        Describe the role you are hiring for, or ask to compare specific SHL assessments.
+        """)
+        
+        cols = st.columns(3)
+        prompts = [
+            ("Java Backend Role", "I need assessments for a Senior Java engineer."),
+            ("Sales Personality", "What's the best personality test for a high-volume sales role?"),
+            ("Compare Top 2", "Compare the top 2 assessments for a leadership position.")
+        ]
+        for i, (title, text) in enumerate(prompts):
+            with cols[i]:
+                if st.button(title, key=f"sample_{i}", use_container_width=True):
+                    st.session_state.messages.append({"role": "user", "content": text})
+                    st.rerun()
 
     # Display Chat History
     for i, msg in enumerate(st.session_state.messages):
@@ -147,23 +172,47 @@ def main():
                     render_recommendation(rec, idx)
 
     # Chat Input
-    if prompt := st.chat_input("Describe the role or ask to compare assessments..."):
+    if prompt := st.chat_input("Describe the role or ask to compare assessments...", key="main_chat_input"):
         # 1. Store and show user message
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user", avatar="👤"):
-            st.markdown(prompt)
+        st.rerun()
 
-        # 2. Get and show assistant response
+    # Process latest user message
+    if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
         with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Analyzing requirements..."):
-                # Always use full history or at least the latest context
-                response = send_chat_request(prompt)
+                response = send_chat_request(st.session_state.messages[-1]["content"])
                 
                 if response:
-                    reply = response.get("reply", "I've analyzed your request.")
+                    reply = response.get("reply", "")
                     recs = response.get("recommendations", [])
+                    clarification = response.get("clarification", "")
+                    comparison = response.get("comparison", "")
                     
-                    st.markdown(reply)
+                    # ROBUST PARSING LOGIC
+                    has_content = bool(recs or clarification or comparison or (reply and "couldn't generate recommendations" not in reply.lower()))
+                    
+                    # Determine what to display as the primary text
+                    display_text = reply
+                    if clarification:
+                        display_text = clarification
+                    elif comparison:
+                        display_text = comparison
+                    
+                    # If we have recommendations but the reply is the fallback error, override it
+                    if recs and ("couldn't generate" in reply.lower() or not reply):
+                        display_text = "Based on your requirements, here are the most relevant SHL assessments:"
+
+                    # FINAL SAFETY: If absolutely no content, show error
+                    if not has_content and not display_text:
+                        st.error("I couldn't generate a specific response. Please try rephrasing your request.")
+                        return
+
+                    # Render Primary Text
+                    if display_text:
+                        st.markdown(display_text)
+                    
+                    # Render Recommendations independently
                     if recs:
                         st.markdown("#### 📋 Top Recommendations")
                         for idx, rec in enumerate(recs, 1):
@@ -172,11 +221,8 @@ def main():
                     # Store in history
                     st.session_state.messages.append({
                         "role": "assistant",
-                        "content": reply,
+                        "content": display_text or "Processed your request.",
                         "recommendations": recs
                     })
                 else:
                     st.error("Failed to get response from AssessIQ.")
-
-if __name__ == "__main__":
-    main()
