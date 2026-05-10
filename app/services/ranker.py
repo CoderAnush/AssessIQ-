@@ -128,49 +128,57 @@ class RecruiterRanker:
         
         Returns naturally spread scores (96, 92, 89, 84, 79, 73...)
         """
-        logger.info(f"Ranking {len(retrieved_results)} assessments for role: {context.role}")
-        
-        # Build/refresh taxonomy
-        if not self.taxonomy._classifications:
-            self.taxonomy.build_taxonomy(list(catalog_assessments.values()))
-        
-        # Classify role
-        role_domain = self.taxonomy.classify_role(
-            context.role or "",
-            list(context.tech_stack)
-        )
-        logger.info(f"Role classified as: {role_domain.value}")
-        
-        # Score all assessments
-        scored_assessments: List[Tuple[AssessmentWithMetadata, RankingFactors, float]] = []
-        
-        for result in retrieved_results:
-            assessment_id = result["id"]
-            assessment = catalog_assessments.get(assessment_id)
+        try:
+            logger.info(f"Ranking {len(retrieved_results)} assessments for role: {context.role}")
             
-            if not assessment:
-                continue
+            # Build/refresh taxonomy
+            if not self.taxonomy._classifications:
+                self.taxonomy.build_taxonomy(list(catalog_assessments.values()))
             
-            factors = self._calculate_factors(
-                assessment, context, role_domain, result
+            # Classify role
+            role_domain = self.taxonomy.classify_role(
+                context.role or "",
+                list(context.tech_stack or [])
             )
-            raw_score = factors.calculate_final()
+            logger.info(f"Role classified as: {role_domain.value}")
             
-            scored_assessments.append((assessment, factors, raw_score))
-        
-        # Sort by raw score
-        scored_assessments.sort(key=lambda x: x[2], reverse=True)
-        
-        # Apply diversity balancing during selection
-        ranked_results = self._apply_diversity_and_finalize(
-            scored_assessments, role_domain, top_k
-        )
-        
-        # Normalize to natural spread
-        final_results = self._normalize_to_natural_spread(ranked_results)
-        
-        logger.info(f"Completed ranking with {len(final_results)} results")
-        return final_results
+            # Score all assessments
+            scored_assessments: List[Tuple[AssessmentWithMetadata, RankingFactors, float]] = []
+            
+            for result in retrieved_results:
+                assessment_id = result.get("id")
+                if not assessment_id:
+                    continue
+                    
+                assessment = catalog_assessments.get(assessment_id)
+                
+                if not assessment:
+                    continue
+                
+                factors = self._calculate_factors(
+                    assessment, context, role_domain, result
+                )
+                raw_score = factors.calculate_final()
+                
+                scored_assessments.append((assessment, factors, raw_score))
+            
+            # Sort by raw score
+            scored_assessments.sort(key=lambda x: x[2], reverse=True)
+            
+            # Apply diversity balancing during selection
+            ranked_results = self._apply_diversity_and_finalize(
+                scored_assessments, role_domain, top_k
+            )
+            
+            # Normalize to natural spread
+            final_results = self._normalize_to_natural_spread(ranked_results)
+            
+            logger.info(f"Completed ranking with {len(final_results)} results")
+            return final_results
+        except Exception as e:
+            logger.error(f"Ranking error: {e}", exc_info=True)
+            # Return minimal safe results instead of crashing
+            return []
     
     def _calculate_factors(
         self,
@@ -354,9 +362,13 @@ class RecruiterRanker:
             )
             
             # Generate explanation
-            explanation = self._generate_recruiter_explanation(
-                assessment, factors, role_domain, classification
-            )
+            try:
+                explanation = self._generate_recruiter_explanation(
+                    assessment, factors, role_domain, classification
+                )
+            except Exception as e:
+                logger.error(f"Error generating explanation for {assessment.id}: {e}")
+                explanation = f"{assessment.name} evaluates core competencies for the {role_domain.value} role."
             
             results.append(RankedAssessment(
                 assessment=assessment,
@@ -547,16 +559,22 @@ class RecruiterRanker:
         recommendations = []
         
         for result in ranked_results[:top_k]:
+            # ENSURE ALL FIELDS REQUIRED BY Recommendation Pydantic model exist
+            # Recommendation(id, name, url, test_type, score, match_label, category, explanation)
             rec = {
-                "id": result.assessment.id,
-                "name": result.assessment.name,
-                "url": result.assessment.url,
-                "test_type": result.assessment.test_type.value,
-                "score": result.final_score,
-                "match_label": result.confidence_label,
-                "category": result.category,
-                "explanation": result.explanation,
+                "id": str(result.assessment.id) if result.assessment.id else "unknown",
+                "name": str(result.assessment.name) if result.assessment.name else "SHL Assessment",
+                "url": str(result.assessment.url) if result.assessment.url else "https://www.shl.com/solutions/products/",
+                "test_type": str(result.assessment.test_type.value) if hasattr(result.assessment.test_type, 'value') else "K",
+                "score": float(result.final_score) if isinstance(result.final_score, (int, float)) else 0.85,
+                "match_label": str(result.confidence_label) if result.confidence_label else "Strong Match",
+                "category": str(result.category) if result.category else "Professional Assessment",
+                "explanation": str(result.explanation) if result.explanation else "Recommended based on role requirements.",
             }
+            
+            # Final safety check for score range
+            rec["score"] = max(0.0, min(1.0, rec["score"]))
+            
             recommendations.append(rec)
         
         return recommendations

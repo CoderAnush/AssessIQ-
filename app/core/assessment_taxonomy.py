@@ -718,6 +718,10 @@ class AssessmentTaxonomy:
     
     def get_domain_priorities(self, role_domain: RoleDomain) -> Dict[AssessmentDomain, float]:
         """Get assessment domain priorities for a role domain."""
+        if not isinstance(role_domain, RoleDomain):
+            logger.warning(f"Invalid role_domain type: {type(role_domain)}. Falling back to GENERAL.")
+            return self.ROLE_DOMAIN_PRIORITIES[RoleDomain.GENERAL]
+            
         return self.ROLE_DOMAIN_PRIORITIES.get(role_domain, self.ROLE_DOMAIN_PRIORITIES[RoleDomain.GENERAL])
     
     def get_assessment_classification(self, assessment_id: str) -> Optional[AssessmentClassification]:

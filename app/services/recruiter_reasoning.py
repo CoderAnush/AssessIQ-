@@ -191,53 +191,57 @@ class RecruiterExplanationEngine:
         
         Returns unique, contextual explanation grounded in metadata.
         """
-        # Build explanation context
-        exp_context = self._build_explanation_context(context)
-        
-        # Get classification
-        classification = self.taxonomy.get_assessment_classification(assessment.id)
-        if not classification:
-            classification = self.taxonomy._classify_assessment(assessment)
-        
-        # Generate explanation components
-        components = []
-        
-        # 1. Role-specific opening
-        opening = self._generate_opening(assessment, exp_context, classification)
-        if opening:
-            components.append(opening)
-        
-        # 2. Capability statement
-        capability = self._generate_capability_statement(
-            assessment, exp_context, classification
-        )
-        if capability:
-            components.append(capability)
-        
-        # 3. Why it matters
-        impact = self._generate_impact_statement(
-            assessment, exp_context, classification
-        )
-        if impact:
-            components.append(impact)
-        
-        # 4. Seniority calibration (if relevant)
-        seniority_note = self._generate_seniority_note(assessment, exp_context)
-        if seniority_note:
-            components.append(seniority_note)
-        
-        # Combine into final explanation
-        if len(components) >= 2:
-            explanation = ". ".join(components[:3]) + "."
-        elif components:
-            explanation = components[0] + "."
-        else:
-            explanation = self._generate_fallback_explanation(assessment, exp_context)
-        
-        # Clean up
-        explanation = self._clean_explanation(explanation)
-        
-        return explanation
+        try:
+            # Build explanation context
+            exp_context = self._build_explanation_context(context)
+            
+            # Get classification
+            classification = self.taxonomy.get_assessment_classification(assessment.id)
+            if not classification:
+                classification = self.taxonomy._classify_assessment(assessment)
+            
+            # Generate explanation components
+            components = []
+            
+            # 1. Role-specific opening
+            opening = self._generate_opening(assessment, exp_context, classification)
+            if opening:
+                components.append(opening)
+            
+            # 2. Capability statement
+            capability = self._generate_capability_statement(
+                assessment, exp_context, classification
+            )
+            if capability:
+                components.append(capability)
+            
+            # 3. Why it matters
+            impact = self._generate_impact_statement(
+                assessment, exp_context, classification
+            )
+            if impact:
+                components.append(impact)
+            
+            # 4. Seniority calibration (if relevant)
+            seniority_note = self._generate_seniority_note(assessment, exp_context)
+            if seniority_note:
+                components.append(seniority_note)
+            
+            # Combine into final explanation
+            if len(components) >= 2:
+                explanation = ". ".join(components[:3]) + "."
+            elif components:
+                explanation = components[0] + "."
+            else:
+                explanation = self._generate_fallback_explanation(assessment, exp_context)
+            
+            # Clean up
+            explanation = self._clean_explanation(explanation)
+            
+            return explanation
+        except Exception as e:
+            logger.error(f"Explanation generation error: {e}", exc_info=True)
+            return f"This {assessment.test_type.value}-type assessment evaluates core competencies required for the {context.role or 'specified'} role."
     
     def _build_explanation_context(self, context: HiringContext) -> ExplanationContext:
         """Build explanation context from hiring context."""
