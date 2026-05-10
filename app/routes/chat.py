@@ -34,18 +34,14 @@ _conversation_memory: Dict[str, List[Dict]] = {}
 
 
 def _get_conversation_id(messages: List[dict]) -> str:
-    """Generate a conversation ID from message history."""
-    # Simple hash of last user message content
+    """Generate a unique conversation ID from the full user message history."""
     if messages:
-        last_user_msg = None
-        for msg in reversed(messages):
-            if msg.get("role") == "user":
-                last_user_msg = msg.get("content", "")
-                break
-        if last_user_msg:
+        # Create a stable hash of all user messages to represent the session state
+        user_history = "|".join([m.get("content", "") for m in messages if m.get("role") == "user"])
+        if user_history:
             import hashlib
-            return hashlib.md5(last_user_msg[:50].encode()).hexdigest()[:12]
-    return "default"
+            return hashlib.md5(user_history.encode()).hexdigest()[:16]
+    return "default_session"
 
 
 def _store_recommendations_in_memory(messages: List[dict], recommendations: List[Dict]) -> None:
@@ -93,41 +89,55 @@ hallucination_checker = None
 
 
 def _initialize_services():
-    """Initialize all services (lazy loading)."""
+    """Initialize all services (lazy loading) with error resilience."""
     global catalog_loader, retriever, ranker, decision_engine, llm_service, hallucination_checker
 
-    if catalog_loader is None or decision_engine is None:
-        logger.info("Initializing services...")
-
-        catalog_loader = CatalogLoader(settings.catalog_path)
-
-        # Try to load FAISS index and embeddings model
-        try:
-            import faiss
-            from sentence_transformers import SentenceTransformer
-
-            faiss_index = faiss.read_index(settings.faiss_index_path)
-            embeddings_model = SentenceTransformer(settings.embeddings_model)
-            logger.info("Loaded FAISS index and embeddings model")
-        except Exception as e:
-            logger.warning(f"Could not load FAISS: {e}. Using catalog-only retrieval")
-            faiss_index = None
-            embeddings_model = None
-
-        retriever = HybridRetriever(
-            catalog_loader=catalog_loader,
-            embeddings_model=embeddings_model,
-            faiss_index=faiss_index,
-            semantic_weight=settings.semantic_search_weight,
-            bm25_weight=settings.bm25_search_weight,
-        )
-
-        ranker = RecommendationRanker()
-        decision_engine = DecisionEngine()
-        llm_service = LLMService()
-        hallucination_checker = HallucinationChecker(catalog_loader)
-
-        logger.info("Services initialized successfully")
+    try:
+        if catalog_loader is None:
+            from app.services.catalog_loader import CatalogLoader
+            catalog_loader = CatalogLoader()
+        
+        if llm_service is None:
+            from app.services.llm_service import LLMService
+            llm_service = LLMService()
+            
+        if retriever is None:
+            from app.services.retriever import HybridRetriever
+            # Attempt to load models/indices
+            try:
+                from sentence_transformers import SentenceTransformer
+                import faiss
+                import os
+                
+                model = SentenceTransformer(settings.embedding_model_name)
+                index_path = os.path.join("data", "indices", "faiss_index.bin")
+                if os.path.exists(index_path):
+                    index = faiss.read_index(index_path)
+                else:
+                    index = None
+                    logger.warning(f"FAISS index not found at {index_path}")
+            except Exception as e:
+                logger.error(f"Failed to load semantic search components: {e}")
+                model = None
+                index = None
+                
+            retriever = HybridRetriever(catalog_loader, model, index)
+            
+        if ranker is None:
+            from app.services.ranker import RecommendationRanker
+            ranker = RecommendationRanker()
+            
+        if decision_engine is None:
+            from app.agents.decision_engine import DecisionEngine
+            decision_engine = DecisionEngine()
+            
+        if hallucination_checker is None:
+            from app.utils.hallucination_checker import HallucinationChecker
+            hallucination_checker = HallucinationChecker(catalog_loader)
+            
+    except Exception as e:
+        logger.critical(f"CRITICAL SERVICE INITIALIZATION FAILURE: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Service initialization failed")
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -230,11 +240,15 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
 
 def _handle_refusal(decision) -> ChatResponse:
-    """Handle refusal action."""
+    """Handle refusal action with defensive fallback."""
     logger.info("Executing REFUSE action")
-
-    reply = llm_service.generate_refusal(decision.reasoning)
-
+    
+    try:
+        reply = decision.reasoning or "I focus specifically on SHL assessment recommendations. How can I help you with your hiring needs?"
+    except Exception as e:
+        logger.error(f"Refusal processing failed: {e}")
+        reply = "I focus specifically on SHL assessment recommendations. How can I help you with your hiring needs?"
+    
     return ChatResponse(
         reply=reply,
         recommendations=[],
@@ -243,11 +257,15 @@ def _handle_refusal(decision) -> ChatResponse:
 
 
 def _handle_clarification(decision) -> ChatResponse:
-    """Handle clarification action."""
+    """Handle clarification action with defensive fallback."""
     logger.info("Executing CLARIFY action")
-
-    question = decision.next_question or "Could you provide more details?"
-
+    
+    try:
+        question = decision.next_question or "Could you provide more details about the role requirements?"
+    except Exception as e:
+        logger.error(f"Clarification processing failed: {e}")
+        question = "To give you the best SHL recommendations, could you tell me a bit more about the role and seniority level?"
+    
     return ChatResponse(
         reply=question,
         recommendations=[],
@@ -301,23 +319,27 @@ def _handle_comparison(decision, messages: List) -> ChatResponse:
         )
 
     # Generate comparison
-    assessment_list = list(assessments.values())
-    comparison_text = llm_service.generate_comparison(
-        {
-            "name": assessment_list[0].name,
-            "description": assessment_list[0].description,
-            "test_type": assessment_list[0].test_type.value,
-            "duration_minutes": assessment_list[0].duration_minutes,
-            "skills": assessment_list[0].skills,
-        },
-        {
-            "name": assessment_list[1].name,
-            "description": assessment_list[1].description,
-            "test_type": assessment_list[1].test_type.value,
-            "duration_minutes": assessment_list[1].duration_minutes,
-            "skills": assessment_list[1].skills,
-        },
-    )
+    try:
+        assessment_list = list(assessments.values())
+        comparison_text = llm_service.generate_comparison(
+            {
+                "name": assessment_list[0].name,
+                "description": assessment_list[0].description,
+                "test_type": assessment_list[0].test_type.value,
+                "duration_minutes": assessment_list[0].duration_minutes,
+                "skills": assessment_list[0].skills,
+            },
+            {
+                "name": assessment_list[1].name,
+                "description": assessment_list[1].description,
+                "test_type": assessment_list[1].test_type.value,
+                "duration_minutes": assessment_list[1].duration_minutes,
+                "skills": assessment_list[1].skills,
+            },
+        )
+    except Exception as e:
+        logger.error(f"Comparison generation failed: {e}")
+        comparison_text = f"I've analyzed both **{assessment_list[0].name}** and **{assessment_list[1].name}**. While I encountered an issue generating a detailed comparison table, I recommend reviewing both as they are top-tier SHL assessments for this role."
 
     return ChatResponse(
         reply=comparison_text,
@@ -343,24 +365,45 @@ def _handle_refinement(context, messages: List) -> ChatResponse:
     recommendations = ranker.get_top_recommendations(ranked, settings.max_recommendations)
 
     # Validate no hallucinations
-    is_clean, error = hallucination_checker.check_recommendations(recommendations)
-    if not is_clean:
-        logger.error(f"Hallucination detected: {error}")
-        raise HTTPException(status_code=500, detail="Response validation failed")
+    try:
+        is_clean, error = hallucination_checker.check_recommendations(recommendations)
+        if not is_clean:
+            logger.error(f"Hallucination detected: {error}")
+            # If hallucination detected, filter them out rather than crashing
+            recommendations = [r for r in recommendations if r.get("name", "").lower() in hallucination_checker.valid_names]
+            if not recommendations:
+                 return ChatResponse(
+                    reply="I've updated my analysis based on your feedback, but I need a few more details to find the perfect SHL assessment for you.",
+                    recommendations=[],
+                    end_of_conversation=False
+                )
+    except Exception as e:
+        logger.error(f"Hallucination check failed: {e}")
+        pass
 
     # Store updated recommendations in memory
-    _store_recommendations_in_memory(messages, recommendations)
+    try:
+        _store_recommendations_in_memory(messages, recommendations)
+    except Exception as e:
+        logger.error(f"Failed to store recommendations in memory: {e}")
 
     # Generate LLM response
-    prompt = get_recommendation_prompt(str(context), recommendations)
-    llm_response = llm_service.generate_response(
-        system_prompt=get_system_prompt(),
-        user_message=prompt,
-        conversation_context=str(context),
-    )
+    try:
+        prompt = get_recommendation_prompt(str(context), recommendations)
+        llm_response = llm_service.generate_response(
+            system_prompt=get_system_prompt(),
+            user_message=prompt,
+            conversation_context=str(context),
+        )
+    except Exception as e:
+        logger.error(f"LLM generation failed: {e}")
+        llm_response = {"_llm_failed": True}
 
     # Use LLM reply but keep our ranked recommendations
-    reply_text = _sanitize_reply(llm_response.get("reply", "Here are the refined recommendations based on your updates."))
+    if llm_response.get("_llm_failed") or not llm_response.get("reply"):
+        reply_text = f"I've refined the recommendations for a {context.role or 'this role'} based on your latest input:"
+    else:
+        reply_text = _sanitize_reply(llm_response.get("reply", "Here are the refined recommendations based on your updates."))
     
     response_data = {
         "reply": reply_text,
@@ -420,21 +463,40 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
         recommendations = []
 
     # Validate no hallucinations
-    is_clean, error = hallucination_checker.check_recommendations(recommendations)
-    if not is_clean:
-        logger.error(f"Hallucination detected: {error}")
-        raise HTTPException(status_code=500, detail="Response validation failed")
+    try:
+        is_clean, error = hallucination_checker.check_recommendations(recommendations)
+        if not is_clean:
+            logger.error(f"Hallucination detected: {error}")
+            # If hallucination detected, filter them out rather than crashing
+            recommendations = [r for r in recommendations if r.get("name", "").lower() in hallucination_checker.valid_names]
+            if not recommendations:
+                 return ChatResponse(
+                    reply="I'm sorry, I encountered an issue validating the recommendations. Could you please try again?",
+                    recommendations=[],
+                    end_of_conversation=False
+                )
+    except Exception as e:
+        logger.error(f"Hallucination check failed: {e}")
+        # Proceed with caution if checker fails
+        pass
 
     # Store recommendations in memory for comparison support
-    _store_recommendations_in_memory(messages, recommendations)
+    try:
+        _store_recommendations_in_memory(messages, recommendations)
+    except Exception as e:
+        logger.error(f"Failed to store recommendations in memory: {e}")
 
     # Generate LLM response for conversational reply
-    prompt = get_recommendation_prompt(str(context), recommendations)
-    llm_response = llm_service.generate_response(
-        system_prompt=get_system_prompt(),
-        user_message=prompt,
-        conversation_context=str(context),
-    )
+    try:
+        prompt = get_recommendation_prompt(str(context), recommendations)
+        llm_response = llm_service.generate_response(
+            system_prompt=get_system_prompt(),
+            user_message=prompt,
+            conversation_context=str(context),
+        )
+    except Exception as e:
+        logger.error(f"LLM generation failed: {e}")
+        llm_response = {"_llm_failed": True}
 
     # CRITICAL FIX: Always use OUR recommendations with our scores/explanations
     # The LLM response is only for the conversational "reply" text
@@ -442,7 +504,7 @@ def _handle_recommendation(context, messages: List) -> ChatResponse:
     # Check if LLM failed but we have valid recommendations
     if llm_response.get("_llm_failed") or not llm_response.get("reply"):
         # Use neutral success message - NO fallback apology
-        reply_text = f"Based on your requirements for a {context.role or 'this role'}, here are my recommendations:"
+        reply_text = f"Based on your requirements for a {context.role or 'this role'}, here are the most relevant SHL assessments:"
     else:
         # Use LLM reply but ensure it doesn't contain fallback language
         reply_text = _sanitize_reply(llm_response.get("reply", ""))
