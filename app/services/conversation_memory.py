@@ -67,6 +67,17 @@ class ConversationSession:
     # Context evolution
     context_evolution: List[Dict[str, Any]] = field(default_factory=list)
 
+    def reset_for_new_request(self):
+        """Part 3: RESET core role context but preserve general preferences."""
+        logger.info(f"Resetting role context for session {self.session_id}")
+        self.role = None
+        self.domain = None
+        self.tech_stack = []
+        self.soft_skills = []
+        self.leadership_needed = False
+        self.current_recommendations = []
+        # refinements and comparisons are kept for history but current context is cleared
+
 
 class ConversationMemoryStore:
     """
@@ -344,6 +355,12 @@ class ConversationMemoryStore:
             logger.info(f"Cleared session {session_id}")
             return True
         return False
+
+    def reset_session_context(self, session_id: str) -> None:
+        """Explicitly reset role context for a session."""
+        session = self._sessions.get(session_id)
+        if session:
+            session.reset_for_new_request()
     
     def _cleanup_expired(self) -> None:
         """Remove expired sessions."""

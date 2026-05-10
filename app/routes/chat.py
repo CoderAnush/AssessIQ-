@@ -119,7 +119,20 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
 
         decision = services.decision_engine.decide(messages)
         context = services.decision_engine.get_context_from_messages(messages)
-        logger.info("CHAT: action=%s turns=%s", decision.action, turn_count)
+        
+        # Part 7: Detect and handle new hiring request context reset
+        from app.services.conversation_memory import get_memory_store
+        memory = get_memory_store()
+        session_id = request_obj.headers.get("X-Session-ID", "default_session")
+        
+        # Check if the LATEST user message was a new hiring request
+        latest_user_msg = messages[-1].get("content", "") if messages[-1]["role"] == "user" else ""
+        if latest_user_msg and services.decision_engine.analyzer.is_new_hiring_request(latest_user_msg, context):
+            logger.info(f"CHAT: New hiring request detected. Resetting session context for {session_id}")
+            memory.reset_session_context(session_id)
+            # Re-analyze context after reset if needed (though analyze_conversation already does boundary check)
+            
+        logger.info("CHAT: action=%s turns=%s completeness=%.2f", decision.action, turn_count, context.get_completeness_score())
 
         catalog = {assessment.id: assessment for assessment in services.catalog_loader.get_all()}
 

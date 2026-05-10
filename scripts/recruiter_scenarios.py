@@ -105,13 +105,13 @@ SCENARIOS = [
     Scenario(
         name="Sales Personality",
         messages=[{"role": "user", "content": "Need personality tests for sales hiring"}],
-        expect_min_recommendations=1,
+        expect_min_recommendations=0, # Expect clarification
         expect_reply_not_contains=["Coding", "Programming", "Java", "Python"],
     ),
     Scenario(
         name="Engineering Leadership",
         messages=[{"role": "user", "content": "Need assessments for engineering managers"}],
-        expect_min_recommendations=1,
+        expect_min_recommendations=0, # Expect clarification
         expect_reply_not_contains=["Coding", "Multiple Choice", "Java"],
     ),
 ]

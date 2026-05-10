@@ -50,25 +50,38 @@ class HiringContext:
 
     def is_sufficient(self) -> bool:
         """Check if enough context for a recommendation (Phase 3)."""
-        has_role = bool(self.role or self.domain or self.tech_stack)
-        has_spec = bool(self.seniority) or bool(self.soft_skills) or bool(self.preferred_test_types) or self.leadership_needs
-        
-        # If we have a very clear technical role/domain, we can recommend without seniority
-        role_text = f"{self.role or ''} {self.domain or ''}".lower()
-        clear_tech_signals = ["java", "python", "react", "data scientist", "machine learning", "sql", "devops", "cloud engineer"]
-        if has_role and any(signal in role_text for signal in clear_tech_signals):
-            return True
-
-        if not (has_role and has_spec):
+        # Strict threshold for enterprise copilot
+        # 1. Role is mandatory
+        if not (self.role or self.domain):
             return False
+            
+        # 2. Must have at least ONE specificity signal (Seniority, Skills, or Tech Stack)
+        has_spec = bool(self.seniority) or bool(self.soft_skills) or bool(self.tech_stack) or bool(self.preferred_test_types) or self.leadership_needs
+        
+        # 3. Domain-specific sufficiency
+        role_text = f"{self.role or ''} {self.domain or ''}".lower()
+        
+        # Tech roles need tech stack OR seniority
+        clear_tech_signals = ["java", "python", "react", "data scientist", "machine learning", "sql", "devops", "cloud engineer"]
+        if any(signal in role_text for signal in clear_tech_signals):
+            return bool(self.tech_stack or self.seniority)
 
+        # Broad roles (Sales/Support/HR) need BOTH seniority AND skill focus
         broad_signals = ["sales", "support", "operations", "leadership", "finance", "graduate", "assistant", "marketing"]
         if any(signal in role_text for signal in broad_signals):
-            has_precision = bool(self.soft_skills or self.technical_skills or self.tech_stack)
-            if not has_precision:
-                return False
+            return bool(self.seniority) and bool(self.soft_skills or self.technical_skills or self.tech_stack)
 
-        return True
+        has_role = bool(self.role or self.domain)
+        return has_role and has_spec
+
+    def get_completeness_score(self) -> float:
+        """Calculate a 0.0-1.0 score for context completeness."""
+        score = 0.0
+        if self.role or self.domain: score += 0.4
+        if self.seniority: score += 0.2
+        if self.tech_stack or self.soft_skills: score += 0.2
+        if self.preferred_test_types or self.leadership_needs: score += 0.2
+        return score
 
     def __str__(self) -> str:
         parts = []
@@ -119,22 +132,75 @@ class ConversationAnalyzer:
                 self.SENIORITY_KEYWORDS_REVERSE[keyword] = level
 
     def analyze_conversation(self, messages: List[dict]) -> Tuple[HiringContext, UserIntent]:
-        """Statelessly reconstruct context from full message history (Phase 2)."""
+        """Statelessly reconstruct context with query isolation (Part 2)."""
         context = HiringContext()
         user_messages = [m["content"] for m in messages if m["role"] == "user"]
         if not user_messages: return context, UserIntent.VAGUE_QUERY
 
         latest_user_msg = user_messages[-1]
-        for user_msg in user_messages:
+        
+        # 1. Determine the 'Request Boundary'
+        # Find the last message that was a completely new hiring request
+        boundary_idx = 0
+        temp_ctx = HiringContext()
+        for i, msg in enumerate(user_messages):
+            if i > 0 and self.is_new_hiring_request(msg, temp_ctx):
+                boundary_idx = i
+                temp_ctx = HiringContext() # Reset temp for detection
+            self._extract_context(msg, temp_ctx)
+            
+        # 2. Only process messages FROM the boundary to avoid contamination
+        active_messages = user_messages[boundary_idx:]
+        logger.info(f"Query isolation: Processing {len(active_messages)} messages from boundary index {boundary_idx}")
+        
+        for user_msg in active_messages:
             self._extract_context(user_msg, context)
 
         intent = self._detect_intent(latest_user_msg, len(user_messages), context)
         
+        # 3. Refinement Check: if it's not a new request but has role context, it's a refinement
+        if boundary_idx == len(user_messages) - 1 and len(user_messages) > 1:
+            # This was a new request, intent should be CLEAR_REQUIREMENT if sufficient
+            pass 
+
         # Heuristic for clarification merge
         if len(latest_user_msg.split()) <= 2 and intent == UserIntent.VAGUE_QUERY:
              intent = UserIntent.CLARIFICATION_PROVIDED
 
         return context, intent
+
+    def is_new_hiring_request(self, message: str, current_context: HiringContext) -> bool:
+        """
+        Identify if the user is switching to a completely new role (Part 4).
+        """
+        msg_low = message.lower()
+        
+        # 1. Explicit transition markers
+        transitions = ["instead", "another role", "different position", "now hiring", "for a different", "switch to", "new request"]
+        if any(t in msg_low for t in transitions):
+            return True
+            
+        # 2. New role/domain markers for specific keywords
+        new_tech = ["for java", "for python", "for react", "for sales", "for marketing", "for support"]
+        if any(t in msg_low for t in new_tech):
+            return True
+
+        # 3. Significant role change detection
+        # Extract role from THIS message only
+        temp_context = HiringContext()
+        self._extract_context(message, temp_context)
+        
+        if temp_context.role and current_context.role:
+            if temp_context.role.lower() != current_context.role.lower():
+                # Avoid resetting for refinements like "senior java" vs "java"
+                if temp_context.role.lower() not in current_context.role.lower() and current_context.role.lower() not in temp_context.role.lower():
+                    logger.info(f"New hiring request detected: {current_context.role} -> {temp_context.role}")
+                    return True
+                    
+        if temp_context.domain and current_context.domain and temp_context.domain != current_context.domain:
+             return True
+             
+        return False
 
     def _detect_intent(self, latest_message: str, message_count: int, context: HiringContext) -> UserIntent:
         msg_lower = latest_message.lower()
@@ -185,17 +251,23 @@ class ConversationAnalyzer:
             r"for (?:a|an)?\s+([^,\.!?]+?)(?:\s+role|\s+position|$)",
             r"hiring (?:a|an)?\s+([^,\.!?]+)",
             r"test for (?:a|an)?\s+([^,\.!?]+)",
-            r"need (?:a|an)?\s+([^,\.!?]+?)(?:\s+assessment|\s+test|\s+screening|$)",
+            r"need (?:a|an|some)?\s+([^,\.!?]+?)(?:\s+assessments?|\s+tests?|\s+screening|$)",
         ]
         for p in role_patterns:
             m = re.search(p, msg_lower)
             if m:
                 role = m.group(1).strip()
+                # Remove common noise words
+                role = re.sub(r'^(?:a|an|the|some|assessments? for|tests? for)\s+', '', role)
+                
                 # If role is too long, it might contain skills; try to truncate at "with" or "and"
                 if len(role.split()) >= 5:
                     role = re.split(r'\s+(?:with|and|who|for)\s+', role)[0].strip()
                 
-                if len(role.split()) < 5: 
+                # Clean up residual noise
+                role = role.replace("assessments", "").replace("tests", "").strip()
+
+                if role and len(role.split()) < 5: 
                     context.role = role
                     break
 
@@ -256,36 +328,39 @@ class ConversationAnalyzer:
             context.preferred_test_types.update({"P", "A"})
 
     def get_clarification_question(self, context: HiringContext) -> Optional[str]:
-        """Multi-slot efficient clarification (Phase 3)."""
+        """Intelligent Recruiter-Grade follow-up questions (Part 8)."""
         missing = context.get_missing_info()
         if not missing: return None
 
-        role_text = f"{context.role or ''} {context.domain or ''}".lower()
-        if any(keyword in role_text for keyword in ["sales", "support", "operations", "leadership", "finance", "marketing", "assistant"]):
+        role_text = (context.role or context.domain or "role").lower()
+        
+        # 1. SPECIFIC TECH CLARIFICATIONS
+        if "java" in role_text or "python" in role_text or "react" in role_text:
             if not context.seniority:
-                return "Is this for an individual contributor or leadership position, and what experience level are you hiring for?"
-            if not (context.soft_skills or context.technical_skills or context.tech_stack):
-                return "Are you prioritizing technical skills, behavioral fit, cognitive ability, or communication for this role?"
+                return f"What seniority level are you targeting for this {role_text} role (e.g., Junior, Senior, or Staff)?"
+            if not context.tech_stack:
+                return f"Are there specific frameworks or libraries (like Spring, Django, or Redux) required for this {role_text} position?"
 
-        if "role" in missing and "seniority" in missing and "skills" in missing:
-            return "What role are you hiring for, what seniority level is the target, and should the assessment emphasize technical, cognitive, or behavioral fit?"
+        # 2. BUSINESS DOMAIN CLARIFICATIONS
+        if "sales" in role_text:
+            if not context.seniority:
+                 return "Is this for an entry-level SDR role, an experienced Account Executive, or a Sales Leadership position?"
+            return "Should I prioritize personality traits like persuasion and resilience, or communication and negotiation skills?"
 
-        if "role" in missing and "seniority" in missing:
-            return "What role are you hiring for and what seniority level should I target?"
+        if "support" in role_text or "customer" in role_text:
+            return "Is this for a front-line customer care role or a technical service desk position? Also, what experience level are you looking for?"
 
-        if "role" in missing and "skills" in missing:
-            return "What role are you hiring for, and should I focus on technical, cognitive, or behavioral fit?"
+        if "leadership" in role_text or "manager" in role_text:
+            return "Is this for a people manager role or an executive leadership position? Should the focus be on strategic management or operational execution?"
 
-        if "seniority" in missing and "skills" in missing:
-            return f"What seniority level are you targeting for this {context.role or 'role'}, and should I prioritize technical, cognitive, or behavioral fit?"
-
+        # 3. GENERIC BUT INTELLIGENT FALLBACKS
         if "role" in missing:
-            return "What role are you hiring for?"
-
+            return "What specific role are you hiring for today?"
+            
         if "seniority" in missing:
-            return f"What seniority level are you targeting for this {context.role or 'role'}?"
-
+            return f"What seniority level or years of experience are you targeting for the {role_text} position?"
+            
         if "skills" in missing:
-            return f"Should I focus on technical, cognitive, or behavioral fit for this {context.role or 'role'} assessment?"
+            return f"To provide the best match for this {role_text} role, should I prioritize technical skills, cognitive ability, or behavioral fit?"
 
-        return None
+        return "Could you provide a few more details about the role and the ideal candidate profile?"

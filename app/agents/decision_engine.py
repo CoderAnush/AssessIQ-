@@ -94,13 +94,19 @@ class DecisionEngine:
                 confidence=0.85,
             )
 
-        # 4. CLARIFY if insufficient context, even when a loose role noun was inferred.
-        if not context.is_sufficient():
+        # 4. CLARIFY if insufficient context (Part 9)
+        completeness_score = context.get_completeness_score()
+        is_sufficient = context.is_sufficient()
+        
+        logger.info(f"Context Completeness: {completeness_score:.2f} | Sufficient: {is_sufficient}")
+
+        # Enterprise threshold: need role + at least one major specificity marker
+        if not is_sufficient or completeness_score < 0.6:
             next_q = self.analyzer.get_clarification_question(context)
             if next_q:
                 return Decision(
                     action=AgentAction.CLARIFY,
-                    reasoning=f"Need more context: {context.get_missing_info()}",
+                    reasoning=f"Context incomplete (score {completeness_score:.2f}). Triggering intelligent clarification.",
                     confidence=0.9,
                     next_question=next_q,
                 )
@@ -108,7 +114,7 @@ class DecisionEngine:
         # 5. RECOMMEND if we have context
         return Decision(
             action=AgentAction.RECOMMEND,
-            reasoning="Sufficient context to generate recommendations",
+            reasoning=f"Sufficient context (score {completeness_score:.2f}) to generate recommendations",
             confidence=0.85,
         )
 

@@ -166,6 +166,9 @@ class RecruiterRanker:
             # Sort by raw score
             scored_assessments.sort(key=lambda x: x[2], reverse=True)
             
+            # Part 11: Structured Logs
+            logger.info(f"RANKING_DIAGNOSTIC: role={context.role} domain={role_domain.value} completeness={context.get_completeness_score():.2f}")
+            
             # Apply diversity balancing during selection
             ranked_results = self._apply_diversity_and_finalize(scored_assessments, role_domain, top_k, role_profile)
             
@@ -210,7 +213,8 @@ class RecruiterRanker:
             "devops": ["docker", "kubernetes", "aws", "devops"],
             "sales": ["sales", "account executive", "business development"],
             "support": ["customer support", "support", "service desk"],
-            "leadership": ["manager", "leadership", "director", "vp"]
+            "leadership": ["manager", "leadership", "director", "vp"],
+            "generic": ["data entry", "basic office", "general administrative", "typing test"]
         }
         
         # Identify the Recruiter Domain from context
@@ -272,6 +276,10 @@ class RecruiterRanker:
                 if not is_match and recruiter_domain in ["java", "python", "data_science", "devops", "frontend"]:
                     if classification.primary_domain in [AssessmentDomain.GENERAL, AssessmentDomain.PERSONALITY] and role_domain != RoleDomain.GENERAL:
                          factors.domain_match -= 0.25 # Technical roles want technical tests
+
+                # D. GENERIC FALLBACK PENALTY (Part 7)
+                if any(kw in candidate_text for kw in TECH_DOMAINS["generic"]) and role_domain != RoleDomain.GENERAL:
+                    factors.domain_match -= 0.60 # HUGE penalty for "Data Entry" in tech roles
 
             # C. SPECIFIC ROLE-BASED PENALTIES
             if role_domain in [RoleDomain.DATA_SCIENTIST, RoleDomain.DATA_ANALYST]:

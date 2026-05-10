@@ -36,17 +36,17 @@ class HybridRetriever:
         synonyms = {
             "test": ["assessment", "evaluation", "exam", "inventory"],
             "coding": ["technical", "knowledge", "programming", "software", "development"],
-            "java": ["programming", "backend", "developer"],
-            "python": ["programming", "data", "ml", "backend"],
+            "java": ["programming", "backend", "developer", "spring", "j2ee"],
+            "python": ["programming", "backend", "developer", "django", "flask"],
             "cognitive": ["ability", "aptitude", "reasoning", "intelligence", "logic"],
             "personality": ["behavioral", "style", "trait", "work", "behavior"],
-                "sales": ["commercial", "revenue", "account", "business", "growth", "quota", "pipeline"],
-                "leadership": ["manager", "executive", "director", "strategy", "management", "supervisor"],
-                "graduate": ["junior", "entry", "trainee", "fresh", "early", "entry-level"],
-                "support": ["customer", "service", "client", "care", "helpdesk", "contact center"],
-                "operations": ["process", "workflow", "logistics", "coordination", "delivery"],
-                "data": ["analyst", "science", "ml", "ai", "statistics"],
-                "finance": ["accounting", "tax", "banking", "audit", "compliance"]
+            "sales": ["commercial", "revenue", "account", "business", "growth", "quota", "pipeline"],
+            "leadership": ["manager", "executive", "director", "strategy", "management", "supervisor"],
+            "graduate": ["junior", "entry", "trainee", "fresh", "early", "entry-level"],
+            "support": ["customer", "service", "client", "care", "helpdesk", "contact center"],
+            "operations": ["process", "workflow", "logistics", "coordination", "delivery"],
+            "data": ["analyst", "science", "ml", "ai", "statistics", "analytics"],
+            "finance": ["accounting", "tax", "banking", "audit", "compliance"]
         }
         for term, syns in synonyms.items():
             if term in query_terms: expanded_terms.update(syns)

@@ -223,6 +223,9 @@ def submit_prompt(text: str) -> None:
     if not prompt:
         return
     st.session_state.messages.append({"role": "user", "content": prompt})
+    # Part 6: Clear stale results on new prompt
+    st.session_state.latest_recommendations = []
+    st.session_state.latest_comparison = None
     st.rerun()
 
 
@@ -510,17 +513,82 @@ def _build_comparison_context(reply: str) -> Optional[Dict[str, Any]]:
     }
 
 def apply_styles():
-    """Apply minimal polished enterprise recruiter UI styling without HTML fragments."""
+    """Apply premium enterprise recruiter UI styling with glassmorphism and modern typography."""
     st.markdown(
         """
         <style>
-            .stApp {
-                background: #fbfdff;
-            }
             @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-            html, body, [class*="st-"] { font-family: 'Outfit', sans-serif; }
+            
+            :root {
+                --primary: #2563eb;
+                --primary-dark: #1d4ed8;
+                --bg-main: #f8fafc;
+                --glass: rgba(255, 255, 255, 0.8);
+                --glass-border: rgba(226, 232, 240, 0.6);
+            }
+
+            .stApp {
+                background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+            }
+
+            html, body, [class*="st-"] { 
+                font-family: 'Outfit', sans-serif; 
+            }
+
+            /* Glassmorphism Chat */
             .stChatMessage {
-                border-radius: 1.2rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; background: rgba(255,255,255,0.84);
+                background: var(--glass) !important;
+                backdrop-filter: blur(10px);
+                border: 1px solid var(--glass-border) !important;
+                border-radius: 1.5rem !important;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+                padding: 1.25rem !important;
+                margin-bottom: 1.25rem !important;
+            }
+
+            /* Metric Cards */
+            [data-testid="stMetric"] {
+                background: white;
+                padding: 1.5rem !important;
+                border-radius: 1rem;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            }
+            
+            [data-testid="stMetricLabel"] {
+                font-weight: 600 !important;
+                color: #64748b !important;
+            }
+
+            /* Buttons */
+            .stButton > button {
+                border-radius: 0.75rem !important;
+                font-weight: 500 !important;
+                transition: all 0.2s ease !important;
+            }
+            
+            .stButton > button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            }
+
+            /* Recommendation Cards */
+            .stContainer[data-testid="stVerticalBlock"] > div > div > div > div > div {
+                border-radius: 1rem !important;
+            }
+
+            /* Titles */
+            h1, h2, h3 {
+                color: #0f172a;
+                font-weight: 700 !important;
+            }
+            
+            .main-title {
+                background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                font-size: 3rem !important;
+                padding-bottom: 0.5rem;
             }
         </style>
         """,
@@ -657,6 +725,9 @@ def main():
     if prompt := st.chat_input("Describe the role or ask a question...", key="chat_input_main"):
         st.session_state.latest_user_query = _clean_message_text(prompt)
         st.session_state.messages.append({"role": "user", "content": st.session_state.latest_user_query})
+        # Part 6: Clear stale results on new prompt
+        st.session_state.latest_recommendations = []
+        st.session_state.latest_comparison = None
         st.rerun()
 
     # --- PROCESSING ---
