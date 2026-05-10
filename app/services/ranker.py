@@ -112,6 +112,9 @@ class RecruiterRanker:
     Produces natural score spreads and enforces category diversity.
     """
     
+    DOMAIN_MISMATCH_PENALTY = -0.40  # -40% penalty for wrong domain
+    MINIMUM_RECOMMENDATION_SCORE = 0.75  # 75% threshold
+    
     def __init__(self, taxonomy: Optional[AssessmentTaxonomy] = None):
         self.taxonomy = taxonomy or AssessmentTaxonomy()
         self.diversity_balancer = DiversityBalancer()
@@ -202,6 +205,21 @@ class RecruiterRanker:
         )
         factors.role_domain_alignment = alignment_score
         
+        # DOMAIN PENALTY (Critical Fix): If primary domain is a total mismatch, apply heavy penalty
+        classification = self.taxonomy.get_assessment_classification(assessment.id)
+        if classification and role_domain != RoleDomain.GENERAL:
+            # Check for high-level domain mismatch (e.g. Technical test for Sales role)
+            mismatch = False
+            if role_domain in [RoleDomain.BACKEND_ENGINEER, RoleDomain.FRONTEND_ENGINEER, RoleDomain.FULLSTACK_ENGINEER]:
+                if classification.primary_domain not in [AssessmentDomain.TECHNICAL, AssessmentDomain.COGNITIVE, AssessmentDomain.ANALYTICAL]:
+                    mismatch = True
+            elif role_domain in [RoleDomain.DATA_SCIENTIST, RoleDomain.DATA_ANALYST]:
+                if classification.primary_domain not in [AssessmentDomain.ANALYTICAL, AssessmentDomain.TECHNICAL, AssessmentDomain.COGNITIVE]:
+                    mismatch = True
+            
+            if mismatch:
+                factors.intent_modifier += self.DOMAIN_MISMATCH_PENALTY
+        
         # 4. Seniority alignment (10%)
         factors.seniority_alignment = self._calculate_seniority_alignment(
             assessment, context
@@ -211,7 +229,8 @@ class RecruiterRanker:
         factors.category_fit = self._calculate_category_fit(assessment, context)
         
         # 6. Recruiter intent modifiers (5%)
-        factors.intent_modifier = self._calculate_intent_modifiers(assessment, context)
+        # factors.intent_modifier = self._calculate_intent_modifiers(assessment, context)
+        # Combined above for clarity
         
         return factors
     
@@ -433,13 +452,18 @@ class RecruiterRanker:
             
             # Apply position decay
             final_score = normalized_score * position_factor
+            
+            # Apply hard threshold
+            if final_score < self.MINIMUM_RECOMMENDATION_SCORE:
+                continue
+
             final_score = max(0.70, min(0.97, final_score))  # Clamp to 70-97%
             
             # Round to avoid artificial precision
             final_score = round(final_score, 2)
             
             result.final_score = final_score
-            result.rank_position = i + 1
+            result.rank_position = len(normalized) + 1
             result.confidence_label = self._get_confidence_label(final_score)
             
             normalized.append(result)
@@ -464,44 +488,42 @@ class RecruiterRanker:
         assessment: AssessmentWithMetadata,
         factors: RankingFactors,
         role_domain: RoleDomain,
-        classification: Optional[AssessmentDomain] = None
+        classification: Optional[AssessmentClassification] = None
     ) -> str:
-        """Generate recruiter-grade contextual explanation."""
+        """Generate high-fidelity recruiter-grade contextual explanation."""
         parts = []
         
-        # Get classification if not provided
         if classification is None:
             classification = self.taxonomy.get_assessment_classification(assessment.id)
         
-        # Role relevance statement
-        if factors.role_domain_alignment > 0.7:
-            parts.append(f"Critical assessment for {role_domain.value.replace('_', ' ')} roles")
-        elif factors.role_domain_alignment > 0.5:
-            parts.append(f"Relevant evaluation for {role_domain.value.replace('_', ' ')}")
+        role_name = role_domain.value.replace('_', ' ')
         
-        # Technical capability statement
-        if factors.skill_overlap_score > 0.7:
-            tech_focus = self._extract_technical_focus(assessment)
-            if tech_focus:
-                parts.append(f"Evaluates {tech_focus}")
+        # 1. Role/Domain Alignment
+        if factors.role_domain_alignment > 0.8:
+            parts.append(f"Exceptional fit for {role_name} hiring as it directly evaluates domain-specific competencies")
+        elif factors.role_domain_alignment > 0.6:
+            parts.append(f"Strongly relevant for assessing {role_name} requirements")
         
-        # Assessment purpose from description
-        purpose = self._extract_assessment_purpose(assessment)
-        if purpose:
-            parts.append(purpose)
+        # 2. Technical Depth (Recruiter-Grade)
+        if classification.technical_depth > 7:
+            parts.append(f"Evaluates advanced technical proficiency and system-level reasoning")
+        elif classification.technical_depth > 4:
+            parts.append(f"Measures core technical knowledge and practical application")
+            
+        # 3. Behavioral/Soft Skills
+        if classification.behavioral_relevance > 7:
+            parts.append(f"Provides deep insights into workplace behavior and collaborative potential")
         
-        # Seniority calibration
+        # 4. Seniority match
         if factors.seniority_alignment > 0.9:
-            parts.append("Appropriate for senior-level expectations")
-        
-        # Combine into recruiter-style explanation
+            parts.append(f"Tailored for the expectations of a {assessment.seniority_levels[0] if assessment.seniority_levels else 'professional'} role")
+
+        # Combine
         if len(parts) >= 2:
             explanation = ". ".join(parts[:3]) + "."
-        elif parts:
-            explanation = parts[0] + "."
         else:
-            explanation = f"{assessment.name} assesses key competencies for this role."
-        
+            explanation = f"Recommended assessment for {role_name} based on skill profile and role taxonomy."
+            
         return explanation
     
     def _extract_technical_focus(self, assessment: AssessmentWithMetadata) -> str:

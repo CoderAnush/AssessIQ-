@@ -119,7 +119,7 @@ class DecisionEngine:
             return "I can only help with SHL assessment recommendations"
 
         if intent == UserIntent.OFF_TOPIC:
-            return "I focus specifically on SHL assessments. How can I help with assessment recommendations?"
+            return "I specialize in SHL assessment recommendation for hiring and talent evaluation. Please describe the role you're hiring for."
 
         return None
 

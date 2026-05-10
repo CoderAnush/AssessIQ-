@@ -65,8 +65,8 @@ def render_recommendation_card(rec: Dict, index: int):
                 </div>
             </div>
             <div class="explanation-box">
-                <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Recruiter Insight</div>
-                <div style="color: #334155; font-size: 0.95rem;">{rec.get('explanation')}</div>
+                <div style="font-size: 0.75rem; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em;">Recruiter Decision Logic</div>
+                <div style="color: #1e293b; font-size: 1rem; font-weight: 500;">{rec.get('explanation')}</div>
             </div>
             <div style="margin-top: 15px;">
                 <a href="{rec.get('url')}" target="_blank" class="shl-button">View on SHL.com ↗</a>
@@ -100,21 +100,22 @@ def apply_styles():
             }
             .recommendation-card:hover { transform: translateY(-4px); border-color: #3b82f6; }
 
-            .badge-type { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; margin-right: 6px; }
-            .badge-category { background: #eff6ff; color: #2563eb; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
+            .badge-type { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-right: 8px; border: 1px solid #e2e8f0; }
+            .badge-category { background: #eff6ff; color: #2563eb; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid #dbeafe; }
             
-            .score-box { background: #f0fdf4; padding: 8px 12px; border-radius: 8px; text-align: right; }
-            .score-value { font-size: 1.5rem; font-weight: 800; color: #059669; }
-            .score-label { font-size: 0.6rem; text-transform: uppercase; color: #059669; font-weight: 700; }
+            .score-box { background: #f0fdf4; padding: 10px 16px; border-radius: 12px; text-align: right; border: 1px solid #dcfce7; }
+            .score-value { font-size: 1.6rem; font-weight: 800; color: #166534; line-height: 1; }
+            .score-label { font-size: 0.65rem; text-transform: uppercase; color: #166534; font-weight: 700; margin-top: 4px; letter-spacing: 0.05em; }
 
-            .assessment-title { font-size: 1.3rem; font-weight: 700; color: #1e293b; margin: 8px 0; }
-            .explanation-box { background: #f8fafc; padding: 14px; border-radius: 10px; border-left: 4px solid #3b82f6; margin: 16px 0; }
+            .assessment-title { font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 12px 0 8px 0; letter-spacing: -0.01em; }
+            .explanation-box { background: #f8fafc; padding: 18px; border-radius: 12px; border-left: 5px solid #3b82f6; margin: 18px 0; line-height: 1.5; }
             
             .shl-button {
                 display: inline-block; background: #2563eb; color: white !important;
-                padding: 10px 20px; border-radius: 8px; text-decoration: none !important;
-                font-weight: 600; font-size: 0.9rem;
+                padding: 12px 24px; border-radius: 10px; text-decoration: none !important;
+                font-weight: 700; font-size: 0.95rem; transition: background 0.2s;
             }
+            .shl-button:hover { background: #1d4ed8; }
         </style>
     """), unsafe_allow_html=True)
 

@@ -220,6 +220,10 @@ class ConversationAnalyzer:
 
         msg_lower = latest_message.lower()
 
+        # Check for off-topic (High Priority)
+        if self._is_off_topic(msg_lower):
+            return UserIntent.OFF_TOPIC
+
         # Check for prompt injection patterns
         if self._is_prompt_injection(msg_lower):
             return UserIntent.PROMPT_INJECTION
@@ -254,19 +258,15 @@ class ConversationAnalyzer:
         ) and message_count > 1:
             return UserIntent.REFINEMENT
 
-        # Check for off-topic
-        if self._is_off_topic(msg_lower):
-            return UserIntent.OFF_TOPIC
-
         # Check if this provides clear information
         if any(
             keyword in msg_lower
-            for keyword in ["years", "level", "need", "require", "must", "should"]
+            for keyword in ["years", "level", "need", "require", "must", "should", "seniority", "skills"]
         ):
             return UserIntent.CLARIFICATION_PROVIDED
 
         # Check if still vague
-        if len(latest_message.split()) < 5:
+        if len(latest_message.split()) < 3:
             return UserIntent.VAGUE_QUERY
 
         return UserIntent.CLEAR_REQUIREMENT
@@ -290,30 +290,27 @@ class ConversationAnalyzer:
         return any(pattern in text for pattern in injection_patterns)
 
     def _is_off_topic(self, text: str) -> bool:
-        """Detect off-topic queries."""
+        """Detect off-topic queries with recruiter-grade precision."""
         off_topic_patterns = [
-            "python tutorial",
-            "how to code",
-            "legal",
-            "law",
-            "contract",
-            "hire",
-            "fire",
-            "salary",
-            "compensation",
-            "market rate",
-            "explain python",
-            "teach me",
-            "recommend restaurants",
-            "weather",
+            "joke", "weather", "movie", "music", "politics", "random chat",
+            "hello", "hi ", "how are you", "what's up",
+            "python tutorial", "how to code", "legal", "law", "contract",
+            "salary", "compensation", "market rate", "explain python",
+            "teach me", "recommend restaurants", "weather",
+            "movie", "song", "who are you", "tell me about yourself",
+            "what can you do", "help"
         ]
 
         # Check for explicitly off-topic keywords
-        if any(pattern in text for pattern in off_topic_patterns):
-            # Exception: allow "hire" or "legal" if "assessment" or "test" is present
-            if "assessment" in text or "test" in text:
-                return False
-            return True
+        for pattern in off_topic_patterns:
+            if re.search(rf"\b{re.escape(pattern)}\b", text):
+                # Exception: allow greeting if it's the first message and followed by something relevant
+                if pattern in ["hello", "hi", "help"] and len(text.split()) > 4:
+                    continue
+                # Exception: allow "hire" or "legal" if "assessment" or "test" is present
+                if ("assessment" in text or "test" in text) and pattern in ["legal", "law"]:
+                    continue
+                return True
 
         # Check for generic "how to" or "tell me about" without relevant context
         if any(text.startswith(pattern) for pattern in ["how to", "teach me", "tell me about", "explain"]):
