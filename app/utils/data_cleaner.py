@@ -231,9 +231,12 @@ class DataCleaner:
         cleaned["url"] = str(assessment.get("url", "")).strip().lower()
 
         # Clean description
-        cleaned["description"] = DataCleaner.normalize_text(
-            assessment.get("description", "")
-        )
+        description = assessment.get("description", "")
+        if not description:
+            # Generate placeholder description from name and category
+            category = assessment.get("category", "Professional")
+            description = f"Standard SHL assessment for {assessment.get('name')}, focused on {category} evaluation."
+        cleaned["description"] = DataCleaner.normalize_text(description)
 
         # Clean skills (if list)
         if isinstance(assessment.get("skills"), list):
@@ -243,7 +246,16 @@ class DataCleaner:
         elif assessment.get("skills"):
             cleaned["skills"] = [DataCleaner.normalize_text(assessment["skills"])]
         else:
-            cleaned["skills"] = []
+            # Infer skills from name if missing
+            name = assessment.get("name", "").lower()
+            if "java" in name: cleaned["skills"] = ["Java", "Programming"]
+            elif "python" in name: cleaned["skills"] = ["Python", "Programming"]
+            elif "react" in name: cleaned["skills"] = ["React", "Frontend"]
+            elif "angular" in name: cleaned["skills"] = ["Angular", "Frontend"]
+            elif "data science" in name: cleaned["skills"] = ["Data Science", "Machine Learning"]
+            elif "leadership" in name: cleaned["skills"] = ["Leadership", "Management"]
+            elif "communication" in name: cleaned["skills"] = ["Communication", "Interpersonal"]
+            else: cleaned["skills"] = []
 
         # Normalize duration
         cleaned["duration_minutes"] = DataCleaner.normalize_duration(
@@ -252,10 +264,22 @@ class DataCleaner:
 
         # Detect test type
         detected_type = DataCleaner.detect_test_type(assessment)
+        if not detected_type:
+            # Try from category string
+            cat_str = str(assessment.get("category", "")).lower()
+            if "personality" in cat_str or "behavioral" in cat_str:
+                detected_type = "P"
+            elif "cognitive" in cat_str or "ability" in cat_str:
+                detected_type = "A"
+            elif "knowledge" in cat_str or "skill" in cat_str:
+                detected_type = "K"
+        
         if detected_type:
             cleaned["test_type"] = detected_type
         elif assessment.get("test_type"):
             cleaned["test_type"] = str(assessment.get("test_type")).upper()[0]
+        else:
+            cleaned["test_type"] = "K" # Default to Knowledge for general skills
 
         # Preserve other fields
         for key in [

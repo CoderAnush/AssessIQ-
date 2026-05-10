@@ -345,33 +345,75 @@ class MetadataEnricher:
         Fully enrich a single assessment with inferred metadata.
 
         Adds:
-        - inferred_skills
-        - inferred_roles
-        - inferred_seniority_levels
-        - category
-        - relevance_scores
+        - domains
+        - ideal_roles
+        - seniority_fit
+        - skill_tags
+        - difficulty_level
+        - recruiter_use_cases
         """
 
         enriched = assessment.copy()
+        text = (assessment.get("name", "") + " " + assessment.get("description", "")).lower()
 
-        # Detect skills
+        # 1. Domains
+        domains = []
+        if "java" in text or "python" in text or "backend" in text: domains.append("backend")
+        if "react" in text or "angular" in text or "frontend" in text or "css" in text: domains.append("frontend")
+        if "data science" in text or "ml" in text or "machine learning" in text: domains.append("data_science")
+        if "leadership" in text or "management" in text or "executive" in text: domains.append("leadership")
+        if "sales" in text or "customer" in text: domains.append("sales")
+        if "cognitive" in text or "reasoning" in text: domains.append("cognitive")
+        if not domains: domains.append("general")
+        enriched["domains"] = domains
+
+        # 2. Ideal Roles
+        roles = MetadataEnricher.infer_roles(assessment)
+        if "general" in roles: roles = []
+        # Add more specific roles based on name
+        name = assessment.get("name", "").lower()
+        if "java" in name: roles.extend(["Java Developer", "Backend Engineer"])
+        if "python" in name: roles.extend(["Python Developer", "Data Engineer"])
+        if "react" in name: roles.extend(["Frontend Developer", "React Engineer"])
+        if "sales" in name: roles.extend(["Sales Representative", "Account Manager"])
+        if "manager" in name: roles.extend(["Team Lead", "Engineering Manager"])
+        enriched["ideal_roles"] = sorted(list(set(roles)))[:5]
+
+        # 3. Seniority Fit
+        enriched["seniority_fit"] = MetadataEnricher.infer_seniority_levels(assessment)
+
+        # 4. Skill Tags
+        skills = set(assessment.get("skills", []))
+        # Add tags from name
+        for word in name.split():
+            if len(word) > 3 and word not in ["test", "short", "form", "solution"]:
+                skills.add(word.capitalize())
+        enriched["skill_tags"] = sorted(list(skills))[:8]
+
+        # 5. Difficulty Level
+        if "advanced" in text or "senior" in text or "executive" in text:
+            enriched["difficulty_level"] = "advanced"
+        elif "entry" in text or "junior" in text or "apprentice" in text:
+            enriched["difficulty_level"] = "entry"
+        else:
+            enriched["difficulty_level"] = "intermediate"
+
+        # 6. Recruiter Use Cases
+        use_cases = []
+        if "technical" in domains: use_cases.append("Technical skill verification")
+        if "leadership" in domains: use_cases.append("Leadership readiness evaluation")
+        if "sales" in domains: use_cases.append("Sales aptitude screening")
+        if "personality" in text: use_cases.append("Culture fit assessment")
+        if "cognitive" in domains: use_cases.append("General mental ability screening")
+        if not use_cases: use_cases.append("General hiring assessment")
+        enriched["recruiter_use_cases"] = use_cases[:3]
+
+        # Legacy fields for backward compatibility
         enriched["inferred_skills"] = MetadataEnricher.detect_skills(assessment)
-
-        # Infer roles
-        enriched["inferred_roles"] = MetadataEnricher.infer_roles(assessment)
-
-        # Infer seniority levels
-        enriched["inferred_seniority_levels"] = (
-            MetadataEnricher.infer_seniority_levels(assessment)
-        )
-
-        # Categorize
+        enriched["inferred_roles"] = enriched["ideal_roles"]
+        enriched["inferred_seniority_levels"] = enriched["seniority_fit"]
         enriched["category"] = MetadataEnricher.infer_assessment_category(assessment)
-
-        # Calculate relevance scores
-        enriched["relevance_scores"] = MetadataEnricher.calculate_relevance_scores(
-            assessment
-        )
+        enriched["relevance_scores"] = MetadataEnricher.calculate_relevance_scores(assessment)
 
         return enriched
 

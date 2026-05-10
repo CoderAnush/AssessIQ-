@@ -198,12 +198,12 @@ class ConversationAnalyzer:
         # Get latest user message for intent detection
         latest_user_msg = user_messages[-1]
 
-        # Detect intent first
-        intent = self._detect_intent(latest_user_msg, len(user_messages))
-
-        # Extract context from all user messages to build full context
+        # Extract context first to build the current state
         for user_msg in user_messages:
             self._extract_context(user_msg, context)
+
+        # Detect intent using the extracted context
+        intent = self._detect_intent(latest_user_msg, len(user_messages), context)
 
         # SPECIAL CASE: Intent Merging for short follow-ups
         # If the latest message is very short (1-2 words), it's likely a clarification
@@ -215,7 +215,7 @@ class ConversationAnalyzer:
 
         return context, intent
 
-    def _detect_intent(self, latest_message: str, message_count: int) -> UserIntent:
+    def _detect_intent(self, latest_message: str, message_count: int, context: HiringContext) -> UserIntent:
         """Detect user's intent from latest message."""
 
         msg_lower = latest_message.lower()
@@ -265,9 +265,17 @@ class ConversationAnalyzer:
         ):
             return UserIntent.CLARIFICATION_PROVIDED
 
-        # Check if still vague
-        if len(latest_message.split()) < 3:
-            return UserIntent.VAGUE_QUERY
+        # Check if still vague (Recruiter Discovery Flow)
+        # If we don't have a domain yet, it's vague
+        if not context.domain and not context.role_domain:
+             if any(term in msg_lower for term in ["developer", "engineer", "programmer", "specialist", "professional", "person", "someone"]):
+                 return UserIntent.VAGUE_QUERY
+        
+        # If we have a domain but no seniority and the message is short
+        if not context.seniority and len(latest_message.split()) < 4:
+            # But only if it's not a direct answer to a previous question
+            if message_count > 1:
+                return UserIntent.VAGUE_QUERY
 
         return UserIntent.CLEAR_REQUIREMENT
 
@@ -392,26 +400,21 @@ class ConversationAnalyzer:
             context.cognitive_skills.add("analytical")
 
     def get_clarification_question(self, context: HiringContext) -> Optional[str]:
-        """
-        Generate the MOST important clarification question.
-        Ask only ONE question. Choose high-value question.
-        """
-
+        """Generate targeted recruiter-style follow-up questions."""
         if not context.role and not context.domain:
             return "What role are you looking to fill?"
-
+        
+        if not context.domain:
+            return f"What specific domain or tech stack is required for this {context.role or 'role'}? (e.g., Java, Python, Frontend, Data Science)"
+        
         if not context.seniority:
-            return "What seniority level? (junior, mid-level, senior)"
-
+            return f"What seniority level are you hiring for? (e.g., Junior, Mid-level, Senior, Leadership)"
+        
         if not context.soft_skills and not context.technical_skills:
-            return "What skills are most important for this role?"
+            return f"Are there any specific technical skills or frameworks you'd like to prioritize?"
 
-        if context.soft_skills and not context.leadership_needs and "leadership" not in " ".join(context.soft_skills).lower():
-            # Check if management/lead role
-            if context.role and any(
-                word in context.role.lower() for word in ["manager", "lead", "director", "head"]
-            ):
-                return "Does this person need to lead or mentor others?"
+        if context.role and any(word in context.role.lower() for word in ["manager", "lead", "director", "head"]) and not context.leadership_needs:
+             return "Does this position require specific leadership or people management responsibilities?"
 
         # No more questions - we have enough
         return None
