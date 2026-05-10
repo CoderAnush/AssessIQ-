@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-05-10T12:08:32.674335",
+  "environment": "production",
+  "tests": [
+    {
+      "name": "Vague Query",
+      "passed": true,
+      "latency_ms": 3482.766628265381
+    },
+    {
+      "name": "Clear Query",
+      "passed": true,
+      "latency_ms": 7351.869106292725
+    },
+    {
+      "name": "Refinement",
+      "passed": true,
+      "latency_ms": 6639.11509513855
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "errors": []
+  },
+  "metrics": {
+    "avg_latency_ms": 5824.583609898885,
+    "hallucinations": 0,
+    "schema_violations": 0,
+    "api_failures": 0
+  }
+}

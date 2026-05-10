@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: assessiq-api
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - API_PORT=8000
+      - API_HOST=0.0.0.0
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - CATALOG_PATH=data/raw/catalog.json
+      - FAISS_INDEX_PATH=data/vectorstore/faiss_index.bin
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    working_dir: /app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - assessiq-network
+
+  # Optional: Streamlit Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: assessiq-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      - api
+    networks:
+      - assessiq-network
+
+networks:
+  assessiq-network:
+    driver: bridge
+
+volumes:
+  data:
+  logs:

@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Data files (but keep examples)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/vectorstore/*
+!data/vectorstore/.gitkeep
+
+# FAISS indices
+*.bin
+*.index
+
+# Credentials and secrets
+credentials.json
+*secret*
+*key*
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE specific
+.vscode/settings.json
+.idea/workspace.xml
+*.sublime-workspace
+
+# Optional packages
+node_modules/
+frontend/node_modules/
+
+# Streamlit cache
+.streamlit/secrets.toml
+.streamlit/cache/

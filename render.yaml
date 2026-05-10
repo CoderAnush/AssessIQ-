@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: assessiq-api
+    runtime: python
+    pythonVersion: "3.10"
+    startCommand: "python app/main.py"
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: ENVIRONMENT
+        value: "production"
+      - key: PORT
+        value: "8000"
+      - key: LOG_LEVEL
+        value: "INFO"
+      - key: DEBUG
+        value: "false"
+      - key: ENABLE_TEST_ROUTES
+        value: "false"
+      - key: GEMINI_API_KEY
+        sync: false
+
+  - type: web
+    name: assessiq-frontend
+    runtime: python
+    pythonVersion: "3.10"
+    startCommand: "streamlit run frontend/streamlit_app.py --server.port=8501 --server.address=0.0.0.0"
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: STREAMLIT_SERVER_PORT
+        value: "8501"
+      - key: STREAMLIT_SERVER_ADDRESS
+        value: "0.0.0.0"
+      - key: STREAMLIT_SERVER_HEADLESS
+        value: "true"
+    routes:
+      - type: http
+        path: "/"
