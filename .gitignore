@@ -42,17 +42,23 @@ env/
 logs/
 *.log
 
-# Data files (but keep examples)
+# Data files (but keep examples and production artifacts)
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+# Allow production artifacts for deployment
+!data/processed/catalog_processed.json
+!data/processed/faiss_index.bin
+!data/processed/bm25_index.pkl
+!data/processed/faiss_metadata.json
 data/vectorstore/*
 !data/vectorstore/.gitkeep
 
-# FAISS indices
+# FAISS indices (Allow specific ones, ignore general)
 *.bin
 *.index
+!data/processed/*.bin
 
 # Credentials and secrets
 credentials.json
