@@ -1,6 +1,6 @@
 """
 AssessIQ AI - Enterprise Assessment Selection Intelligence.
-Clean production-ready frontend with robust response parsing.
+Clean production-ready frontend with robust response parsing and context awareness.
 """
 
 import streamlit as st
@@ -70,18 +70,9 @@ def init_session():
     if "conv_id" not in st.session_state:
         st.session_state.conv_id = f"conv_{datetime.now().strftime('%m%d_%H%M')}"
 
-def send_chat_request(user_message: str):
-    """Proven lightweight request logic."""
-    # Build payload from full history for context
-    history = []
-    for msg in st.session_state.messages:
-        history.append({"role": msg["role"], "content": msg["content"]})
-    
-    # Add current message if not already there (though usually it is added to state first)
-    # But for this clean implementation, we'll assume state is already updated.
-    
-    payload = {"messages": history}
-    
+def send_chat_request(messages: List[Dict]):
+    """Proven lightweight request logic using full history for context merging."""
+    payload = {"messages": messages}
     try:
         response = requests.post(
             f"{BACKEND_URL}/chat",
@@ -113,7 +104,7 @@ def render_recommendation(rec: Dict, index: int):
         </div>
         <div class="explanation-box">
             <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Recruiter Insight</div>
-            <div style="color: #3341155; font-size: 0.95rem;">{rec.get('explanation')}</div>
+            <div style="color: #334155; font-size: 0.95rem;">{rec.get('explanation')}</div>
         </div>
         <div style="margin-top: 15px;">
             <a href="{rec.get('url')}" target="_blank" class="shl-button" id="btn_{index}_{name.replace(' ', '_')}">View on SHL.com ↗</a>
@@ -173,7 +164,6 @@ def main():
 
     # Chat Input
     if prompt := st.chat_input("Describe the role or ask to compare assessments...", key="main_chat_input"):
-        # 1. Store and show user message
         st.session_state.messages.append({"role": "user", "content": prompt})
         st.rerun()
 
@@ -181,7 +171,9 @@ def main():
     if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
         with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Analyzing requirements..."):
-                response = send_chat_request(st.session_state.messages[-1]["content"])
+                # Clean messages for backend (only role and content)
+                api_messages = [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
+                response = send_chat_request(api_messages)
                 
                 if response:
                     reply = response.get("reply", "")
@@ -189,30 +181,30 @@ def main():
                     clarification = response.get("clarification", "")
                     comparison = response.get("comparison", "")
                     
-                    # ROBUST PARSING LOGIC
-                    has_content = bool(recs or clarification or comparison or (reply and "couldn't generate recommendations" not in reply.lower()))
+                    # Robust Parsing Logic: Ensure we show content if it exists
+                    has_content = (
+                        reply or recs or clarification or comparison
+                    )
                     
-                    # Determine what to display as the primary text
-                    display_text = reply
-                    if clarification:
-                        display_text = clarification
-                    elif comparison:
-                        display_text = comparison
-                    
-                    # If we have recommendations but the reply is the fallback error, override it
-                    if recs and ("couldn't generate" in reply.lower() or not reply):
-                        display_text = "Based on your requirements, here are the most relevant SHL assessments:"
-
-                    # FINAL SAFETY: If absolutely no content, show error
-                    if not has_content and not display_text:
+                    if not has_content:
                         st.error("I couldn't generate a specific response. Please try rephrasing your request.")
                         return
 
-                    # Render Primary Text
-                    if display_text:
-                        st.markdown(display_text)
+                    # SUPPRESS FALLBACK ERROR IF RECS EXIST
+                    display_text = reply
+                    if recs and ("couldn't generate recommendations" in reply.lower() or not reply):
+                        display_text = "Based on your requirements, here are the most relevant SHL assessments:"
                     
-                    # Render Recommendations independently
+                    # PRIORITIZE CLARIFICATION/COMPARISON TEXT IF PRESENT
+                    if clarification:
+                        display_text = clarification
+                    elif comparison and not recs: # Only use comparison text if it's the main response
+                        display_text = comparison
+
+                    # Render Text
+                    st.markdown(display_text)
+                    
+                    # Render Recommendations (Independent of text)
                     if recs:
                         st.markdown("#### 📋 Top Recommendations")
                         for idx, rec in enumerate(recs, 1):
@@ -221,7 +213,7 @@ def main():
                     # Store in history
                     st.session_state.messages.append({
                         "role": "assistant",
-                        "content": display_text or "Processed your request.",
+                        "content": display_text,
                         "recommendations": recs
                     })
                 else:

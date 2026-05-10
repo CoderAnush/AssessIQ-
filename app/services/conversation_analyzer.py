@@ -201,9 +201,14 @@ class ConversationAnalyzer:
         # Detect intent first
         intent = self._detect_intent(latest_user_msg, len(user_messages))
 
-        # Extract context from all user messages
+        # Extract context from all user messages to build full context
         for user_msg in user_messages:
             self._extract_context(user_msg, context)
+
+        # SPECIAL CASE: Intent Merging for short follow-ups
+        # If the latest message is very short (1-2 words), it's likely a clarification
+        if len(latest_user_msg.split()) <= 2 and intent == UserIntent.VAGUE_QUERY:
+             intent = UserIntent.CLARIFICATION_PROVIDED
 
         logger.debug(f"Analyzed context: {context}")
         logger.debug(f"Detected intent: {intent}")
@@ -318,13 +323,13 @@ class ConversationAnalyzer:
         return False
 
     def _extract_context(self, message: str, context: HiringContext) -> None:
-        """Extract context fields from a single message."""
+        """Extract context fields from a single message without overwriting existing data with None."""
 
         msg_lower = message.lower()
 
-        # Extract seniority
+        # 1. Extract seniority
         for keyword, level in self.SENIORITY_KEYWORDS_REVERSE.items():
-            if keyword in msg_lower:
+            if re.search(rf"\b{re.escape(keyword)}\b", msg_lower):
                 context.seniority = level
                 # Try to extract years
                 years_match = re.search(r"(\d+)\s*(?:years?|yrs?)", msg_lower)
@@ -332,40 +337,49 @@ class ConversationAnalyzer:
                     context.years_experience = int(years_match.group(1))
                 break
 
-        # Extract role
+        # 2. Extract role (Enhanced)
         role_patterns = [
             r"(?:hiring|looking for|need)s?\s+(?:a\s+)?(?:assessments?\s+for\s+)?(?:a\s+)?([^,\.!?]+?)(?:\s+(?:who|with|that|engineer|developer|manager))",
             r"(?:hiring|looking for|need)s?\s+(?:a\s+)?([^,\.!?]+?)$",
-            r"([^,\.!?]+?)\s+(?:role|position|job|opening)",
+            r"([^,\.!?]+?)\s+(?:role|position|job|opening|vacancy)",
         ]
         
+        extracted_role = None
         for pattern in role_patterns:
             role_match = re.search(pattern, msg_lower)
             if role_match:
                 role = role_match.group(1).strip()
-                # Clean up role
                 role = re.sub(r"^(?:a|an|the|hiring)\s+", "", role)
                 role = re.sub(r"\s+role$", "", role)
-                if role and len(role.split()) < 5:  # Avoid capturing full sentences
-                    context.role = role
+                if role and len(role.split()) < 5:
+                    extracted_role = role
                     break
+        
+        # Direct Match for Roles (if message is just the role)
+        if not extracted_role and len(msg_lower.split()) <= 3:
+            # Check if it contains tech keywords + engineer/developer
+            tech_found = any(tech in msg_lower for tech in self.TECH_KEYWORDS)
+            if tech_found or any(kw in msg_lower for kw in ["engineer", "developer", "manager", "lead", "analyst"]):
+                extracted_role = msg_lower
 
-        # Extract tech stack
+        if extracted_role:
+            context.role = extracted_role
+
+        # 3. Extract tech stack (Merge, don't overwrite)
         for tech in self.TECH_KEYWORDS:
-            # Match whole word to avoid "go" in "good"
             if re.search(rf"\b{re.escape(tech)}\b", msg_lower):
                 context.tech_stack.add(tech)
 
-        # Extract soft skills
+        # 4. Extract soft skills (Merge)
         for skill in self.SOFT_SKILLS:
-            if skill in msg_lower:
+            if re.search(rf"\b{re.escape(skill)}\b", msg_lower):
                 context.soft_skills.add(skill)
 
-        # Extract specific patterns
-        if "leadership" in msg_lower or "lead" in msg_lower:
+        # 5. Extract specific patterns
+        if any(kw in msg_lower for kw in ["leadership", "lead", "manage", "manager", "mentoring"]):
             context.leadership_needs = True
 
-        if "communication" in msg_lower:
+        if "communication" in msg_lower or "speaking" in msg_lower:
             context.soft_skills.add("communication")
 
         if "problem solving" in msg_lower or "problem-solving" in msg_lower:

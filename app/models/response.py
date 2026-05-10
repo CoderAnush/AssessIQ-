@@ -116,12 +116,14 @@ class ChatResponse(BaseModel):
     """POST /chat response schema (NON-NEGOTIABLE)."""
 
     reply: str = Field(
-        ..., description="Agent response text", min_length=1, max_length=2000
+        ..., description="Agent response text", min_length=1, max_length=5000
     )
     recommendations: List[Recommendation] = Field(
         default_factory=list,
         description="Empty when gathering info, 1-10 items when recommending"
     )
+    clarification: Optional[str] = Field(None, description="Direct clarification question if needed")
+    comparison: Optional[str] = Field(None, description="Comparison text if requested")
     end_of_conversation: bool = Field(
         default=False,
         description="True only when task is complete"

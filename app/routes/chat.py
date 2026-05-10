@@ -77,7 +77,11 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             response = ChatResponse(reply=decision.reasoning, recommendations=[])
             
         elif decision.action == AgentAction.CLARIFY:
-            response = ChatResponse(reply=decision.next_question, recommendations=[])
+            response = ChatResponse(
+                reply=decision.next_question,
+                clarification=decision.next_question, 
+                recommendations=[]
+            )
             
         elif decision.action == AgentAction.RECOMMEND:
             print("CHAT: Executing RECOMMEND (Lightweight)")
@@ -108,7 +112,11 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         else:
             # Fallback for COMPARE/REFINE for simplicity during debugging
             print(f"CHAT: Falling back to generic handler for {decision.action}")
-            response = ChatResponse(reply="I'm processing your request. How else can I help?", recommendations=[])
+            response = ChatResponse(
+                reply="I'm processing your request. How else can I help?", 
+                comparison="Comparison or refinement requested. I'm analyzing the differences now.",
+                recommendations=[]
+            )
 
         print(f"CHAT: Successfully processed in {time.time() - start_time:.2f}s")
         return response
