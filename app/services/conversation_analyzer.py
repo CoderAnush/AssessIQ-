@@ -84,7 +84,7 @@ class ConversationAnalyzer:
         # 4. Role Normalization (Phase 4)
         from app.services.role_normalizer import RoleNormalizer
         normalizer = RoleNormalizer()
-        context.normalized_role, _, _ = normalizer.normalize(context.role or last_user_msg)
+        context.normalized_role, _, _ = normalizer.normalize_role(context.role or last_user_msg)
 
         # 4. Convergence Logic (Phase 4 & 6)
         missing = context.get_missing_slots()
