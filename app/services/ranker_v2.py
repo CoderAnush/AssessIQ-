@@ -38,72 +38,87 @@ class EnterpriseRanker:
 
     def rank(self, retrieved: List[Dict], context: Any, catalog: Dict[str, Any], top_k: int = 10) -> List[RankedAssessment]:
         """
-        STRICT DOMAIN GATING PASS (Part 1, 3, 5 Fix).
+        STRICT DOMAIN GATING PASS with SMART Fallback Handling.
+        Prevents cross-domain leakage while keeping expanded candidates visible with lower confidence.
         """
-        # Use the domain already detected by the chat route for consistency
         query_domain = getattr(context, "domain", Domain.GENERAL)
         query_classification = {"primaryDomain": query_domain}
         
         logger.info(f"RANKER: Using Context Domain: {query_domain}")
 
-        # 1. INITIAL STRICT FILTERING (Part 1 & 5 Fix)
-        # We filter BEFORE any ranking or diversity logic.
+        # 1. INITIAL STRICT FILTERING (precision + safety gates)
         candidates = []
-        # Optimization: Limit candidate pool to top 40 for performance
         for res in retrieved[:40]:
             assess = catalog.get(res["id"])
-            if not assess: continue
-
-            # DYNAMIC RE-TAGGING (Ensure latest intelligence rules apply)
-            # This handles cases where catalog startup tagging was less precise
-            assess_domain = self.domain_classifier.normalize_assessment_domain(assess.name, assess.description)
-            
-            # ABSOLUTE GATE (Part 1 & 2 Fix)
-            if not self.domain_classifier.is_allowed_domain(query_domain, assess_domain):
+            if not assess:
                 continue
-            
-            # --- FINAL PRECISION NEGATIVE FILTERS ---
+
+            # DYNAMIC RE-TAGGING
+            assess_domain = self.domain_classifier.normalize_assessment_domain(assess.name, assess.description)
+
+            is_expansion = res.get("expansion_matched", False)
+            # ABSOLUTE GATE (prevents cross-domain leakage)
+            # For expanded candidates, relax locking ONLY to adjacency within ADJACENCY_MAP.
+            if not self.domain_classifier.is_allowed_domain(query_domain, assess_domain):
+                if not is_expansion:
+                    continue
+
+                # DATA_AI sparse catalogs may normalize NLP/ML assessments into GENERAL.
+                # Allow expanded DATA_AI candidates into GENERAL without cross-domain leakage.
+                if query_domain == Domain.DATA_AI and is_expansion and assess_domain == Domain.GENERAL:
+                    pass
+                else:
+                    adjacent = assess_domain in self.domain_classifier.ADJACENCY_MAP.get(query_domain, [])
+                    if not adjacent:
+                        continue
+
             assess_text = (assess.name + " " + assess.description).lower()
-            
-            # 1. FRONTEND Precision: No DevOps/Cloud unless explicitly asked
+
+            # Precision negative filters (keep as safety)
             if query_domain == Domain.FRONTEND:
                 devops_cloud = ["aws", "cloud", "kubernetes", "docker", "terraform", "infrastructure", "devops", "networking", "azure", "gcp"]
                 if any(kw in assess_text for kw in devops_cloud):
-                    # Only allow if explicitly in query
-                    if not any(kw in query.lower() for kw in devops_cloud):
-                        continue
-
-            # 2. BACKEND Precision: No Frontend unless explicitly asked
+                    # Keep domain safety via is_allowed_domain gate above.
+                    # Do not hard-drop expanded candidates (they will be confidence-decayed later).
+                    pass
             if query_domain == Domain.BACKEND:
                 frontend_tech = ["angular", "react", "vue", "ui ", "frontend", "css", "html", "nextjs", "ux "]
                 if any(kw in assess_text for kw in frontend_tech):
-                    if not any(kw in query.lower() for kw in frontend_tech):
-                        continue
-
-            # 3. AI/ML Precision: No generic Backend/Frontend unless asked
+                    # Keep domain safety: is_allowed_domain already enforced above.
+                    pass
             if query_domain == Domain.DATA_AI:
                 generic_tech = ["java developer", "frontend engineer", "sales representative"]
                 if any(kw in assess_text for kw in generic_tech):
-                    if not any(kw in query.lower() for kw in generic_tech):
-                        continue
+                    pass
 
-            # Base Factors
             semantic_sim = res.get("hybrid_score", 0.0)
-            
-            # Pre-calculate domain match (faster in hot loop)
-            domain_match = 1.0 if assess_domain == query_domain else 0.6 if assess_domain in self.domain_classifier.ADJACENCY_MAP.get(query_domain, []) else 0.0
-                
+
+            expansion_label = res.get("expansion_label", None)
+
+            # Domain match score:
+            # - exact domain => 1.0
+            # - adjacent domain => 0.6 (still allowed by domain gate)
+            # - for expansion items, keep them eligible even when normalization differs,
+            #   but never allow domain_match to reach "exact" confidence.
+            if assess_domain == query_domain:
+                domain_match = 1.0
+            else:
+                adjacent = assess_domain in self.domain_classifier.ADJACENCY_MAP.get(query_domain, [])
+                domain_match = 0.55 if (adjacent and is_expansion) else (0.6 if adjacent else 0.0)
+
             tech_stack = {str(t).lower() for t in (getattr(context, "tech_stack", set()) or set())}
             assess_skills = {s.lower() for s in getattr(assess, "skills", [])}
             matched = tech_stack.intersection(assess_skills)
             skill_overlap = len(matched) / max(1, len(tech_stack)) if tech_stack else 0.5
-            
+
             candidates.append({
                 "assess": assess,
                 "semantic": semantic_sim,
                 "domain": domain_match,
                 "overlap": skill_overlap,
-                "matched": matched
+                "matched": matched,
+                "is_expansion": is_expansion,
+                "expansion_label": expansion_label,
             })
 
         # 2. DIVERSITY BOOST WITHIN SAME DOMAIN (Part 3 Fix)
@@ -137,6 +152,18 @@ class EnterpriseRanker:
             )
 
             explanation = self._generate_grounded_insight(assess, query_classification, cand["matched"])
+            
+            # Phase 4: Handle Fallback/Expansion confidence decay (larger decay, keep visible)
+            is_expansion = cand.get("is_expansion", False)
+            expansion_label = cand.get("expansion_label", None)
+
+            if is_expansion:
+                # Expanded/related items should remain visible but clearly lower confidence.
+                final_score = final_score * 0.60
+                if expansion_label:
+                    explanation = f"{expansion_label}: {explanation}"
+                else:
+                    explanation = f"Related Competency: {explanation}"
 
             final_ranked.append(RankedAssessment(
                 assessment=assess,

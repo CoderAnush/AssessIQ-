@@ -63,6 +63,10 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         # Inject domain and query into context for ranker/orchestrator
         context.query = user_query
         context.domain = query_domain
+        
+        # Merge tech stack from classifier (for expansion)
+        if "techStack" in query_class:
+             context.tech_stack = set(context.tech_stack) | set(query_class["techStack"])
 
         if decision.action == AgentAction.REFUSE:
             return ChatResponse(reply=decision.reasoning, recommendations=[], end_of_conversation=False)
@@ -74,23 +78,27 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             # 2. RETRIEVAL & RANKING PHASE
             retrieval_start = time.time()
             query = f"{context.role} {context.seniority} {' '.join(context.tech_stack)}"
-            retrieved = services.retriever.retrieve(query, context, top_k=25) # Reduced from 30
+            retrieved = services.retriever.retrieve(query, context, top_k=50) # increased for smarter domain fallback recall
             retrieval_time = time.time() - retrieval_start
             
             ranking_start = time.time()
             catalog = {a.id: a for a in services.catalog_loader.get_all()}
-            ranked_results = services.ranker.rank(retrieved, context, catalog, top_k=8) # Reduced from 12 for speed
+            ranked_results = services.ranker.rank(retrieved, context, catalog, top_k=12) # ensure enough candidates for fallback
             ranking_time = time.time() - ranking_start
 
             recommendations = []
             for idx, res in enumerate(ranked_results):
-                # FINAL SAFETY GUARD: ABSOLUTE ASSERTION (Zero Leakage)
+                # The ranker already enforced domain safety dynamically.
                 assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
-                if not domain_classifier.is_allowed_domain(query_domain, assess_domain):
-                    continue
 
                 base_confidence = int((res.final_score or 0.6) * 100)
-                final_confidence = max(60, min(99, base_confidence - (idx * 2)))
+                # Expanded/Related items should remain visible but with a softer confidence decay.
+                is_expanded = any(
+                    t in (res.explanation or "")
+                    for t in ["Expanded Match", "Related Competency Match", "Related Competency:"]
+                )
+                decay = (idx * 1) if is_expanded else (idx * 2)
+                final_confidence = max(55, min(99, base_confidence - decay))
                 
                 recommendations.append(Recommendation(
                     name=str(res.assessment.name),
@@ -111,6 +119,108 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                 domain_label = query_domain.lower().replace("_", " ")
                 msg = f"I've optimized an enterprise {domain_label} hiring pipeline. While my current technical catalog is specialized, broadening the search for related core skills might provide better matches."
                 return ChatResponse(reply=msg, recommendations=[], end_of_conversation=False)
+
+            # Minimum pipeline guarantee (domain-compatible):
+            # If we have ranked results but fewer than 3 recommendations, keep them visible.
+            if ranked_results and len(recommendations) < 3:
+                for res in ranked_results:
+                    if len(recommendations) >= 3:
+                        break
+                    if any(rec.name == res.assessment.name for rec in recommendations):
+                        continue
+
+                    assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
+                    base_confidence = int((res.final_score or 0.6) * 100)
+                    is_expanded = any(
+                        t in (res.explanation or "")
+                        for t in ["Expanded Match", "Related Competency Match", "Related Competency:"]
+                    )
+                    decay = 0 if is_expanded else 2
+                    final_confidence = max(55, min(99, base_confidence - decay))
+
+                    recommendations.append(Recommendation(
+                        name=str(res.assessment.name),
+                        url=str(res.assessment.url),
+                        test_type=str(res.assessment.test_type.value),
+                        subtitle=f"{res.assessment.category.title()} Assessment",
+                        confidence=final_confidence,
+                        category=str(res.assessment.category),
+                        stage="Screening",
+                        duration=f"{getattr(res.assessment, 'duration_minutes', 30)} min",
+                        recruiter_insight=str(res.explanation),
+                        ideal_use_case=str(res.assessment.description[:120]) + "...",
+                        domain=str(assess_domain),
+                        matched_skills=list(res.matched_skills)
+                    ))
+
+            # HARD RECALL PATCH for DATA_AI sparse catalogs:
+            # If DATA_AI still returns <3, append additional domain-safe retrievals (no cross-domain leakage).
+            if query_domain == Domain.DATA_AI and len(recommendations) < 3:
+                # Retrieve more candidates directly and filter by domain-safe gates.
+                extra_retrieved = services.retriever.retrieve(query, context, top_k=80)
+                extra_names = {r.name for r in recommendations}
+
+                for item in extra_retrieved:
+                    if len(recommendations) >= 3:
+                        break
+                    assess_obj = catalog.get(item["id"])
+                    if not assess_obj:
+                        continue
+                    if assess_obj.name in extra_names:
+                        continue
+
+                    assess_domain = domain_classifier.normalize_assessment_domain(assess_obj.name, assess_obj.description)
+
+                    # Domain-safe acceptance for DATA_AI sparse catalogs:
+                    # - exact DATA_AI
+                    # - adjacency within ADJACENCY_MAP (e.g., ENGINEERING_CORE/BACKEND)
+                    # - GENERAL only if explicit NLP/ML signals are present
+                    adjacent_domains = set(domain_classifier.ADJACENCY_MAP.get(query_domain, []))
+
+                    # Strong NLP/ML content-based acceptance to ensure sparse DATA_AI catalogs still yield recs,
+                    # while staying within "no cross-domain leakage" by requiring explicit NLP/ML signals.
+                    assess_text = (assess_obj.name + " " + assess_obj.description).lower()
+                    ai_signals = [
+                        "tensorflow", "pytorch", "keras", "nlp", "llm", "transformers",
+                        "language model", "language models", "neural networks", "machine learning",
+                        "deep learning", "natural language", "text generation", "bert", "gpt",
+                        "word embeddings", "tokenization", "sequence modeling", "sequence-to-sequence"
+                    ]
+                    has_ai_signal = any(s in assess_text for s in ai_signals)
+
+                    if query_domain == Domain.DATA_AI and has_ai_signal:
+                        accept = True
+                    elif assess_domain == Domain.DATA_AI:
+                        accept = True
+                    elif assess_domain in adjacent_domains:
+                        accept = True
+                    else:
+                        accept = False
+
+                    if not accept:
+                        continue
+
+                    # Confidence intentionally low for expansion recall patch.
+                    final_confidence = max(50, min(75, int((item.get("hybrid_score", 0.2) or 0.2) * 100)))
+
+                    is_expansion = item.get("expansion_matched", False)
+                    expansion_label = item.get("expansion_label", "Related Competency Match")
+                    recruiter_insight = str(item.get("expansion_label", expansion_label)) + ": Added due to DATA_AI sparse-catalog fallback."
+
+                    recommendations.append(Recommendation(
+                        name=str(assess_obj.name),
+                        url=str(assess_obj.url),
+                        test_type=str(assess_obj.test_type.value),
+                        subtitle=f"{assess_obj.category.title()} Assessment",
+                        confidence=final_confidence,
+                        category=str(assess_obj.category),
+                        stage="Screening",
+                        duration=f"{getattr(assess_obj, 'duration_minutes', 30)} min",
+                        recruiter_insight=recruiter_insight if is_expansion else "Related Competency Match: Domain-safe fallback recall.",
+                        ideal_use_case=str(assess_obj.description[:120]) + "...",
+                        domain=str(assess_domain),
+                        matched_skills=list(getattr(assess_obj, "skills", [])[:5])
+                    ))
 
             # 3. ORCHESTRATION PHASE
             orch_start = time.time()

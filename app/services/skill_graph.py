@@ -19,11 +19,18 @@ class SkillGraph:
     """
     Recruiter-oriented skill graph.
     Supports relationship modeling, propagation, and similarity.
+    Includes domain-constrained competency chains for SMART fallback expansion.
     """
     
     def __init__(self):
         self.nodes: Dict[str, SkillNode] = {}
         self._initialize_graph()
+        self._domain_competency_chains = self._build_domain_competency_chains()
+        self.domain_adjacency_mapping = {
+            "backend": ["data_ai", "frontend"],
+            "data_ai": ["backend"],
+            "frontend": ["backend"]
+        }
 
     def _add_node(self, name: str, category: str, weight: float = 1.0):
         name_low = name.lower()
@@ -44,6 +51,43 @@ class SkillGraph:
         
         node_a.related.add(skill_b.lower())
         node_b.related.add(skill_a.lower())
+
+    def _build_domain_competency_chains(self) -> Dict[str, List[str]]:
+        """
+        Explicit domain competency chains for domain-safe expansion.
+        Order matters: earlier items are closer to the query domain.
+        Returned strings should correspond to skills/nodes that appear in this graph
+        (or at least be used as expansion keywords).
+        """
+        # Note: kept intentionally minimal and domain-constrained to avoid leakage.
+        return {
+            "backend": [
+                "FastAPI",
+                "APIs",
+                "backend systems",
+                "distributed systems",
+                "server-side engineering",
+                "software architecture",
+                "databases",
+            ],
+            "frontend": [
+                "React",
+                "TypeScript",
+                "UI Engineering",
+                "frontend architecture",
+            ],
+            "data_ai": [
+                "TensorFlow",
+                "deep learning",
+                "neural networks",
+                "machine learning",
+                "data science",
+                "python for AI",
+                "NLP foundations",
+                "transformers",
+                "language models",
+            ],
+        }
 
     def _initialize_graph(self):
         """Build the core knowledge graph."""
@@ -139,10 +183,13 @@ class SkillGraph:
         self._add_relationship("FastAPI", "Backend Engineering")
         self._add_related("FastAPI", "APIs")
         self._add_related("FastAPI", "Microservices")
+        self._add_related("FastAPI", "Distributed Systems")
         
         self._add_node("Django", "framework")
         self._add_relationship("Django", "Python")
+        self._add_relationship("Django", "Backend Engineering")
         self._add_related("Django", "Web Development")
+        self._add_related("Django", "Databases")
         
         self._add_node("Kubernetes", "tool", weight=1.2)
         self._add_node("Terraform", "tool", weight=1.1)
@@ -151,13 +198,35 @@ class SkillGraph:
         self._add_relationship("Cloud Engineering", "Terraform")
         
         self._add_node("PyTorch", "framework", weight=1.1)
-        self._add_node("TensorFlow", "framework")
-        self._add_node("Spark", "tool")
+        self._add_node("TensorFlow", "framework", weight=1.1)
+        self._add_relationship("TensorFlow", "Deep Learning")
+        self._add_relationship("TensorFlow", "Neural Networks")
+        self._add_relationship("Deep Learning", "Machine Learning")
+        
+        self._add_node("NLP", "domain", weight=1.2)
+        self._add_relationship("NLP", "Transformers")
+        self._add_relationship("NLP", "Language Models")
+        self._add_related("NLP", "Generative AI")
+        self._add_related("NLP", "Machine Learning")
+        
+        self._add_node("React", "framework", weight=1.2)
+        self._add_relationship("React", "TypeScript")
+        self._add_relationship("React", "State Management")
+        self._add_relationship("React", "UI Engineering")
+        self._add_related("React", "Frontend Architecture")
         
         self._add_node("Go", "language", weight=1.1)
         self._add_node("Rust", "language", weight=1.1)
         self._add_node("Playwright", "tool")
         self._add_node("Cypress", "tool")
+        
+        # 10. General Technical Foundations
+        self._add_node("Software Engineering", "domain", weight=1.0)
+        self._add_relationship("Software Engineering", "Data Structures")
+        self._add_relationship("Software Engineering", "Algorithms")
+        self._add_relationship("Software Engineering", "Coding")
+        self._add_related("Backend Engineering", "Software Engineering")
+        self._add_related("Frontend Engineering", "Software Engineering")
 
     def expand_skills(self, skills: Set[str], depth: int = 1) -> Set[str]:
         expanded = set(s.lower() for s in skills)
@@ -186,6 +255,46 @@ class SkillGraph:
         if s_b in node_a.parents: return 0.8
         if s_b in node_a.related: return 0.7
         return 0.0
+
+    def get_domain_competency_chain_keywords(self, query_domain: str) -> Set[str]:
+        """
+        Domain-safe keyword set for fallback expansion.
+
+        query_domain:
+          - expects canonical internal keys: "backend", "frontend", "data_ai"
+          - callers should map Domain enum values to these strings.
+        """
+        chain = self._domain_competency_chains.get((query_domain or "").lower(), [])
+        # Always normalize to lowercase for matching against assessment text.
+        return {c.lower() for c in chain}
+
+    def get_domain_adjacent_skills(self, seed_skills: Set[str], query_domain: str, depth: int = 2) -> Set[str]:
+        """
+        Expand seed skills but constrain expansion to the provided domain.
+        Uses the general graph expansion, then filters results by domain keywords.
+        """
+        domain_keywords = self.get_domain_competency_chain_keywords(query_domain)
+        if not domain_keywords:
+            return set()
+
+        expanded = self.expand_skills(seed_skills, depth=depth)
+        # Keep only skills/keywords that look domain-relevant.
+        constrained = set()
+        for s in expanded:
+            s_low = s.lower()
+            if any(k in s_low for k in domain_keywords):
+                constrained.add(s_low)
+
+        # Also allow direct keywords from the chain if they intersect with expanded concepts.
+        # (This helps when the catalog uses slightly different phrasing.)
+        constrained.update({k for k in domain_keywords if k in expanded or any(k in x for x in expanded)})
+        return constrained
+
+    def get_domain_expansion_chain(self, domain: str) -> Set[str]:
+        return self.get_domain_competency_chain_keywords(domain)
+
+    def expand_skills_by_domain(self, query_domain: str, seed_skills: Set[str], depth: int = 2) -> Set[str]:
+        return self.get_domain_adjacent_skills(seed_skills, query_domain, depth)
 
     def infer_intent(self, query: str) -> Dict[str, float]:
         query_low = query.lower()

@@ -93,13 +93,19 @@ def render_recommendation_card(rec: Dict[str, Any], index: int):
     n = _normalize_recommendation(rec)
     conf_color = "#10b981" if n['confidence'] >= 90 else "#f59e0b" if n['confidence'] >= 80 else "#ef4444"
     skills = "".join([f'<span style="background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700; margin-right:4px; border:1px solid #e2e8f0;">{s}</span>' for s in n['matched_skills'][:3]])
-    card_html = f"""<div style="background:white; border-radius:1rem; border:1px solid #e2e8f0; padding:1.25rem; margin-bottom:1rem; min-height:400px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+    
+    rel_badge = ""
+    if "Related Competency" in n['insight']:
+        rel_badge = '<div style="margin-top: 8px;"><span style="background: rgba(124, 58, 237, 0.1); color: #7c3aed; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; border: 1px solid rgba(124, 58, 237, 0.2);">RELATED COMPETENCY</span></div>'
+
+    card_html = f"""<div style="background:white; border-radius:1rem; border:1px solid #e2e8f0; padding:1.25rem; margin-bottom:1rem; min-height:420px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
 <div>
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
 <span style="background:#eff6ff; color:#2563eb; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:800; text-transform:uppercase;">{n['domain']}</span>
 <span style="color:{conf_color}; font-weight:900; font-size:1.2rem;">{n['confidence']}%</span>
 </div>
 <h4 style="margin:0; font-size:1.05rem; color:#0f172a; line-height:1.2;">{index}. {n['name']}</h4>
+{rel_badge}
 <div style="display:flex; gap:4px; margin-top:8px; flex-wrap:wrap;">{skills}</div>
 <div style="background:#f8fafc; border-radius:0.5rem; padding:0.75rem; margin-top:1rem; border:1px solid #f1f5f9;">
 <p style="margin:0; font-size:0.8rem; color:#475569; line-height:1.4;"><b>Recruiter Reasoning:</b><br/>{n['insight']}</p>

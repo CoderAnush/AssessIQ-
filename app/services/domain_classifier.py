@@ -27,23 +27,36 @@ class DomainClassifier:
     BACKEND_INDICATORS = {
         "backend", "api", "rest api", "flask", "django", "fastapi", "microservice",
         "server", "web app", "postgres", "redis", "celery", "sqlalchemy", "distributed systems",
-        "sql", "nosql", "database", "mongodb", "postgresql", "enterprise java", "spring", "j2ee"
+        "sql", "nosql", "database", "mongodb", "postgresql", "enterprise java", "spring", "j2ee",
+        "java", "c++", "c programming", "c#", "dotnet", "software", "coding", "programming", "developer",
+        "development", "engineering", "technical", "distributed"
     }
 
     AI_ML_INDICATORS = {
         "ai", "ml", "machine learning", "deep learning", "tensorflow", "pytorch",
         "nlp", "llm", "generative ai", "data science", "computer vision", "statistics",
-        "data engineering", "spark", "hadoop", "analytics", "neural networks"
+        "data engineering", "spark", "hadoop", "analytics", "neural networks", "data", "mathematics",
+        "modeling", "algorithms"
     }
 
     FRONTEND_INDICATORS = {
         "frontend", "javascript", "typescript", "react", "angular", "vue", "nextjs",
-        "web", "ui", "ux", "frontend architecture", "html", "css", "sass", "redux"
+        "web", "ui", "ux", "frontend architecture", "html", "css", "sass", "redux",
+        "interface", "design", "architecture", "styling"
     }
 
     DEVOPS_INDICATORS = {
         "devops", "cloud", "aws", "docker", "terraform", "kubernetes", "sre",
         "infrastructure", "azure", "gcp", "ci/cd", "observability", "jenkins", "ansible"
+    }
+
+    ADJACENCY_MAP = {
+        Domain.BACKEND: [Domain.DEVOPS, Domain.ENGINEERING_CORE],
+        Domain.FRONTEND: [Domain.ENGINEERING_CORE],
+        Domain.DATA_AI: [Domain.BACKEND, Domain.ENGINEERING_CORE],
+        Domain.DEVOPS: [Domain.BACKEND, Domain.ENGINEERING_CORE],
+        Domain.QA: [Domain.BACKEND, Domain.ENGINEERING_CORE],
+        Domain.MANAGEMENT: [Domain.GENERAL]
     }
 
     DOMAIN_GROUPS = {
@@ -116,10 +129,18 @@ class DomainClassifier:
             primary_domain = sorted_domains[0][0]
             confidence = min(1.0, sorted_domains[0][1] / 10.0)
         
+        # 4. Tech Stack Extraction (For Expansion)
+        tech_stack = set()
+        for domain, keywords in self.DOMAIN_GROUPS.items():
+            for kw in keywords:
+                if re.search(rf"\b{re.escape(kw)}\b", query_low):
+                    tech_stack.add(kw.title())
+
         return {
             "primaryDomain": primary_domain,
             "confidence": confidence,
-            "all_scores": scores
+            "all_scores": scores,
+            "techStack": tech_stack
         }
 
     def normalize_assessment_domain(self, name: str, description: str) -> Domain:
@@ -138,10 +159,6 @@ class DomainClassifier:
              return Domain.FRONTEND
         if any(re.search(rf"\b{re.escape(kw)}\b", text) for kw in ["machine learning", "data science", "nlp", "llm"]):
             return Domain.DATA_AI
-        # Special check for 'AI' or 'ML' as standalone words
-        if any(re.search(rf"\b{kw}\b", text, re.I) for kw in ["ai", "ml"]):
-            return Domain.DATA_AI
-
         scores = {domain: 0 for domain in self.DOMAIN_GROUPS}
         for domain, keywords in self.DOMAIN_GROUPS.items():
             for kw in keywords:
@@ -151,7 +168,12 @@ class DomainClassifier:
         sorted_domains = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         if sorted_domains and sorted_domains[0][1] > 0:
             return sorted_domains[0][0]
-            
+
+        # Core Engineering Check
+        if any(kw in text for kw in ["software", "programming", "coding", "algorithm", "data structure", "computer science", "technical"]):
+            # If it didn't match a specific domain above, call it CORE
+            return Domain.ENGINEERING_CORE
+
         return Domain.GENERAL
 
     def is_allowed_domain(self, query_domain: Domain, assessment_domain: Domain) -> bool:
@@ -159,11 +181,13 @@ class DomainClassifier:
         Smart Safety Gate (Absolute Precision).
         """
         if query_domain == Domain.GENERAL:
-            return assessment_domain not in [Domain.ENGINEERING_CORE, Domain.MEDICAL]
+            return assessment_domain != Domain.MEDICAL
             
-        if assessment_domain in [Domain.ENGINEERING_CORE, Domain.MEDICAL]:
-            return False
-            
+        # ENGINEERING_CORE is the universal fallback for all technical domains
+        if assessment_domain == Domain.ENGINEERING_CORE:
+            technical_domains = {Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA}
+            return query_domain in technical_domains
+
         # Strict Isolation for Core Technical Domains
         technical_domains = [Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA, Domain.MANAGEMENT]
         if query_domain in technical_domains:
