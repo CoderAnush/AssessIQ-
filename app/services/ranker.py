@@ -441,7 +441,7 @@ class RecruiterRanker:
         if factors.domain_match < 0.5:
             penalties_applied.append(f"domain_penalty_active")
 
-        print(
+        logger.debug(
             f"[RANK_DEBUG] {assessment.name[:50]} | "
             f"role_tier={role_tier} | "
             f"domain_match={factors.domain_match:.3f} | "

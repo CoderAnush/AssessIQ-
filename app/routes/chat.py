@@ -238,7 +238,7 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                 pipeline_model = None
 
             logger.info("FINAL RECOMMENDATIONS: %s", [r.name for r in recommendations])
-            print(f"FINAL RECOMMENDATIONS: {[r.name for r in recommendations]}")
+
             
             return ChatResponse(
                 reply=reply,
@@ -275,14 +275,10 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             end_of_conversation=conversation_complete,
         )
 
-    except Exception as e:
+    except Exception:
         logger.exception("FATAL ERROR IN CHAT PIPELINE")
-        error_trace = traceback.format_exc()
-        
-        # 9. DISABLING EMERGENCY FALLBACK MASKING FOR DEBUGGING
         return ChatResponse(
-            reply=f"PIPELINE ERROR: {str(e)}",
-            detail=error_trace,
+            reply="I encountered a technical issue while analyzing the hiring request. Please try rephrasing your role description or focusing on specific skills.",
             recommendations=[],
             end_of_conversation=False
         )

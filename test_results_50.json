@@ -303,13 +303,13 @@
     "category": "DevOps/Cloud",
     "expected": "devops",
     "should_clarify": false,
-    "is_clarification": true,
-    "rec_count": 0,
-    "first_rec": null,
+    "is_clarification": false,
+    "rec_count": 5,
+    "first_rec": "Docker (New)",
     "has_java": false,
     "has_python": false,
-    "has_devops": false,
-    "success": false
+    "has_devops": true,
+    "success": true
   },
   {
     "query": "AWS Cloud Engineer",
@@ -318,7 +318,7 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 10,
-    "first_rec": "Cloud Computing (New)",
+    "first_rec": "Amazon Web Services (AWS) Development (New)",
     "has_java": false,
     "has_python": false,
     "has_devops": true,
@@ -355,13 +355,13 @@
     "category": "DevOps/Cloud",
     "expected": "devops",
     "should_clarify": false,
-    "is_clarification": true,
-    "rec_count": 0,
-    "first_rec": null,
+    "is_clarification": false,
+    "rec_count": 5,
+    "first_rec": "Docker (New)",
     "has_java": false,
     "has_python": false,
-    "has_devops": false,
-    "success": false
+    "has_devops": true,
+    "success": true
   },
   {
     "query": "Frontend Developer",
@@ -382,7 +382,7 @@
     "expected": "frontend",
     "should_clarify": false,
     "is_clarification": false,
-    "rec_count": 10,
+    "rec_count": 5,
     "first_rec": "JavaScript (New)",
     "has_java": true,
     "has_python": false,
@@ -447,12 +447,12 @@
     "expected": "data",
     "should_clarify": false,
     "is_clarification": false,
-    "rec_count": 10,
-    "first_rec": "Automata Data Science (New)",
-    "has_java": true,
+    "rec_count": 4,
+    "first_rec": "Automata - SQL (New)",
+    "has_java": false,
     "has_python": false,
     "has_devops": false,
-    "success": false
+    "success": true
   },
   {
     "query": "ML Ops Engineer",
@@ -461,11 +461,11 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 4,
-    "first_rec": "JavaScript (New)",
-    "has_java": true,
+    "first_rec": "Automata - SQL (New)",
+    "has_java": false,
     "has_python": false,
     "has_devops": false,
-    "success": false
+    "success": true
   },
   {
     "query": "Data Engineer",
@@ -487,11 +487,11 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 4,
-    "first_rec": "JavaScript (New)",
-    "has_java": true,
+    "first_rec": "AI Skills",
+    "has_java": false,
     "has_python": false,
     "has_devops": false,
-    "success": false
+    "success": true
   },
   {
     "query": "QA Engineer",
@@ -525,12 +525,12 @@
     "expected": "qa",
     "should_clarify": false,
     "is_clarification": false,
-    "rec_count": 4,
-    "first_rec": "JavaScript (New)",
-    "has_java": true,
+    "rec_count": 7,
+    "first_rec": "Agile Testing (New)",
+    "has_java": false,
     "has_python": false,
     "has_devops": false,
-    "success": false
+    "success": true
   },
   {
     "query": "Senior QA Analyst",
@@ -563,13 +563,13 @@
     "category": "Management",
     "expected": "management",
     "should_clarify": false,
-    "is_clarification": true,
-    "rec_count": 0,
-    "first_rec": null,
+    "is_clarification": false,
+    "rec_count": 10,
+    "first_rec": "Account Manager Solution",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
-    "success": false
+    "success": true
   },
   {
     "query": "Product Manager",
@@ -589,13 +589,13 @@
     "category": "Management",
     "expected": "management",
     "should_clarify": false,
-    "is_clarification": true,
-    "rec_count": 0,
-    "first_rec": null,
+    "is_clarification": false,
+    "rec_count": 10,
+    "first_rec": "Executive Scenarios",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
-    "success": false
+    "success": true
   },
   {
     "query": "developer",
@@ -655,8 +655,8 @@
     "expected": "fullstack",
     "should_clarify": false,
     "is_clarification": false,
-    "rec_count": 10,
-    "first_rec": "Automata - SQL (New)",
+    "rec_count": 4,
+    "first_rec": "JavaScript (New)",
     "has_java": true,
     "has_python": false,
     "has_devops": false,

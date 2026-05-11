@@ -68,31 +68,31 @@ def sanitize_text(value: Any, fallback: str = "") -> str:
 def init_session_state():
     """Initialize persistent session state."""
     if "messages" not in st.session_state:
-        st.session_state.messages = []
+        st.session_state["messages"] = []
     if "conversation_id" not in st.session_state:
-        st.session_state.conversation_id = str(uuid.uuid4())
+        st.session_state["conversation_id"] = str(uuid.uuid4())
     if "last_processed_signature" not in st.session_state:
-        st.session_state.last_processed_signature = ""
+        st.session_state["last_processed_signature"] = ""
     if "last_query_time" not in st.session_state:
-        st.session_state.last_query_time = 0
+        st.session_state["last_query_time"] = 0
     if "latest_recommendations" not in st.session_state:
-        st.session_state.latest_recommendations = []
+        st.session_state["latest_recommendations"] = []
     if "latest_pipeline" not in st.session_state:
-        st.session_state.latest_pipeline = []
+        st.session_state["latest_pipeline"] = []
     if "latest_comparison" not in st.session_state:
-        st.session_state.latest_comparison = None
+        st.session_state["latest_comparison"] = None
     if "latest_user_query" not in st.session_state:
-        st.session_state.latest_user_query = ""
+        st.session_state["latest_user_query"] = ""
     if "latest_reply" not in st.session_state:
-        st.session_state.latest_reply = ""
+        st.session_state["latest_reply"] = ""
     if "request_errors" not in st.session_state:
-        st.session_state.request_errors = []
+        st.session_state["request_errors"] = []
     if "request_in_progress" not in st.session_state:
-        st.session_state.request_in_progress = False
+        st.session_state["request_in_progress"] = False
     if "compare_selection" not in st.session_state:
-        st.session_state.compare_selection = []
+        st.session_state["compare_selection"] = []
     if "comparison_selection" not in st.session_state:
-        st.session_state.comparison_selection = []
+        st.session_state["comparison_selection"] = []
 
 
 @st.cache_data(show_spinner=False)
@@ -259,10 +259,10 @@ def submit_prompt(text: str) -> None:
     prompt = _clean_message_text(text)
     if not prompt:
         return
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.get("messages", []).append({"role": "user", "content": prompt})
     # Part 6: Clear stale results on new prompt
-    st.session_state.latest_recommendations = []
-    st.session_state.latest_comparison = None
+    st.session_state["latest_recommendations"] = []
+    st.session_state["latest_comparison"] = None
     st.rerun()
 
 
@@ -277,7 +277,7 @@ def send_chat_request(messages: List[Dict]) -> Optional[Dict]:
     try:
         start_time = time.time()
         payload = {"messages": [{"role": m["role"], "content": m["content"]} for m in messages]}
-        headers = {"X-Session-ID": st.session_state.conversation_id}
+        headers = {"X-Session-ID": st.session_state.get("conversation_id", str(uuid.uuid4()))}
         
         response = requests.post(
             f"{BACKEND_URL}/chat",
@@ -288,14 +288,14 @@ def send_chat_request(messages: List[Dict]) -> Optional[Dict]:
         
         if response.status_code == 200:
             data = response.json()
-            st.session_state.last_query_time = time.time() - start_time
-            st.session_state.request_errors = []
+            st.session_state["last_query_time"] = time.time() - start_time
+            st.session_state["request_errors"] = []
             return data
         else:
-            st.session_state.request_errors = [f"Backend Error: {response.status_code}"]
+            st.session_state["request_errors"] = ["The recommendation service is temporarily unavailable. Please try again."]
             return None
-    except Exception as e:
-        st.session_state.request_errors = [f"Connection Error: {e}"]
+    except Exception:
+        st.session_state["request_errors"] = ["Unable to reach the recommendation service right now. Please retry."]
         return None
 
 # --- UI COMPONENTS ---
@@ -304,14 +304,14 @@ def render_recommendation_card(rec: Dict[str, Any], index: int, compact: bool = 
     """Render a polished enterprise-grade assessment card."""
     try:
         rec = _normalize_recommendation(rec)
-        name = _sanitize_display_text(rec["name"])
-        category = _sanitize_display_text(rec["category"])
-        insight = _sanitize_display_text(rec["recruiter_insight"])
-        ideal_use_case = _sanitize_display_text(rec["ideal_use_case"])
-        stage = _sanitize_display_text(rec["stage"])
-        duration = _sanitize_display_text(str(rec["duration"]))
-        url = str(rec["url"])
-        confidence = int(rec["confidence"])
+        name = _sanitize_display_text(rec.get("name", "Unknown Assessment"))
+        category = _sanitize_display_text(rec.get("category", "General"))
+        insight = _sanitize_display_text(rec.get("recruiter_insight", "Grounded catalog recommendation."))
+        ideal_use_case = _sanitize_display_text(rec.get("ideal_use_case", "General assessment"))
+        stage = _sanitize_display_text(rec.get("stage", "Screening"))
+        duration = _sanitize_display_text(str(rec.get("duration", "N/A")))
+        url = str(rec.get("url", "#"))
+        confidence = int(rec.get("confidence", 0))
         test_type = str(rec["test_type"])
         type_label = TYPE_LABELS.get(test_type, "Assessment")
         
@@ -356,11 +356,8 @@ def render_recommendation_card(rec: Dict[str, Any], index: int, compact: bool = 
 
             st.link_button("View Assessment Details", url, use_container_width=True)
 
-    except Exception as e:
-        st.warning(f"Could not render card {index}: {e}")
-
-    except Exception as e:
-        st.warning(f"Could not render card {index}: {e}")
+    except Exception:
+        st.warning(f"Card {index} could not be displayed. Try refreshing the conversation.")
 
 
 def render_summary_metrics() -> None:
@@ -445,7 +442,7 @@ def _format_recommendation_table(recommendations: List[Dict[str, Any]]) -> str:
     for idx, rec in enumerate(recommendations, 1):
         r = _normalize_recommendation(rec)
         rows.append(
-            f"| {idx} | {r['name']} | {r['category']} | {r['confidence']}% | {r['best_hiring_stage']} | {r['duration_minutes']} min | {r['ideal_use_case']} |"
+            f"| {idx} | {r.get('name', 'N/A')} | {r.get('category', 'N/A')} | {r.get('confidence', 0)}% | {r.get('best_hiring_stage', 'N/A')} | {r.get('duration_minutes', 'N/A')} min | {r.get('ideal_use_case', 'N/A')} |"
         )
     return "\n".join(rows)
 
@@ -498,8 +495,8 @@ def build_export_report() -> str:
         
         if pipeline.get("gaps"):
             lines.extend(["", "### ⚠️ Hiring Gaps Detected", "The following competency areas require additional evaluation:"])
-            for gap in pipeline["gaps"]:
-                lines.append(f"- {gap.title()}")
+            for gap in pipeline.get("gaps", []):
+                lines.append(f"- {str(gap).title()}")
         lines.append("")
 
     if recommendations:
@@ -514,7 +511,7 @@ def build_export_report() -> str:
         "## Conversation Transcript",
     ])
 
-    for message in st.session_state.messages:
+    for message in st.session_state.get("messages", []):
         role = message.get("role", "user").title()
         content = _clean_message_text(message.get("content", ""))
         lines.append(f"- **{role}:** {content}")
@@ -588,8 +585,8 @@ def render_comparison_section(comparison: Dict[str, Any]) -> None:
         return
 
     summary = comparison.get("summary", "")
-    left = _normalize_recommendation(items[0])
-    right = _normalize_recommendation(items[1])
+    left = _normalize_recommendation(items[0]) if len(items) > 0 else {}
+    right = _normalize_recommendation(items[1]) if len(items) > 1 else {}
 
     st.markdown("### Comparison Intelligence")
     if summary:
@@ -604,12 +601,12 @@ def render_comparison_section(comparison: Dict[str, Any]) -> None:
         render_recommendation_card(right, 2, compact=True)
 
     rows = [
-        ("Best for", left['best_hiring_stage'], right['best_hiring_stage']),
-        ("Category", left['category'], right['category']),
-        ("Confidence", f"{left['confidence']}%", f"{right['confidence']}%"),
-        ("Duration", left['duration'], right['duration']),
-        ("Ideal use case", left['ideal_use_case'], right['ideal_use_case']),
-        ("Recruiter insight", left['recruiter_insight'], right['recruiter_insight']),
+        ("Best for", left.get('best_hiring_stage', 'N/A'), right.get('best_hiring_stage', 'N/A')),
+        ("Category", left.get('category', 'N/A'), right.get('category', 'N/A')),
+        ("Confidence", f"{left.get('confidence', 0)}%", f"{right.get('confidence', 0)}%"),
+        ("Duration", left.get('duration', 'N/A'), right.get('duration', 'N/A')),
+        ("Ideal use case", left.get('ideal_use_case', 'N/A'), right.get('ideal_use_case', 'N/A')),
+        ("Recruiter insight", left.get('recruiter_insight', 'N/A'), right.get('recruiter_insight', 'N/A')),
     ]
 
     comparison_data = {
@@ -621,7 +618,7 @@ def render_comparison_section(comparison: Dict[str, Any]) -> None:
 
 
     if "latest_pipeline" not in st.session_state:
-        st.session_state.latest_pipeline = None
+        st.session_state["latest_pipeline"] = None
 
 def _append_assistant_response(reply: str, recommendations: List[Dict[str, Any]], comparison: Optional[Dict[str, Any]], pipeline: Optional[Dict[str, Any]] = None) -> None:
     assistant_message: Dict[str, Any] = {
@@ -632,14 +629,15 @@ def _append_assistant_response(reply: str, recommendations: List[Dict[str, Any]]
     }
     if comparison:
         assistant_message["comparison"] = comparison
-    st.session_state.messages.append(assistant_message)
+    st.session_state.get("messages", []).append(assistant_message)
 
 
 def _build_comparison_context(reply: str) -> Optional[Dict[str, Any]]:
-    if not st.session_state.latest_recommendations or len(st.session_state.latest_recommendations) < 2:
+    latest_recommendations = st.session_state.get("latest_recommendations", [])
+    if not latest_recommendations or len(latest_recommendations) < 2:
         return None
 
-    items = st.session_state.latest_recommendations[:2]
+    items = latest_recommendations[:2]
     summary = reply.strip() or "Use Assessment A for high-volume screening. Use Assessment B for final-stage leadership evaluation."
     return {
         "summary": summary,
@@ -733,7 +731,7 @@ def apply_styles():
 
 def render_sidebar_export() -> None:
     export_report = build_export_report()
-    has_content = bool(st.session_state.messages)
+    has_content = bool(st.session_state.get("messages", []))
     st.download_button(
         "⬇️ Export recruiter report",
         data=export_report,
@@ -775,8 +773,9 @@ def main():
         st.markdown("---")
         if st.button("🗑️ Clear Conversation", use_container_width=True):
             for key in ["messages", "latest_recommendations", "latest_comparison", "latest_pipeline"]:
-                if key in st.session_state: st.session_state[key] = [] if "messages" in key else None
-            st.session_state.conversation_id = str(uuid.uuid4())
+                if key in st.session_state:
+                    st.session_state[key] = [] if key == "messages" else None
+            st.session_state["conversation_id"] = str(uuid.uuid4())
             st.rerun()
         st.markdown("---")
         render_sidebar_examples()
@@ -785,13 +784,13 @@ def main():
     st.title("Hiring Orchestration Copilot")
     st.markdown("Generate multi-stage assessment pipelines grounded in the SHL catalog.")
 
-    if not st.session_state.messages:
+    if not st.session_state.get("messages", []):
         render_empty_state()
     else:
         render_summary_metrics()
 
     # --- CHAT DISPLAY ---
-    for msg_idx, msg in enumerate(st.session_state.messages):
+    for msg_idx, msg in enumerate(st.session_state.get("messages", [])):
         role, content = msg.get("role", "user"), msg.get("content", "")
         with st.chat_message(role, avatar="🤖" if role == "assistant" else "👤"):
             st.markdown(_sanitize_display_text(content))
@@ -800,7 +799,7 @@ def main():
                 render_pipeline_section(msg["pipeline"])
                 
             if msg.get("recommendations"):
-                enriched = msg["recommendations"]
+                enriched = msg.get("recommendations", [])
                 for idx, rec in enumerate(enriched, 1):
                     render_recommendation_card(rec, idx)
             
@@ -809,18 +808,20 @@ def main():
 
     # --- INPUT ---
     if prompt := st.chat_input("Describe the role (e.g. 'Senior Java Dev' or 'Engineering Manager')..."):
-        st.session_state.latest_user_query = _clean_message_text(prompt)
-        st.session_state.messages.append({"role": "user", "content": st.session_state.latest_user_query})
-        st.session_state.latest_recommendations = []
-        st.session_state.latest_pipeline = None
+        cleaned_prompt = _clean_message_text(prompt)
+        st.session_state["latest_user_query"] = cleaned_prompt
+        st.session_state.get("messages", []).append({"role": "user", "content": cleaned_prompt})
+        st.session_state["latest_recommendations"] = []
+        st.session_state["latest_pipeline"] = None
         st.rerun()
 
     # --- PROCESSING ---
-    if _is_assistant_pending(st.session_state.messages):
+    pending_messages = st.session_state.get("messages", [])
+    if _is_assistant_pending(pending_messages):
         with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("Orchestrating hiring pipeline..."):
                 try:
-                    response = send_chat_request(st.session_state.messages)
+                    response = send_chat_request(pending_messages)
                     if response:
                         reply = str(response.get("reply", ""))
                         recs = response.get("recommendations", []) or []
@@ -829,17 +830,17 @@ def main():
                         st.markdown(reply)
                         if pipeline:
                             render_pipeline_section(pipeline)
-                            st.session_state.latest_pipeline = pipeline
+                            st.session_state["latest_pipeline"] = pipeline
                         
                         if recs:
-                            st.session_state.latest_recommendations = recs
+                            st.session_state["latest_recommendations"] = recs
                             for e_idx, rec in enumerate(recs, 1):
                                 render_recommendation_card(rec, e_idx)
                         
                         _append_assistant_response(reply, recs, None, pipeline)
                         st.rerun()
-                except Exception as e:
-                    st.error(f"Orchestration failed: {e}")
+                except Exception:
+                    st.error("The assistant hit a temporary issue. Please retry the same request.")
 
 if __name__ == "__main__":
     main()
