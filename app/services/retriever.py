@@ -61,10 +61,18 @@ class HybridRetriever:
         role_profile = self.taxonomy.get_role_intelligence_profile(role_domain)
         anchor_terms = [term.lower() for term in role_profile.get("anchor_terms", [])]
 
+        # 2b. Global Technical Filter (Phase 11)
+        role_text = (context.role or "").lower()
+        is_tech = any(w in role_text for w in ["python", "java", "backend", "engineer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect"])
+        blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections", "agency manager"]
+
         scored_results = []
         for assessment in all_assessments:
-            score = 0.0
             name_low = assessment.name.lower()
+            if is_tech and any(bw in name_low for bw in blacklist):
+                continue
+                
+            score = 0.0
             desc_low = assessment.description.lower()
             metadata_str = (name_low + " " + desc_low).lower()
             
@@ -110,6 +118,47 @@ class HybridRetriever:
 
         # Sort by score
         scored_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
+        
+        # 4. EMPTY RESULT FALLBACK (Phase 11)
+        if not scored_results:
+            logger.info("RETRIEVER: No results found, triggered technical fallback")
+            role_text = (context.role or "").lower()
+            is_tech = any(w in role_text for w in ["python", "java", "backend", "engineer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect"])
+            
+            # Blacklist for technical fallbacks
+            blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections"]
+            
+            if is_tech:
+                # Fallback to top technical assessments
+                for a in all_assessments:
+                    name_low = a.name.lower()
+                    if any(w in name_low for w in ["java", "python", "software", "coding", "technical", "algorithm", "logic", "programming", "developer"]):
+                        if not any(bw in name_low for bw in blacklist):
+                            scored_results.append({
+                                "id": a.id,
+                                "name": a.name,
+                                "url": a.url,
+                                "test_type": a.test_type.value,
+                                "description": a.description,
+                                "hybrid_score": 0.5
+                            })
+                            if len(scored_results) >= top_k: break
+            
+            # Generic but safe fallback if still empty (still filtering blacklist)
+            if not scored_results:
+                for a in all_assessments:
+                    name_low = a.name.lower()
+                    if not any(bw in name_low for bw in blacklist):
+                        scored_results.append({
+                            "id": a.id,
+                            "name": a.name,
+                            "url": a.url,
+                            "test_type": a.test_type.value,
+                            "description": a.description,
+                            "hybrid_score": 0.1
+                        })
+                        if len(scored_results) >= top_k: break
+
         return scored_results[:top_k]
 
 

@@ -11,7 +11,10 @@ import time
 import traceback
 import re
 
-from app.models.response import ChatRequest, ChatResponse, Message, Recommendation
+from app.models.response import (
+    ChatRequest, ChatResponse, Message, Recommendation,
+    HiringPipelineModel, PipelineStageModel, FatigueReportModel, SignalReportModel
+)
 from app.agents.decision_engine import AgentAction
 from app.config import settings
 from app.logger_config.logger import get_logger
@@ -117,8 +120,29 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         turn_limit_reached = turn_count >= settings.max_conversation_turns
         conversation_complete = turn_limit_reached
 
+        logger.info("CHAT STAGE: Decision Engine")
         decision = services.decision_engine.decide(messages)
+        
+        logger.info("CHAT STAGE: Conversation Analyzer")
         context, _ = services.decision_engine.analyzer.analyze(messages)
+        
+        # 5. Domain Injection Logic (Phase 11)
+        role_text = (context.role or "").lower()
+        if any(w in role_text for w in ["python", "backend", "fastapi", "django"]):
+            context.domain = "backend_engineering"
+            logger.info("DOMAIN INJECTION: backend_engineering triggered")
+        elif any(w in role_text for w in ["kubernetes", "terraform", "devops", "sre"]):
+            context.domain = "cloud_devops"
+            logger.info("DOMAIN INJECTION: cloud_devops triggered")
+        elif any(w in role_text for w in ["engineering manager", "stakeholder", "leadership", "people manager"]):
+            context.domain = "leadership"
+            logger.info("DOMAIN INJECTION: leadership triggered")
+        elif any(w in role_text for w in ["data scientist", "sql", "ml", "machine learning"]):
+            context.domain = "data_science"
+            logger.info("DOMAIN INJECTION: data_science triggered")
+        elif any(w in role_text for w in ["java", "spring boot"]):
+            context.domain = "backend_engineering"
+            logger.info("DOMAIN INJECTION: java/backend_engineering triggered")
         
         turn_count = sum(1 for m in messages if m["role"] == "assistant")
         logger.info("CHAT: action=%s turns=%s", decision.action, turn_count)
@@ -134,11 +158,15 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             return ChatResponse(reply=reply, recommendations=[], end_of_conversation=False)
 
         if decision.action in {AgentAction.RECOMMEND, AgentAction.REFINE}:
+            logger.info("CHAT STAGE: Retriever")
             query = f"{context.role} {context.seniority} {' '.join(context.tech_stack)}"
             retrieved = services.retriever.retrieve(query, context, top_k=20)
+            logger.info(f"RETRIEVER: Found {len(retrieved)} candidates")
             
             # Enterprise Hardened Ranker
+            logger.info("CHAT STAGE: Ranker")
             ranked_results = services.ranker.rank(retrieved, context, catalog, top_k=10)
+            logger.info(f"RANKER: Found {len(ranked_results)} results")
 
             recommendations = []
             if ranked_results:
@@ -169,28 +197,29 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                         domain=", ".join(getattr(res.assessment, "engineering_domains", []))
                     ))
                 
-                # 2. Adaptive Orchestration (Phase 6)
+                logger.info("CHAT STAGE: Adaptive Orchestrator")
                 optimized = services.adaptive_orchestrator.orchestrate(ranked_results, context, catalog)
                 
                 pipeline_model = HiringPipelineModel(
                     stages=[PipelineStageModel(
-                        name=s["name"],
-                        description=f"Assessment focuses on {s['type']} validation.",
-                        assessments=s["assessments"],
-                        estimated_duration=s["duration"],
-                        competencies_covered=[] # Simplified for now
-                    ) for s in optimized.stages],
-                    fatigue=FatigueReportModel(**optimized.fatigue_report),
-                    signal=SignalReportModel(**optimized.signal_report),
-                    tradeoff_analysis=optimized.tradeoff_analysis,
-                    strategic_guidance=optimized.strategic_advice
+                        name=s.get("name", "Assessment Stage"),
+                        description=s.get("description", "Assessment focuses on technical validation."),
+                        assessments=s.get("assessments", []),
+                        estimated_duration=s.get("duration", 30),
+                        competencies_covered=s.get("competencies_covered", [])
+                    ) for s in getattr(optimized, "stages", [])],
+                    fatigue=FatigueReportModel(**getattr(optimized, "fatigue_report", {})),
+                    signal=SignalReportModel(**getattr(optimized, "signal_report", {})),
+                    tradeoff_analysis=getattr(optimized, "tradeoff_analysis", "Balanced approach"),
+                    strategic_guidance=getattr(optimized, "strategic_advice", "No strategic advice provided.")
                 )
 
                 # 3. Log Interaction (Phase 7)
+                logger.info("CHAT STAGE: Orchestration Analytics")
                 services.orchestration_analytics.log_interaction(
                     session_id=str(getattr(request_obj.state, "session_id", "default")),
                     action="orchestrate",
-                    data={"query": query_text, "pipeline_stages": len(optimized.stages)}
+                    data={"query": query, "pipeline_stages": len(getattr(optimized, "stages", []))}
                 )
 
                 reply = f"I've generated an adaptive hiring pipeline for {context.role}. {optimized.strategic_advice}"
@@ -198,6 +227,9 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                 reply = "I couldn't find any assessments that match those requirements."
                 pipeline_model = None
 
+            logger.info("FINAL RECOMMENDATIONS: %s", [r.name for r in recommendations])
+            print(f"FINAL RECOMMENDATIONS: {[r.name for r in recommendations]}")
+            
             return ChatResponse(
                 reply=reply,
                 recommendations=recommendations,
@@ -235,32 +267,12 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
 
     except Exception as e:
         logger.exception("FATAL ERROR IN CHAT PIPELINE")
-        try:
-            # Emergency fallback: Return top 3 generic technical assessments
-            catalog = services.catalog_loader.get_all()
-            generic_recs = []
-            for a in catalog[:3]:
-                generic_recs.append(Recommendation(
-                    name=a.name,
-                    url=a.url,
-                    test_type=a.test_type.value,
-                    subtitle="General Assessment",
-                    confidence=85,
-                    category="general",
-                    stage="Screening",
-                    duration="30 min",
-                    recruiter_insight="I've selected this broadly applicable assessment as a starting point while I refine my deep-retrieval logic.",
-                    ideal_use_case=a.description[:100] + "..."
-                ))
-            
-            return ChatResponse(
-                reply="I'm experiencing a temporary intelligence hiccup, but here are 3 broadly applicable assessments from the SHL catalog to get you started.",
-                recommendations=generic_recs,
-                end_of_conversation=False
-            )
-        except Exception:
-            return ChatResponse(
-                reply="I specialize in recommending SHL assessments and cannot assist with unrelated topics.",
-                recommendations=[],
-                end_of_conversation=False
-            )
+        error_trace = traceback.format_exc()
+        
+        # 9. DISABLING EMERGENCY FALLBACK MASKING FOR DEBUGGING
+        return ChatResponse(
+            reply=f"PIPELINE ERROR: {str(e)}",
+            detail=error_trace,
+            recommendations=[],
+            end_of_conversation=False
+        )

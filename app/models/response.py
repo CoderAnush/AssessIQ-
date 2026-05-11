@@ -82,6 +82,7 @@ class ChatResponse(BaseModel):
     reply: str = Field(..., description="Assistant response")
     recommendations: List[Recommendation] = Field(default_factory=list)
     pipeline: Optional[HiringPipelineModel] = None # Phase 1
+    detail: Optional[str] = Field(None, description="Detailed error or debug information")
     end_of_conversation: bool = Field(default=False)
 
     class Config:

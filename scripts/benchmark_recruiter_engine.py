@@ -80,7 +80,8 @@ def run_benchmark():
         retrieved = retriever.retrieve(scenario["query"], scenario["context"], top_k=20)
         
         # 2. Rank
-        ranked = ranker.rank(retrieved, scenario["context"], catalog, mode=scenario["context"].workflow_mode, top_k=5)
+        ranked = ranker.rank(retrieved, scenario["context"], catalog, top_k=5)
+        print(f"  -> Top Results: {[r.assessment.name for r in ranked]}")
         
         # 3. Evaluate
         metrics = evaluate_results(ranked, scenario)

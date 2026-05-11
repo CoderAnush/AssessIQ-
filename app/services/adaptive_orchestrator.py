@@ -71,7 +71,7 @@ class AdaptiveOrchestrator:
         selected = []
         covered_skills = set()
         total_time = 0
-        limit_time = 180 if context.workflow_mode == "quick_screening" else 300
+        limit_time = 180 if getattr(context, "workflow_mode", None) == "quick_screening" else 300
         
         for res in ranked:
             assess = res.assessment
@@ -122,7 +122,7 @@ class AdaptiveOrchestrator:
 
     def _generate_strategic_advice(self, signal: Dict, fatigue: Dict, context: HiringContext) -> str:
         advice = []
-        if signal["coverage"]["leadership"] < 0.3 and context.leadership_needs:
+        if signal.get("coverage", {}).get("leadership", 0.0) < 0.3 and getattr(context, "leadership_needs", False):
             advice.append("⚠️ Strategic risk: Current pipeline lacks leadership signal.")
         if fatigue["risk_level"] == "HIGH":
             advice.append("💡 Tip: Consider splitting the technical evaluations to reduce candidate dropout.")

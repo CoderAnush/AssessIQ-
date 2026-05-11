@@ -79,36 +79,75 @@ class EnterpriseRanker:
 
             explanation = self._generate_grounded_insight(assess, context)
             
+            tech_stack = getattr(context, "tech_stack", set()) or set()
+            assess_skills = set(getattr(assess, "skills", []))
+            matched_skills = list(tech_stack.intersection(assess_skills)) if tech_stack else []
+
             scored.append(RankedAssessment(
                 assessment=assess,
                 factors=factors,
                 final_score=final_score,
                 explanation=explanation,
-                matched_skills=list(context.tech_stack.intersection(set(getattr(assess, "skills", [])))),
+                matched_skills=matched_skills,
                 inferred_skills=[]
             ))
             
-        return sorted(scored, key=lambda x: x.final_score, reverse=True)[:top_k]
+        ranked = sorted(scored, key=lambda x: x.final_score, reverse=True)[:top_k]
+        
+        # 6. GUARANTEE MINIMUM RESULTS (Phase 11)
+        if not ranked and catalog:
+            logger.info("RANKER: No results, returning top technical catalog items")
+            role_text = getattr(context, "role", "").lower()
+            is_tech = any(w in role_text for w in ["python", "java", "backend", "engineer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect"])
+            
+            fallback_candidates = []
+            blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections"]
+            
+            for assess in catalog.values():
+                name_low = assess.name.lower()
+                if any(bw in name_low for bw in blacklist): continue
+                
+                score = 0.5
+                if is_tech:
+                    if any(w in name_low for w in ["java", "python", "software", "coding", "technical", "algorithm", "logic", "programming", "developer"]):
+                        score = 0.7
+                    else:
+                        score = 0.3
+                
+                fallback_candidates.append(RankedAssessment(
+                    assessment=assess,
+                    factors=RankingFactors(),
+                    final_score=score,
+                    explanation="Catalog-grounded recommendation for general recruiter screening."
+                ))
+                if len(fallback_candidates) >= 5: break
+            
+            ranked = sorted(fallback_candidates, key=lambda x: x.final_score, reverse=True)[:3]
+        
+        return ranked
 
     def _calculate_factors(self, assess: Any, context: Any, query_emb: Any) -> RankingFactors:
         # 1. Domain Alignment
         assess_domain = self._infer_domain(assess)
-        domain_penalty = 1.0 if context.domain != "general" and assess_domain != "general" and context.domain != assess_domain else 0.0
+        context_domain = getattr(context, "domain", "general")
+        domain_penalty = 1.0 if context_domain != "general" and assess_domain != "general" and context_domain != assess_domain else 0.0
         
         # 2. Skill Overlap
         assess_skills = set(getattr(assess, "skills", [])) | set(getattr(assess, "inferred_skills", []))
-        matched = assess_skills.intersection(context.tech_stack)
-        keyword_sim = len(matched) / max(1, len(context.tech_stack))
+        tech_stack = getattr(context, "tech_stack", set()) or set()
+        matched = assess_skills.intersection(tech_stack)
+        keyword_sim = len(matched) / max(1, len(tech_stack))
         
         # 3. Graph Relevance
         graph_score = 0.0
-        for s in context.tech_stack:
+        for s in tech_stack:
             for askill in assess_skills:
                 graph_score = max(graph_score, self.skill_graph.get_related_weight(s, askill))
 
         # 4. Role Boost
         role_boost = 0.0
-        if context.role and context.role.lower() in assess.name.lower():
+        role = getattr(context, "role", "") or ""
+        if role and role.lower() in assess.name.lower():
             role_boost = self.ROLE_SPECIFICITY_BOOST
         
         # 5. Embedding Similarity (SKIPPED in Hotfix)
@@ -150,33 +189,34 @@ class EnterpriseRanker:
         """Phase 4 & 5: Grounded Recruiter Insights with Adjacency Reasoning."""
         domain = self._infer_domain(assess)
         assess_skills = set(getattr(assess, "skills", [])) | set(getattr(assess, "inferred_skills", []))
-        matched = list(context.tech_stack.intersection(assess_skills))
+        tech_stack = getattr(context, "tech_stack", set()) or set()
+        matched = list(tech_stack.intersection(assess_skills))
         
         # Adaptive Fallback Reasoning (Phase 4)
         is_adjacent = False
-        if context.tech_stack and not matched:
+        if tech_stack and not matched:
             is_adjacent = True
             
-        role_desc = context.role or "this role"
+        role_desc = getattr(context, "role", "this role") or "this role"
         
         if domain == "backend engineering":
             if is_adjacent:
-                target_tech = list(context.tech_stack)[0] if context.tech_stack else "modern backend"
+                target_tech = list(tech_stack)[0] if tech_stack else "modern backend"
                 return f"While not directly testing {target_tech}, this assessment evaluates the core systems reasoning and logic critical for high-performance {role_desc} environments."
             skill_part = f" for {', '.join(matched)}" if matched else ""
             return f"Evaluates core backend API problem-solving and technical proficiency{skill_part} for production engineering roles."
             
         if domain == "devops":
-            if "kubernetes" in context.tech_stack or "terraform" in context.tech_stack:
+            if "kubernetes" in tech_stack or "terraform" in tech_stack:
                 return f"Evaluates infrastructure automation and systems reliability competencies relevant for Kubernetes and cloud platform teams."
             return f"Measures infrastructure-as-code and cloud reliability proficiency required for {role_desc} environments."
-
+ 
         if domain == "data science":
-            if any(s in context.tech_stack for s in ["pytorch", "ml", "ai"]):
+            if any(s in tech_stack for s in ["pytorch", "ml", "ai"]):
                 return f"Measures analytical reasoning and data interpretation skills important for AI/ML engineering workflows."
             return f"Assesses statistical modeling and data-driven decision making for {role_desc}."
-
+ 
         if domain == "management":
-            return f"Useful for screening {context.role} who need to lead teams and collaborate cross-functionally with stakeholders."
+            return f"Useful for screening {role_desc} who need to lead teams and collaborate cross-functionally with stakeholders."
             
-        return f"A grounded SHL assessment for {context.role} that validates key competencies in the {domain} domain."
+        return f"A grounded SHL assessment for {role_desc} that validates key competencies in the {domain} domain."
