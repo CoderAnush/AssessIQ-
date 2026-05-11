@@ -37,13 +37,15 @@ class HiringContext:
 
     def get_missing_slots(self) -> List[str]:
         required = ["role", "tech_stack"]
-        # Tech roles need tech stack, management needs leadership signal
-        if self.domain in ["management", "business"]:
+        # Some domains don't need explicit tech stack (like management, frontend, data science)
+        if self.domain in ["management", "business", "frontend engineering", "data science", "qa"]:
             required = ["role"]
         
         missing = []
         if not self.role: missing.append("role")
-        if self.domain == "backend engineering" and not self.tech_stack: missing.append("tech_stack")
+        # Only backend engineering roles need explicit tech stack clarification
+        if self.domain == "backend engineering" and not self.tech_stack: 
+            missing.append("tech_stack")
         
         # Don't ask for things we already asked or inferred
         return [s for s in missing if s not in self.asked_slots and s not in self.inferred_slots]
@@ -123,36 +125,68 @@ class ConversationAnalyzer:
     def _extract_role(self, text: str) -> Optional[str]:
         text_lower = text.lower()
         
-        # PRIORITY 1: Specific compound roles (most specific)
+        # PRIORITY 1: Most specific compound roles (exact matches first)
         compound_roles = [
+            # Backend/Fullstack
             "python backend", "java backend", "backend engineer", "software engineer",
-            "qa automation", "product manager", "engineering manager", 
-            "data scientist", "ml engineer", "platform engineer", "ai architect",
-            "systems engineer", "embedded developer", "data engineer",
-            "java developer", "python developer", "fullstack developer"
+            "fullstack developer", "full stack developer", "java developer", "python developer",
+            # Frontend specific
+            "react developer", "angular developer", "vue developer", "frontend developer",
+            "frontend engineer", "ui developer", "web developer",
+            # Data/ML
+            "data scientist", "machine learning engineer", "ml engineer", "ml ops",
+            "data engineer", "ai engineer", "ai architect", "data analyst",
+            "platform engineer", "systems engineer", "embedded developer",
+            # QA/DevOps
+            "qa automation", "sdet", "test automation", "qa engineer",
+            "devops engineer", "sre", "site reliability", "cloud engineer",
+            # Management
+            "engineering manager", "product manager", "tech lead", "technical lead",
+            "cto", "chief technology", "vp engineering", "head of engineering",
+            # Generic compound
+            "sales manager", "account manager", "customer support", "helpdesk"
         ]
         for r in compound_roles:
             if r in text_lower: 
                 return r
         
-        # PRIORITY 2: Core technology keywords (language/framework first)
-        tech_keywords = ["java", "python", "react", "angular", "nodejs", "devops", "cloud"]
-        for tech in tech_keywords:
-            if tech in text_lower:
-                # Return appropriate role based on context
-                if "backend" in text_lower or tech in ["java", "python"]:
-                    return f"{tech} backend" if tech in ["java", "python"] else tech
-                return tech
+        # PRIORITY 2: Technology keywords with context
+        if "react" in text_lower or "angular" in text_lower or "vue" in text_lower:
+            return "frontend"
+        if "frontend" in text_lower or "ui" in text_lower or "web" in text_lower:
+            return "frontend"
+        if "machine learning" in text_lower or " ml " in text_lower or "data science" in text_lower:
+            return "data scientist"
+        if "ai " in text_lower and "artificial intelligence" in text_lower:
+            return "ai engineer"
+        if "java" in text_lower and "javascript" not in text_lower:
+            return "java backend"
+        if "python" in text_lower:
+            return "python backend"
+        if "devops" in text_lower or "sre" in text_lower:
+            return "devops"
+        if "cloud" in text_lower:
+            return "cloud"
+        if "kubernetes" in text_lower or "docker" in text_lower or "terraform" in text_lower:
+            return "devops"
         
-        # PRIORITY 3: Generic roles (fallback)
-        generic_roles = [
-            "frontend", "fullstack", "backend", "qa", "sdet", "sales", 
-            "customer support", "support", "executive", "architect", "manager",
+        # PRIORITY 3: Standalone role keywords (sorted by priority)
+        standalone_roles = [
+            "fullstack", "backend", "frontend", "qa", "sdet", "test",
+            "data scientist", "data engineer", "analyst",
+            "manager", "architect", "lead", "cto",
+            "sales", "support", "executive",
             "sre", "engineer", "developer"
         ]
-        for r in generic_roles:
+        for r in standalone_roles:
             if r in text_lower: 
                 return r
+        
+        # VAGUE: Too generic - return None to trigger clarification
+        vague_terms = ["programmer", "coder", "hack", "computer"]
+        for v in vague_terms:
+            if v in text_lower:
+                return None
         
         return None
 
@@ -185,7 +219,7 @@ class ConversationAnalyzer:
             return "frontend engineering"
         if any(w in combined for w in ["qa", "test", "selenium", "cypress", "sdet", "automation", "playwright"]):
             return "qa automation"
-        if any(w in combined for w in ["manager", "lead", "leadership", "people", "strategy", "executive", "stakeholder"]):
+        if any(w in combined for w in ["manager", "tech lead", "technical lead", "leadership", "people", "strategy", "executive", "stakeholder", "cto", "chief technology", "vp", "director", "head of"]):
             return "management"
         if any(w in combined for w in ["sales", "negotiation", "support", "customer", "business"]):
             return "business"
