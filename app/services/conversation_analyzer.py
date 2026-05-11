@@ -122,12 +122,16 @@ class ConversationAnalyzer:
 
     def _extract_role(self, text: str) -> Optional[str]:
         roles = [
-            "python backend", "java backend", "frontend", "fullstack", 
-            "devops", "cloud", "qa automation", "sdet", "product manager", 
-            "engineering manager", "data scientist", "ml engineer", "sales", 
-            "customer support", "executive", "architect", "manager",
-            "platform engineer", "sre", "data engineer", "ai architect",
-            "systems engineer", "embedded developer"
+            # Specific compound roles (longer first for priority)
+            "python backend", "java backend", "backend engineer", "software engineer",
+            "qa automation", "product manager", "engineering manager", 
+            "data scientist", "ml engineer", "platform engineer", "ai architect",
+            "systems engineer", "embedded developer", "data engineer",
+            # Standalone keywords (shorter)
+            "java", "python", "backend", "frontend", "fullstack", 
+            "devops", "cloud", "qa", "sdet", "sales", 
+            "customer support", "support", "executive", "architect", "manager",
+            "sre", "engineer", "developer"
         ]
         # Sort by length to match longer specific roles first
         for r in sorted(roles, key=len, reverse=True):
