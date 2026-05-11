@@ -112,7 +112,8 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     recruiter_insight=str(res.explanation),
                     ideal_use_case=str(res.assessment.description[:120]) + "...",
                     domain=str(assess_domain),
-                    matched_skills=list(res.matched_skills)
+                    matched_skills=list(res.matched_skills),
+                    recruiter_signal=str(getattr(res, "recruiter_signal", "Core Technical Signal"))
                 ))
             
             if not recommendations:
@@ -150,7 +151,8 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                         recruiter_insight=str(res.explanation),
                         ideal_use_case=str(res.assessment.description[:120]) + "...",
                         domain=str(assess_domain),
-                        matched_skills=list(res.matched_skills)
+                        matched_skills=list(res.matched_skills),
+                        recruiter_signal=str(getattr(res, "recruiter_signal", "Core Technical Signal"))
                     ))
 
             # HARD RECALL PATCH for DATA_AI sparse catalogs:
@@ -219,7 +221,8 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                         recruiter_insight=recruiter_insight if is_expansion else "Related Competency Match: Domain-safe fallback recall.",
                         ideal_use_case=str(assess_obj.description[:120]) + "...",
                         domain=str(assess_domain),
-                        matched_skills=list(getattr(assess_obj, "skills", [])[:5])
+                        matched_skills=list(getattr(assess_obj, "skills", [])[:5]),
+                        recruiter_signal="Expansion Signal"
                     ))
 
             # 3. ORCHESTRATION PHASE

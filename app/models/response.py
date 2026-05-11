@@ -60,6 +60,7 @@ class Recommendation(BaseModel):
     ideal_use_case: str = Field("", description="Ideal scenario for use")
     domain: str = Field("", description="Detected engineering domain")
     matched_skills: List[str] = Field(default_factory=list, description="Directly matching skills")
+    recruiter_signal: str = Field("", description="Dynamic hiring signal tag")
 
     class Config:
         extra = "ignore"

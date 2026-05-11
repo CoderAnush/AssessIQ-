@@ -53,7 +53,8 @@ def _normalize_recommendation(rec: Dict[str, Any]) -> Dict[str, Any]:
             "url": str(rec.get("url", "#")),
             "domain": sanitize_text(rec.get("domain"), "General").title(),
             "test_type": str(rec.get("test_type", "K")),
-            "matched_skills": rec.get("matched_skills") or []
+            "matched_skills": rec.get("matched_skills") or [],
+            "recruiter_signal": sanitize_text(rec.get("recruiter_signal"), "Core Technical Signal")
         }
         return n
     except Exception:
@@ -91,21 +92,43 @@ def render_hero_landing():
 
 def render_recommendation_card(rec: Dict[str, Any], index: int):
     n = _normalize_recommendation(rec)
-    conf_color = "#10b981" if n['confidence'] >= 90 else "#f59e0b" if n['confidence'] >= 80 else "#ef4444"
+    
+    if n['confidence'] >= 90:
+        conf_tier = "Elite Match"
+        conf_color = "#10b981"
+    elif n['confidence'] >= 75:
+        conf_tier = "Strong Match"
+        conf_color = "#3b82f6"
+    elif n['confidence'] >= 60:
+        conf_tier = "Relevant Match"
+        conf_color = "#f59e0b"
+    else:
+        conf_tier = "Fallback Match"
+        conf_color = "#ef4444"
+
     skills = "".join([f'<span style="background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700; margin-right:4px; border:1px solid #e2e8f0;">{s}</span>' for s in n['matched_skills'][:3]])
     
-    rel_badge = ""
-    if "Related Competency" in n['insight']:
-        rel_badge = '<div style="margin-top: 8px;"><span style="background: rgba(124, 58, 237, 0.1); color: #7c3aed; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; border: 1px solid rgba(124, 58, 237, 0.2);">RELATED COMPETENCY</span></div>'
+    if "Related Competency" in n['insight'] or "Expanded Match" in n['insight']:
+        match_badge = '<span style="background: rgba(124, 58, 237, 0.1); color: #7c3aed; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; border: 1px solid rgba(124, 58, 237, 0.2);">EXPANDED MATCH</span>'
+    else:
+        match_badge = '<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.2);">EXACT MATCH</span>'
 
-    card_html = f"""<div style="background:white; border-radius:1rem; border:1px solid #e2e8f0; padding:1.25rem; margin-bottom:1rem; min-height:420px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+    signal_badge = f'<div style="margin-top: 8px;"><span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; border: 1px solid rgba(59, 130, 246, 0.2);">{n["recruiter_signal"].upper()}</span></div>'
+
+    card_html = f"""<div style="background:white; border-radius:1rem; border:1px solid #e2e8f0; padding:1.25rem; margin-bottom:1rem; min-height:440px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
 <div>
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-<span style="background:#eff6ff; color:#2563eb; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:800; text-transform:uppercase;">{n['domain']}</span>
-<span style="color:{conf_color}; font-weight:900; font-size:1.2rem;">{n['confidence']}%</span>
+<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem;">
+<div style="display:flex; flex-direction:column; gap:4px;">
+<span style="background:#eff6ff; color:#2563eb; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:800; text-transform:uppercase; width:fit-content;">{n['domain']}</span>
+{match_badge}
+</div>
+<div style="text-align: right;">
+<span style="color:{conf_color}; font-weight:900; font-size:1.2rem; display:block; line-height:1;">{n['confidence']}%</span>
+<span style="color:{conf_color}; font-size:0.6rem; font-weight:800; text-transform:uppercase;">{conf_tier}</span>
+</div>
 </div>
 <h4 style="margin:0; font-size:1.05rem; color:#0f172a; line-height:1.2;">{index}. {n['name']}</h4>
-{rel_badge}
+{signal_badge}
 <div style="display:flex; gap:4px; margin-top:8px; flex-wrap:wrap;">{skills}</div>
 <div style="background:#f8fafc; border-radius:0.5rem; padding:0.75rem; margin-top:1rem; border:1px solid #f1f5f9;">
 <p style="margin:0; font-size:0.8rem; color:#475569; line-height:1.4;"><b>Recruiter Reasoning:</b><br/>{n['insight']}</p>

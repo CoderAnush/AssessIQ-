@@ -60,10 +60,33 @@ class HybridRetriever:
             # Explicit tech boosts
             if explicit_python and "python" in metadata_str: score += 0.5
             if explicit_java and "java" in metadata_str: score += 0.5
-            if explicit_frontend and any(w in metadata_str for w in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web"]):
+            if explicit_devops and any(w in metadata_str for w in ["devops", "kubernetes", "terraform", "cloud", "ci/cd", "infrastructure"]):
                 score += 0.5
-            if explicit_devops and any(w in metadata_str for w in ["devops", "kubernetes", "terraform", "cloud"]):
-                score += 0.5
+                
+            # Framework Specialization Boost & Penalties (React/Angular/Vue)
+            is_react_query = any(w in query_low for w in ["react", "next.js", "nextjs", "redux", "typescript frontend"])
+            is_angular_query = "angular" in query_low
+            is_vue_query = "vue" in query_low
+            
+            if is_react_query:
+                if any(w in metadata_str for w in ["react", "next.js", "nextjs", "typescript", "ui architecture", "frontend systems", "modern frontend"]):
+                    score += 0.8
+                # Penalize legacy or generic JS
+                if any(w in metadata_str for w in ["angularjs", "angular", "legacy"]):
+                    score -= 1.0
+                if "javascript" in metadata_str and not any(w in metadata_str for w in ["react", "typescript", "ui", "frontend"]):
+                    score -= 0.5
+            elif is_angular_query:
+                if any(w in metadata_str for w in ["angular", "rxjs", "frontend architecture"]):
+                    score += 0.8
+                if "react" in metadata_str and "angular" not in metadata_str:
+                    score -= 1.0
+            elif is_vue_query:
+                if any(w in metadata_str for w in ["vue", "frontend component architecture"]):
+                    score += 0.8
+            elif explicit_frontend:
+                if any(w in metadata_str for w in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web"]):
+                    score += 0.5
             
             # Skill Graph Expansion
             tech_stack = getattr(context, "tech_stack", set())
@@ -130,6 +153,7 @@ class HybridRetriever:
                 Domain.BACKEND: "backend",
                 Domain.FRONTEND: "frontend",
                 Domain.DATA_AI: "data_ai",
+                Domain.DEVOPS: "devops",
             }
             chain_key = chain_key_map.get(query_domain, None)
 
@@ -159,6 +183,12 @@ class HybridRetriever:
                     "natural language", "natural language processing",
                     "word embeddings", "tokenization", "sequence modeling",
                     "text generation", "sequence-to-sequence"
+                ],
+                Domain.DEVOPS: [
+                    "kubernetes", "docker", "terraform", "aws", "ci/cd", "linux", "networking",
+                    "infrastructure", "cloud computing", "sre", "observability", "deployment systems",
+                    "container orchestration", "infrastructure as code", "cloud systems", "cloud operations",
+                    "deployment engineering"
                 ],
             }
             if query_domain in domain_foundations:

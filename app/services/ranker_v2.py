@@ -25,6 +25,7 @@ class RankedAssessment:
     final_score: float
     explanation: str
     matched_skills: List[str] = field(default_factory=list)
+    recruiter_signal: str = "Core Technical Signal"
 
 class EnterpriseRanker:
     """
@@ -151,26 +152,25 @@ class EnterpriseRanker:
                 diversity_bonus=diversity_bonus
             )
 
-            explanation = self._generate_grounded_insight(assess, query_classification, cand["matched"])
+            explanation = self._generate_grounded_insight(assess, query_classification, cand["matched"], is_expansion)
+            recruiter_signal = self._determine_recruiter_signal(assess, query_domain, is_expansion)
             
             # Phase 4: Handle Fallback/Expansion confidence decay (larger decay, keep visible)
-            is_expansion = cand.get("is_expansion", False)
-            expansion_label = cand.get("expansion_label", None)
-
             if is_expansion:
                 # Expanded/related items should remain visible but clearly lower confidence.
                 final_score = final_score * 0.60
                 if expansion_label:
                     explanation = f"{expansion_label}: {explanation}"
                 else:
-                    explanation = f"Related Competency: {explanation}"
+                    explanation = f"Related Competency Match: {explanation}"
 
             final_ranked.append(RankedAssessment(
                 assessment=assess,
                 factors=factors,
                 final_score=final_score,
                 explanation=explanation,
-                matched_skills=list(cand["matched"])
+                matched_skills=list(cand["matched"]),
+                recruiter_signal=recruiter_signal
             ))
             
             # Optimization: Stop once we have 15 good candidates to process for orchestration
@@ -180,9 +180,42 @@ class EnterpriseRanker:
         # Sort and return only the top K.
         return sorted(final_ranked, key=lambda x: x.final_score, reverse=True)[:top_k]
 
-    def _generate_grounded_insight(self, assess: Any, query_class: Dict, matched_skills: Set[str]) -> str:
+    def _generate_grounded_insight(self, assess: Any, query_class: Dict, matched_skills: Set[str], is_expansion: bool) -> str:
         primary_domain = getattr(assess, "primary_domain", Domain.GENERAL)
+        query_domain = query_class.get("primaryDomain", Domain.GENERAL)
+        
+        if query_domain == Domain.BACKEND:
+            base = "Recommended because it validates API architecture, backend systems, and distributed service design relevant to the engineering role"
+        elif query_domain == Domain.FRONTEND:
+            base = "Recommended because it evaluates modern frontend architecture, JavaScript competency, and UI engineering fundamentals"
+        elif query_domain == Domain.DATA_AI:
+            base = "Recommended because it measures machine learning foundations, NLP reasoning, and data science competency overlap"
+        elif query_domain == Domain.DEVOPS:
+            base = "Recommended because it validates infrastructure reliability, cloud deployment workflows, and Kubernetes-oriented operational skills"
+        else:
+            base = f"Recommended because it evaluates core {primary_domain.value.lower().replace('_', ' ')} principles essential for this role"
+
+        if is_expansion:
+            base = f"While an exact match was unavailable, this recommendation strongly aligns with the required competencies. {base}"
+
         if matched_skills:
             skills_str = ", ".join(list(matched_skills)[:3])
-            return f"Validates {skills_str} competencies with high domain precision."
-        return f"Evaluates core {primary_domain.lower().replace('_', ' ')} principles essential for this role."
+            return f"{base}, specifically overlapping with: {skills_str}."
+        return f"{base}."
+
+    def _determine_recruiter_signal(self, assess: Any, query_domain: Domain, is_expansion: bool) -> str:
+        assess_text = (assess.name + " " + assess.description).lower()
+        if query_domain == Domain.BACKEND:
+            return "Enterprise Backend Signal" if "api" in assess_text or "microservice" in assess_text else "Distributed Systems Signal"
+        elif query_domain == Domain.FRONTEND:
+            if "react" in assess_text or "next" in assess_text:
+                return "Modern Frontend Signal"
+            elif "angular" in assess_text:
+                return "Angular Architecture Signal"
+            else:
+                return "UI Engineering Signal"
+        elif query_domain == Domain.DATA_AI:
+            return "ML Research Signal" if "research" in assess_text or "nlp" in assess_text else "Enterprise Data Signal"
+        elif query_domain == Domain.DEVOPS:
+            return "Infrastructure Reliability Signal" if "sre" in assess_text or "kubernetes" in assess_text else "Cloud Operations Signal"
+        return "Core Technical Signal"

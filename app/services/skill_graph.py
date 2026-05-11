@@ -87,6 +87,25 @@ class SkillGraph:
                 "transformers",
                 "language models",
             ],
+            "devops": [
+                "kubernetes",
+                "docker",
+                "terraform",
+                "aws",
+                "ci/cd",
+                "linux",
+                "networking",
+                "infrastructure",
+                "cloud computing",
+                "sre",
+                "observability",
+                "deployment systems",
+                "container orchestration",
+                "infrastructure as code",
+                "cloud systems",
+                "cloud operations",
+                "deployment engineering",
+            ],
         }
 
     def _initialize_graph(self):
@@ -140,6 +159,19 @@ class SkillGraph:
         self._add_related("Frontend Engineering", "UI")
         self._add_related("Fullstack", "Frontend Engineering")
         self._add_related("Fullstack", "Backend Engineering")
+        
+        self._add_relationship("React", "Next.js")
+        self._add_relationship("React", "Redux")
+        self._add_related("React", "Modern Frontend")
+        self._add_related("React", "UI Architecture")
+        self._add_related("React", "Frontend Systems")
+
+        self._add_relationship("Angular", "RxJS")
+        self._add_related("Angular", "Frontend Architecture")
+
+        self._add_node("Vue.js", "framework")
+        self._add_related("Vue.js", "Frontend Component Architecture")
+        self._add_relationship("Vue", "Vue.js")
         
         # 5. QA & SDET
         self._add_node("Selenium", "tool")
@@ -196,6 +228,13 @@ class SkillGraph:
         self._add_node("Docker", "tool")
         self._add_relationship("Cloud Engineering", "Kubernetes")
         self._add_relationship("Cloud Engineering", "Terraform")
+        self._add_relationship("Kubernetes", "Container Orchestration")
+        self._add_relationship("Container Orchestration", "Infrastructure")
+        self._add_related("Infrastructure", "Cloud Operations")
+        
+        self._add_relationship("Terraform", "Infrastructure as Code")
+        self._add_relationship("Infrastructure as Code", "Cloud Systems")
+        self._add_related("Cloud Systems", "Deployment Engineering")
         
         self._add_node("PyTorch", "framework", weight=1.1)
         self._add_node("TensorFlow", "framework", weight=1.1)
