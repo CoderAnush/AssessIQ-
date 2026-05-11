@@ -128,9 +128,14 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         
         # 5. Domain Injection Logic (Phase 11)
         role_text = (context.role or "").lower()
+        is_java_role = bool(re.search(r"\bjava\b", role_text)) and "javascript" not in role_text
+
         if any(w in role_text for w in ["python", "backend", "fastapi", "django"]):
             context.domain = "backend_engineering"
             logger.info("DOMAIN INJECTION: backend_engineering triggered")
+        elif any(w in role_text for w in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web", "nextjs"]):
+            context.domain = "frontend_engineering"
+            logger.info("DOMAIN INJECTION: frontend_engineering triggered")
         elif any(w in role_text for w in ["kubernetes", "terraform", "devops", "sre"]):
             context.domain = "cloud_devops"
             logger.info("DOMAIN INJECTION: cloud_devops triggered")
@@ -140,7 +145,7 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         elif any(w in role_text for w in ["data scientist", "sql", "ml", "machine learning"]):
             context.domain = "data_science"
             logger.info("DOMAIN INJECTION: data_science triggered")
-        elif any(w in role_text for w in ["java", "spring boot"]):
+        elif is_java_role or "spring boot" in role_text:
             context.domain = "backend_engineering"
             logger.info("DOMAIN INJECTION: java/backend_engineering triggered")
         

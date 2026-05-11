@@ -38,6 +38,7 @@ class EnterpriseRanker:
     DOMAIN_MISMATCH_PENALTY = 0.85
     ROLE_SPECIFICITY_BOOST = 0.3
     TECH_STACK_BOOST = 0.4
+    FRONTEND_MIN_RESULTS = 3
     
     def __init__(self, embedding_service=None, skill_graph: Optional[SkillGraph] = None):
         self.embedding_service = embedding_service
@@ -57,9 +58,19 @@ class EnterpriseRanker:
                 query_emb = None
         
         scored = []
+        is_frontend_query = self._is_frontend_context(context)
+        is_technical_query = self._is_technical_context(context)
+        is_fastapi_query = self._is_fastapi_context(context)
+
         for res in retrieved:
             assess = catalog.get(res["id"])
             if not assess: continue
+
+            if is_technical_query and self._is_suppressed_for_technical(assess):
+                continue
+
+            if is_fastapi_query and self._is_fastapi_mismatch(assess):
+                continue
             
             factors = self._calculate_factors(assess, context, query_emb)
             
@@ -79,7 +90,7 @@ class EnterpriseRanker:
 
             explanation = self._generate_grounded_insight(assess, context)
             
-            tech_stack = getattr(context, "tech_stack", set()) or set()
+            tech_stack = {str(t).lower() for t in (getattr(context, "tech_stack", set()) or set())}
             assess_skills = set(getattr(assess, "skills", []))
             matched_skills = list(tech_stack.intersection(assess_skills)) if tech_stack else []
 
@@ -93,26 +104,63 @@ class EnterpriseRanker:
             ))
             
         ranked = sorted(scored, key=lambda x: x.final_score, reverse=True)[:top_k]
+
+        # Guarantee frontend coverage for explicit frontend requests.
+        if is_frontend_query and len(ranked) < self.FRONTEND_MIN_RESULTS and catalog:
+            existing_ids = {item.assessment.id for item in ranked}
+            supplemental = []
+            for assess in catalog.values():
+                if assess.id in existing_ids:
+                    continue
+                if self._is_suppressed_for_technical(assess):
+                    continue
+                if not self._is_frontend_assessment(assess):
+                    continue
+                supplemental.append(RankedAssessment(
+                    assessment=assess,
+                    factors=RankingFactors(graph_relevance=0.8, keyword_similarity=0.6, role_boost=0.25),
+                    final_score=0.75,
+                    explanation=self._generate_grounded_insight(assess, context),
+                    matched_skills=[],
+                    inferred_skills=[],
+                ))
+                if len(ranked) + len(supplemental) >= self.FRONTEND_MIN_RESULTS:
+                    break
+
+            ranked = sorted(ranked + supplemental, key=lambda x: x.final_score, reverse=True)[:max(top_k, self.FRONTEND_MIN_RESULTS)]
         
         # 6. GUARANTEE MINIMUM RESULTS (Phase 11)
         if not ranked and catalog:
             logger.info("RANKER: No results, returning top technical catalog items")
             role_text = getattr(context, "role", "").lower()
-            is_tech = any(w in role_text for w in ["python", "java", "backend", "engineer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect"])
+            is_tech = any(w in role_text for w in ["python", "java", "backend", "engineer", "developer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect", "fastapi"])
+            is_fastapi = "fastapi" in role_text or any(str(t).lower() == "fastapi" for t in (getattr(context, "tech_stack", set()) or set()))
             
             fallback_candidates = []
-            blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections"]
+            blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections", "agency manager", "job focused assessment", "global skills", "hipo unlocking potential", "bank operations supervisor", "branch manager"]
             
             for assess in catalog.values():
                 name_low = assess.name.lower()
+                text_low = (assess.name + " " + assess.description).lower()
                 if any(bw in name_low for bw in blacklist): continue
                 
                 score = 0.5
                 if is_tech:
-                    if any(w in name_low for w in ["java", "python", "software", "coding", "technical", "algorithm", "logic", "programming", "developer"]):
-                        score = 0.7
+                    if self._is_suppressed_for_technical(assess):
+                        continue
+
+                    matches_technical = False
+                    if is_fastapi:
+                        if any(w in text_low for w in ["python", "backend", "fastapi", "django", "flask", "microservice", "api ", " api"]):
+                            matches_technical = True
+                            score = 0.85
                     else:
-                        score = 0.3
+                        if any(w in name_low for w in ["java", "python", "software", "coding", "technical", "algorithm", "logic", "programming", "developer"]):
+                            matches_technical = True
+                            score = 0.7
+
+                    if not matches_technical:
+                        continue
                 
                 fallback_candidates.append(RankedAssessment(
                     assessment=assess,
@@ -133,8 +181,8 @@ class EnterpriseRanker:
         domain_penalty = 1.0 if context_domain != "general" and assess_domain != "general" and context_domain != assess_domain else 0.0
         
         # 2. Skill Overlap
-        assess_skills = set(getattr(assess, "skills", [])) | set(getattr(assess, "inferred_skills", []))
-        tech_stack = getattr(context, "tech_stack", set()) or set()
+        assess_skills = {str(s).lower() for s in (set(getattr(assess, "skills", [])) | set(getattr(assess, "inferred_skills", [])))}
+        tech_stack = {str(t).lower() for t in (getattr(context, "tech_stack", set()) or set())}
         matched = assess_skills.intersection(tech_stack)
         keyword_sim = len(matched) / max(1, len(tech_stack))
         
@@ -149,6 +197,16 @@ class EnterpriseRanker:
         role = getattr(context, "role", "") or ""
         if role and role.lower() in assess.name.lower():
             role_boost = self.ROLE_SPECIFICITY_BOOST
+
+        if self._is_frontend_context(context) and self._is_frontend_assessment(assess):
+            role_boost += 0.35
+
+        if self._is_frontend_context(context) and self._is_java_backend_assessment(assess):
+            domain_penalty = 1.0
+
+        if self._is_fastapi_context(context) and self._is_fastapi_assessment(assess):
+            graph_score = max(graph_score, 0.9)
+            role_boost += 0.25
         
         # 5. Embedding Similarity (SKIPPED in Hotfix)
         embedding_sim = 0.0
@@ -200,8 +258,8 @@ class EnterpriseRanker:
     def _generate_grounded_insight(self, assess: Any, context: Any) -> str:
         """Phase 4 & 5: Grounded Recruiter Insights with Adjacency Reasoning."""
         domain = self._infer_domain(assess)
-        assess_skills = set(getattr(assess, "skills", [])) | set(getattr(assess, "inferred_skills", []))
-        tech_stack = getattr(context, "tech_stack", set()) or set()
+        assess_skills = {str(s).lower() for s in (set(getattr(assess, "skills", [])) | set(getattr(assess, "inferred_skills", [])))}
+        tech_stack = {str(t).lower() for t in (getattr(context, "tech_stack", set()) or set())}
         matched = list(tech_stack.intersection(assess_skills))
         
         # Adaptive Fallback Reasoning (Phase 4)
@@ -232,3 +290,58 @@ class EnterpriseRanker:
             return f"Useful for screening {role_desc} who need to lead teams and collaborate cross-functionally with stakeholders."
             
         return f"A grounded SHL assessment for {role_desc} that validates key competencies in the {domain} domain."
+
+    def _is_technical_context(self, context: Any) -> bool:
+        role = (getattr(context, "role", "") or "").lower()
+        domain = (getattr(context, "domain", "") or "").lower()
+        tech_stack = {str(t).lower() for t in (getattr(context, "tech_stack", set()) or set())}
+        technical_terms = {
+            "backend", "frontend", "engineer", "developer", "software", "python", "java", "javascript",
+            "typescript", "react", "angular", "vue", "fastapi", "devops", "sre", "qa", "sdet", "data", "ml", "ai",
+        }
+        return any(term in role for term in technical_terms) or "engineering" in domain or bool(tech_stack.intersection(technical_terms))
+
+    def _is_frontend_context(self, context: Any) -> bool:
+        role = (getattr(context, "role", "") or "").lower()
+        domain = (getattr(context, "domain", "") or "").lower()
+        tech_stack = " ".join(str(t).lower() for t in (getattr(context, "tech_stack", set()) or set()))
+        frontend_terms = ["frontend", "react", "angular", "vue", "javascript", "typescript", "nextjs", "ui", "web"]
+        return any(term in role for term in frontend_terms) or "frontend" in domain or any(term in tech_stack for term in frontend_terms)
+
+    def _is_fastapi_context(self, context: Any) -> bool:
+        role = (getattr(context, "role", "") or "").lower()
+        tech_stack = " ".join(str(t).lower() for t in (getattr(context, "tech_stack", set()) or set()))
+        return "fastapi" in role or "fastapi" in tech_stack
+
+    def _is_frontend_assessment(self, assess: Any) -> bool:
+        text = (assess.name + " " + assess.description).lower()
+        frontend_terms = ["frontend", "front-end", "ui", "web", "javascript", "typescript", "react", "angular", "vue", "html", "css"]
+        return any(term in text for term in frontend_terms)
+
+    def _is_java_backend_assessment(self, assess: Any) -> bool:
+        text = (assess.name + " " + assess.description).lower()
+        backend_terms = ["java", "spring", "backend", "j2ee", "hibernate"]
+        return any(term in text for term in backend_terms)
+
+    def _is_fastapi_assessment(self, assess: Any) -> bool:
+        text = (assess.name + " " + assess.description).lower()
+        return any(term in text for term in ["fastapi", "python", "backend", "microservice", "django", "flask"])
+
+    def _is_fastapi_mismatch(self, assess: Any) -> bool:
+        text = (assess.name + " " + assess.description).lower()
+        return not any(term in text for term in ["fastapi", "python", "backend", "microservice", "django", "flask"])
+
+    def _is_suppressed_for_technical(self, assess: Any) -> bool:
+        text = (assess.name + " " + assess.description).lower()
+        if any(term in text for term in ["sales", "account manager", "customer service", "reservation agent", "cashier", "clerk", "support representative", "bank operations supervisor", "branch manager"]):
+            return True
+
+        if any(term in text for term in ["global skills", "hipo unlocking potential", "job focused assessment", "agency manager"]):
+            return True
+
+        has_personality = any(term in text for term in ["personality", "behavioral"]) 
+        has_technical = any(term in text for term in ["java", "python", "backend", "frontend", "react", "angular", "typescript", "javascript", "api", "devops", "data", "ml", "qa", "automation"])
+        if has_personality and not has_technical:
+            return True
+
+        return False

@@ -65,19 +65,26 @@ class HybridRetriever:
         role_text = (context.role or "").lower()
         query_text = query_low
         is_tech = any(w in role_text for w in ["python", "java", "backend", "engineer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect", "graduate", "intern"])
-        blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections", "agency manager", "hotel", "front desk", "receptionist", "hospitality", "store manager"]
+        blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections", "agency manager", "hotel", "front desk", "receptionist", "hospitality", "store manager", "global skills", "hipo unlocking potential", "job focused assessment"]
         
         # Language-specific filtering (NEW: prevent Java/Python cross-contamination)
         explicit_python = "python" in query_text or "django" in query_text or "flask" in query_text
         explicit_java = "java" in query_text and "javascript" not in query_text  # Exclude JavaScript false positives
         explicit_devops = any(w in query_text for w in ["devops", "sre", "kubernetes", "terraform", "docker", "aws", "azure", "gcp", "cloud"])
+        explicit_frontend = any(w in query_text for w in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web", "nextjs"])
+        explicit_fastapi = "fastapi" in query_text
         
         if explicit_python:
             # Exclude ANY Java assessment when Python is requested
             language_penalty_keywords = ["java"]  # Simple and effective - catches all Java
+            if explicit_fastapi:
+                language_penalty_keywords.extend(["sales", "account manager", "customer service"])
         elif explicit_java:
             # Exclude Python assessments when Java is requested
             language_penalty_keywords = ["python"]  # Simple and effective - catches all Python
+        elif explicit_frontend:
+            # Frontend roles should not leak Java backend recommendations.
+            language_penalty_keywords = ["java", "spring", "backend", "sales", "account manager", "customer service"]
         elif explicit_devops:
             # For DevOps, exclude pure language programming assessments
             language_penalty_keywords = ["java programming", "python programming", "java coding", "python coding", "core java", "python developer"]
@@ -93,6 +100,12 @@ class HybridRetriever:
             score = 0.0
             desc_low = assessment.description.lower()
             metadata_str = (name_low + " " + desc_low).lower()
+
+            if is_tech and any(term in metadata_str for term in ["sales", "account manager", "customer service", "global skills", "hipo unlocking potential", "job focused assessment"]):
+                continue
+
+            if is_tech and "personality" in metadata_str and not any(term in metadata_str for term in ["java", "python", "backend", "frontend", "devops", "data", "qa", "react", "angular", "api", "automation"]):
+                continue
             
             # Language filtering (NEW: completely exclude wrong language for explicit queries)
             if language_penalty_keywords and any(kw in name_low for kw in language_penalty_keywords):
@@ -127,6 +140,15 @@ class HybridRetriever:
                 tech_matches = [tech for tech in context.tech_stack if tech.lower() in metadata_str]
                 if tech_matches:
                     score += 0.4 + (0.1 * len(tech_matches))
+
+            if explicit_frontend and any(term in metadata_str for term in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web", "nextjs"]):
+                score += 0.5
+
+            if explicit_fastapi:
+                if any(term in metadata_str for term in ["fastapi", "python", "backend", "microservice", "django", "flask"]):
+                    score += 0.7
+                else:
+                    continue
 
             if score > 0.15:
                 scored_results.append({
@@ -167,14 +189,20 @@ class HybridRetriever:
                         matches_language = "python" in name_low or "django" in name_low or "flask" in name_low
                     elif explicit_java:
                         matches_language = "java" in name_low and "javascript" not in name_low
+                    elif explicit_fastapi:
+                        matches_language = any(w in name_low for w in ["fastapi", "python", "backend", "django", "flask", "microservice"])
                     elif explicit_devops:
                         # For DevOps, look for cloud/DevOps keywords
                         matches_language = any(w in name_low for w in ["cloud", "devops", "kubernetes", "docker", "aws", "azure", "infrastructure", "terraform"])
+                    elif explicit_frontend:
+                        matches_language = any(w in name_low for w in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web"])
                     else:
                         # No explicit language - accept any technical
                         matches_language = any(w in name_low for w in ["java", "python", "software", "coding", "technical", "algorithm", "logic", "programming", "developer"])
                     
                     if matches_language and not any(bw in name_low for bw in blacklist):
+                        if explicit_frontend and any(w in name_low for w in ["java", "spring", "backend"]):
+                            continue
                         scored_results.append({
                             "id": a.id,
                             "name": a.name,
@@ -186,7 +214,7 @@ class HybridRetriever:
                         if len(scored_results) >= top_k: break
             
             # Only use generic fallback if NO explicit language was requested
-            if not scored_results and not explicit_python and not explicit_java and not explicit_devops:
+            if not scored_results and not explicit_python and not explicit_java and not explicit_devops and not explicit_fastapi and not explicit_frontend:
                 for a in all_assessments:
                     name_low = a.name.lower()
                     if not any(bw in name_low for bw in blacklist):
