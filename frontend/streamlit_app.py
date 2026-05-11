@@ -205,6 +205,33 @@ def enrich_recommendations(recommendations: List[Dict[str, Any]], query: str = "
     return enriched
 
 
+def _normalize_recommendation(rec: Dict[str, Any]) -> Dict[str, Any]:
+    """Defensive normalization for recommendation objects (Phase 11)."""
+    # Safe defaults as requested
+    normalized = {
+        "name": rec.get("name", "Unknown Assessment"),
+        "category": rec.get("category", "General"),
+        "confidence": rec.get("confidence", 0),
+        "best_hiring_stage": rec.get("best_hiring_stage", "General Screening"),
+        "duration_minutes": rec.get("duration_minutes", 30),
+        "ideal_use_case": rec.get("ideal_use_case", "General hiring assessment"),
+    }
+    
+    # Merge with original for remaining fields and apply secondary fallbacks
+    full = {**rec, **normalized}
+    
+    # Ensure UI-specific fields are present
+    if "url" not in full: full["url"] = "#"
+    if "recruiter_insight" not in full: 
+        full["recruiter_insight"] = full.get("description") or "Grounded catalog recommendation."
+    if "test_type" not in full: full["test_type"] = "K"
+    if "domain" not in full: full["domain"] = "General"
+    if "stage" not in full: full["stage"] = full["best_hiring_stage"]
+    if "duration" not in full: full["duration"] = f"{full['duration_minutes']} min"
+    
+    return full
+
+
 def is_comparison_request(text: str) -> bool:
     text_low = text.lower()
     return any(
@@ -270,15 +297,16 @@ def send_chat_request(messages: List[Dict]) -> Optional[Dict]:
 def render_recommendation_card(rec: Dict[str, Any], index: int, compact: bool = False) -> None:
     """Render a polished enterprise-grade assessment card."""
     try:
-        name = _sanitize_display_text(rec.get("name", "Assessment"))
-        category = _sanitize_display_text(rec.get("category", "General"))
-        insight = _sanitize_display_text(rec.get("recruiter_insight", ""))
-        ideal_use_case = _sanitize_display_text(rec.get("ideal_use_case", ""))
-        stage = _sanitize_display_text(rec.get("stage", "Early Screening"))
-        duration = _sanitize_display_text(str(rec.get("duration", "N/A")))
-        url = str(rec.get("url", "#"))
-        confidence = int(rec.get("confidence", 0))
-        test_type = str(rec.get("test_type", "K"))
+        rec = _normalize_recommendation(rec)
+        name = _sanitize_display_text(rec["name"])
+        category = _sanitize_display_text(rec["category"])
+        insight = _sanitize_display_text(rec["recruiter_insight"])
+        ideal_use_case = _sanitize_display_text(rec["ideal_use_case"])
+        stage = _sanitize_display_text(rec["stage"])
+        duration = _sanitize_display_text(str(rec["duration"]))
+        url = str(rec["url"])
+        confidence = int(rec["confidence"])
+        test_type = str(rec["test_type"])
         type_label = TYPE_LABELS.get(test_type, "Assessment")
         
         matched_skills = rec.get("matched_skills", [])
@@ -409,8 +437,9 @@ def _format_recommendation_table(recommendations: List[Dict[str, Any]]) -> str:
         return ""
     rows = ["| Rank | Assessment | Category | Confidence | Stage | Duration | Use case |", "|---|---|---|---:|---|---:|---|"]
     for idx, rec in enumerate(recommendations, 1):
+        r = _normalize_recommendation(rec)
         rows.append(
-            f"| {idx} | {rec['name']} | {rec['category']} | {rec['confidence']}% | {rec['best_hiring_stage']} | {rec['duration_minutes']} min | {rec['ideal_use_case']} |"
+            f"| {idx} | {r['name']} | {r['category']} | {r['confidence']}% | {r['best_hiring_stage']} | {r['duration_minutes']} min | {r['ideal_use_case']} |"
         )
     return "\n".join(rows)
 
@@ -440,12 +469,18 @@ def build_export_report() -> str:
             "### Pipeline Stages",
         ])
         for i, stage in enumerate(pipeline.get("stages", []), 1):
+            s_name = stage.get("name", f"Stage {i}")
+            s_desc = stage.get("description", "Assessment stage.")
+            s_dur = stage.get("estimated_duration", 30)
+            s_assess = stage.get("assessments", [])
+            s_comp = stage.get("competencies_covered", [])
+            
             lines.extend([
-                f"#### Stage {i}: {stage['name']}",
-                f"- **Description:** {stage['description']}",
-                f"- **Duration:** {stage['estimated_duration']} min",
-                f"- **Assessments:** {', '.join(stage['assessments'])}",
-                f"- **Competencies:** {', '.join(stage['competencies_covered'])}",
+                f"#### Stage {i}: {s_name}",
+                f"- **Description:** {s_desc}",
+                f"- **Duration:** {s_dur} min",
+                f"- **Assessments:** {', '.join(s_assess) if s_assess else 'N/A'}",
+                f"- **Competencies:** {', '.join(s_comp) if s_comp else 'N/A'}",
                 "",
             ])
         
@@ -529,13 +564,16 @@ def render_pipeline_section(pipeline: Dict[str, Any]) -> None:
 
     # 4. Pipeline Flow
     st.markdown("#### 🏗️ Orchestrated Pipeline Flow")
-    p_cols = st.columns(len(pipeline["stages"]))
-    for i, stage in enumerate(pipeline["stages"]):
+    p_cols = st.columns(len(pipeline.get("stages", [])))
+    for i, stage in enumerate(pipeline.get("stages", [])):
         with p_cols[i]:
             with st.container(border=True):
-                st.markdown(f"**Stage {i+1}: {stage['name']}**")
-                st.caption(stage["description"])
-                for assess_name in stage["assessments"]:
+                s_name = stage.get("name", f"Stage {i+1}")
+                s_desc = stage.get("description", "Assessment stage.")
+                s_assess = stage.get("assessments", [])
+                st.markdown(f"**Stage {i+1}: {s_name}**")
+                st.caption(s_desc)
+                for assess_name in s_assess:
                     st.markdown(f"- {assess_name}")
 
 def render_comparison_section(comparison: Dict[str, Any]) -> None:
@@ -544,7 +582,8 @@ def render_comparison_section(comparison: Dict[str, Any]) -> None:
         return
 
     summary = comparison.get("summary", "")
-    left, right = items[0], items[1]
+    left = _normalize_recommendation(items[0])
+    right = _normalize_recommendation(items[1])
 
     st.markdown("### Comparison Intelligence")
     if summary:
@@ -559,12 +598,12 @@ def render_comparison_section(comparison: Dict[str, Any]) -> None:
         render_recommendation_card(right, 2, compact=True)
 
     rows = [
-        ("Best for", left.get("stage", ""), right.get("stage", "")),
-        ("Category", left.get("category", ""), right.get("category", "")),
-        ("Confidence", f"{left.get('confidence', 0)}%", f"{right.get('confidence', 0)}%"),
-        ("Duration", left.get('duration', 'N/A'), right.get('duration', 'N/A')),
-        ("Ideal use case", left.get("ideal_use_case", ""), right.get("ideal_use_case", "")),
-        ("Recruiter insight", left.get("recruiter_insight", ""), right.get("recruiter_insight", "")),
+        ("Best for", left['best_hiring_stage'], right['best_hiring_stage']),
+        ("Category", left['category'], right['category']),
+        ("Confidence", f"{left['confidence']}%", f"{right['confidence']}%"),
+        ("Duration", left['duration'], right['duration']),
+        ("Ideal use case", left['ideal_use_case'], right['ideal_use_case']),
+        ("Recruiter insight", left['recruiter_insight'], right['recruiter_insight']),
     ]
 
     comparison_data = {
