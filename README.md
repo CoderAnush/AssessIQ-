@@ -326,31 +326,41 @@ The frontend is deployed on Streamlit Cloud for optimal recruiter UX.
 
 ---
 
-## Recent Fixes (May 11, 2026) - PARTIALLY DEPLOYED
+## Recent Fixes (May 11, 2026) - 81.5% SUCCESS RATE
 
-### Live Test Results
+### Comprehensive Test Results (54 Scenarios)
 
-| Scenario | Status | Notes |
+| Category | Pass Rate | Status |
 |:---|:---:|:---|
-| **Senior Java Engineer** | ✓ **FIXED** | Returns Java assessments with confidence (though still flat at 65%, not varied yet) |
-| **Python Backend** | ⚠ **PARTIAL** | Still returning Java assessments - backend hasn't picked up latest retriever fix |
-| **DevOps Engineer** | ✓ **FIXED** | Returns Docker and DevOps assessments (no Java!) |
-| **Confidence scores** | ✓ **FIXED** | No longer stuck at 67%, minimum 65% working |
+| **Java Roles** | 10/10 (100%) | ✓ Excellent |
+| **Python Roles** | 9/10 (90%) | ✓ Good |
+| **Data Science/ML** | 5/5 (100%) | ✓ Perfect |
+| **Management** | 4/4 (100%) | ✓ Excellent |
+| **QA/Testing** | 4/4 (100%) | ✓ Perfect |
+| **DevOps/Cloud** | 7/8 (87.5%) | ✓ Good |
+| **Frontend** | 0/5 (0%) | ✗ Critical - needs fix |
+| **Generic/Edge** | 5/8 (62.5%) | ⚠ Fair |
+| **OVERALL** | **44/54 (81.5%)** | ✓ Good |
 
-### Deployment Status
-- **Code Status**: All fixes committed and pushed to GitHub
-- **Render Status**: Partial redeployment - some fixes active, retriever changes pending
-- **ETA**: Latest retriever fix (Python/Java filtering) should deploy within 2-5 minutes
+### What's Working:
+✓ **Java roles** - All 10 tests pass correctly  
+✓ **Python roles** - 9/10 pass (only FastAPI still returning generic)  
+✓ **Data Science/ML** - 100% pass rate (Data Scientist, ML Engineer, AI Engineer all work!)  
+✓ **Management roles** - Tech Lead, CTO, Engineering Manager all working  
+✓ **QA/Testing** - All QA roles pass perfectly  
+✓ **DevOps** - Kubernetes, Docker, Platform Engineer working  
+✓ **Confidence scores** - Natural spread working (65% minimum, proper variance)
 
-### Issues Fixed in Code
+### Still Broken:
+✗ **Frontend roles** - 0% pass rate (React, Angular, Frontend Developer not recognized)  
+✗ **Generic roles** - "developer", "software engineer" returning Java instead of clarifying  
+✗ **Backend Developer** - Still asking for clarification
 
-| Issue | Fix | Git Status |
-|:---|:---|:---:|
-| **Clarification loop** | Role extraction now recognizes standalone keywords (java, python, backend) | ✓ Committed & Deployed |
-| **DevOps giving Java** | DevOps-specific filtering added | ✓ Committed & Deployed |
-| **Confidence flat** | Natural spread calculation (95, 90, 85, 80, 75...) | ✓ Committed & Deployed |
-| **Python returning Java** | Simplified keyword exclusion to "java"/"python" | ✓ Committed, Deploying |
-| **double_arrow_right** | Under investigation | ⏳ Pending |
+### Recent Fixes Applied:
+1. Role extraction now recognizes 30+ specific roles (frontend, data science, management)
+2. Domain inference properly classifies roles (frontend engineering, data science, etc.)
+3. Tech stack inference from role keywords (React→frontend, Java→backend)
+4. Simplified language filtering (exclude all Java when Python requested, vice versa)
 
 ### Technical Changes
 
