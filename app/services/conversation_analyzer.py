@@ -121,21 +121,39 @@ class ConversationAnalyzer:
         return context, intent
 
     def _extract_role(self, text: str) -> Optional[str]:
-        roles = [
-            # Specific compound roles (longer first for priority)
+        text_lower = text.lower()
+        
+        # PRIORITY 1: Specific compound roles (most specific)
+        compound_roles = [
             "python backend", "java backend", "backend engineer", "software engineer",
             "qa automation", "product manager", "engineering manager", 
             "data scientist", "ml engineer", "platform engineer", "ai architect",
             "systems engineer", "embedded developer", "data engineer",
-            # Standalone keywords (shorter)
-            "java", "python", "backend", "frontend", "fullstack", 
-            "devops", "cloud", "qa", "sdet", "sales", 
+            "java developer", "python developer", "fullstack developer"
+        ]
+        for r in compound_roles:
+            if r in text_lower: 
+                return r
+        
+        # PRIORITY 2: Core technology keywords (language/framework first)
+        tech_keywords = ["java", "python", "react", "angular", "nodejs", "devops", "cloud"]
+        for tech in tech_keywords:
+            if tech in text_lower:
+                # Return appropriate role based on context
+                if "backend" in text_lower or tech in ["java", "python"]:
+                    return f"{tech} backend" if tech in ["java", "python"] else tech
+                return tech
+        
+        # PRIORITY 3: Generic roles (fallback)
+        generic_roles = [
+            "frontend", "fullstack", "backend", "qa", "sdet", "sales", 
             "customer support", "support", "executive", "architect", "manager",
             "sre", "engineer", "developer"
         ]
-        # Sort by length to match longer specific roles first
-        for r in sorted(roles, key=len, reverse=True):
-            if r in text: return r
+        for r in generic_roles:
+            if r in text_lower: 
+                return r
+        
         return None
 
     def _extract_seniority(self, text: str) -> Optional[str]:
