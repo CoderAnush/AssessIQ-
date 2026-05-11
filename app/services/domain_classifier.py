@@ -99,6 +99,13 @@ class DomainClassifier:
             if not any(kw in query_low for kw in ["machine learning", "deep learning", "nlp", "react", "frontend"]):
                 return {"primaryDomain": Domain.DEVOPS, "confidence": 1.0, "reason": "Explicit DevOps Keywords"}
 
+        if any(kw in query_low for kw in ["civil", "mechanical", "electrical", "aeronautical", "aerospace", "chemical", "ceramic", "cad ", "bim "]):
+             if not any(kw in query_low for kw in ["software", "coding", "developer", "backend", "frontend"]):
+                return {"primaryDomain": Domain.ENGINEERING_CORE, "confidence": 1.0, "reason": "Explicit Physical Engineering"}
+
+        if any(kw in query_low for kw in ["medical", "cardiology", "healthcare", "nursing", "pharmacology"]):
+            return {"primaryDomain": Domain.MEDICAL, "confidence": 1.0, "reason": "Explicit Medical Keywords"}
+
         if any(kw in query_low for kw in ["frontend", "react", "angular", "ui ", "ux ", "css"]):
             return {"primaryDomain": Domain.FRONTEND, "confidence": 1.0, "reason": "Explicit Frontend Keywords"}
 

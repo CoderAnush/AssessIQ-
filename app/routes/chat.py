@@ -140,7 +140,9 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             PHYS_ENG_BLOCK = [
                 "geoscience", "geoinformatics", "instrumentation", "industrial engineering",
                 "fire engineering", "petroleum", "mining", "naval", "agricultural",
-                "biomedical engineering", "metallurgy", "textile"
+                "biomedical engineering", "metallurgy", "textile", "civil engineer",
+                "mechanical engineer", "electrical engineer", "aerospace", "aeronautical",
+                "chemical engineer", "cad ", "bim ", "structural engineer"
             ]
 
             # Generic non-technical assessments that should not appear for specific tech stack queries
