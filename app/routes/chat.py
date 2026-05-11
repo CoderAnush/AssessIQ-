@@ -86,19 +86,84 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             ranked_results = services.ranker.rank(retrieved, context, catalog, top_k=12) # ensure enough candidates for fallback
             ranking_time = time.time() - ranking_start
 
+            import re
+            query_tokens = set(re.findall(r'\b[a-z0-9.]+\b', query.lower()))
+            specializations = {"react", "redux", "typescript", "nextjs", "next.js", "tensorflow", "pytorch", "nlp", "llm", "kubernetes", "terraform", "spring", "springboot", "django", "fastapi", "angular", "vue"}
+            requested_specs = query_tokens.intersection(specializations)
+            
+            coverage_found = False
+            if requested_specs:
+                for res in ranked_results:
+                    assess_skills = {s.lower() for s in getattr(res.assessment, "skills", [])}
+                    assess_text = (res.assessment.name + " " + res.assessment.description).lower()
+                    assess_tokens = set(re.findall(r'\b[a-z0-9.]+\b', assess_text))
+                    if requested_specs.intersection(assess_tokens) or requested_specs.intersection(assess_skills):
+                        coverage_found = True
+                        break
+            else:
+                coverage_found = True
+
+            sparse_catalog_msg = ""
+            if requested_specs and not coverage_found:
+                if "react" in requested_specs or "redux" in requested_specs:
+                    sparse_catalog_msg = "Specialized assessments for React/Redux are limited in the current catalog. Showing closest validated frontend engineering competencies."
+                elif "tensorflow" in requested_specs or "nlp" in requested_specs:
+                    sparse_catalog_msg = "No exact TensorFlow/NLP assessments currently exist. Showing adjacent ML competency validations."
+                else:
+                    spec_str = "/".join(list(requested_specs)[:2])
+                    sparse_catalog_msg = f"Specialized assessments for {spec_str} are limited in the current catalog. Showing closest validated competencies."
+
             recommendations = []
             for idx, res in enumerate(ranked_results):
                 # The ranker already enforced domain safety dynamically.
                 assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
-
                 base_confidence = int((res.final_score or 0.6) * 100)
+
+                assess_text = (res.assessment.name + " " + res.assessment.description).lower()
+                assess_tokens = set(re.findall(r'\b[a-z0-9.]+\b', assess_text))
+                
+                # STRICT SUPPRESSION RULE
+                mismatch_triggered = False
+                if "react" in requested_specs or "angular" in requested_specs:
+                    if "java" in assess_tokens or "spring" in assess_tokens or "backend" in assess_tokens:
+                        mismatch_triggered = True
+                if "spring" in requested_specs or "springboot" in requested_specs:
+                    if "javascript" in assess_tokens or "react" in assess_tokens or "angular" in assess_tokens:
+                        mismatch_triggered = True
+                if "tensorflow" in requested_specs or "nlp" in requested_specs:
+                    if ("analytics" in assess_tokens and "deep" not in assess_tokens) or "frontend" in assess_tokens:
+                        mismatch_triggered = True
+                if "kubernetes" in requested_specs or "terraform" in requested_specs:
+                    if "react" in assess_tokens or "java" in assess_tokens or "frontend" in assess_tokens:
+                        mismatch_triggered = True
+                
+                if mismatch_triggered and base_confidence < 65:
+                    continue
+
+                # MATCH QUALITY REASON
+                assess_skills = {s.lower() for s in getattr(res.assessment, "skills", [])}
+                if requested_specs.intersection(assess_tokens) or requested_specs.intersection(assess_skills):
+                    quality_reason = "Exact Technology Match"
+                elif assess_domain == Domain.FRONTEND:
+                    quality_reason = "Adjacent Frontend Competency"
+                elif assess_domain == Domain.BACKEND:
+                    quality_reason = "General Backend Validation"
+                elif assess_domain == Domain.DEVOPS:
+                    quality_reason = "Semantic Infrastructure Match"
+                elif assess_domain == Domain.DATA_AI:
+                    quality_reason = "Adjacent ML Competency Validation"
+                else:
+                    quality_reason = "Core Technical Signal"
+
                 # Expanded/Related items should remain visible but with a softer confidence decay.
                 is_expanded = any(
                     t in (res.explanation or "")
-                    for t in ["Expanded Match", "Related Competency Match", "Related Competency:"]
+                    for t in ["Expanded Match", "Related Competency Match", "Related Competency:", "FALLBACK MATCH"]
                 )
                 decay = (idx * 1) if is_expanded else (idx * 2)
                 final_confidence = max(55, min(99, base_confidence - decay))
+                
+                insight = str(res.explanation)
                 
                 recommendations.append(Recommendation(
                     name=str(res.assessment.name),
@@ -109,11 +174,11 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     category=str(res.assessment.category),
                     stage="Screening",
                     duration=f"{getattr(res.assessment, 'duration_minutes', 30)} min",
-                    recruiter_insight=str(res.explanation),
+                    recruiter_insight=insight,
                     ideal_use_case=str(res.assessment.description[:120]) + "...",
                     domain=str(assess_domain),
                     matched_skills=list(res.matched_skills),
-                    recruiter_signal=str(getattr(res, "recruiter_signal", "Core Technical Signal"))
+                    recruiter_signal=quality_reason
                 ))
             
             if not recommendations:
@@ -131,10 +196,37 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                         continue
 
                     assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
-                    base_confidence = int((res.final_score or 0.6) * 100)
+                    # Minimum pipeline guarantee
+                    # Suppress mismatches here as well!
+                    assess_text = (res.assessment.name + " " + res.assessment.description).lower()
+                    assess_tokens = set(re.findall(r'\b[a-z0-9.]+\b', assess_text))
+                    mismatch_triggered = False
+                    if "react" in requested_specs or "angular" in requested_specs:
+                        if "java" in assess_tokens or "spring" in assess_tokens or "backend" in assess_tokens:
+                            mismatch_triggered = True
+                    if "spring" in requested_specs or "springboot" in requested_specs:
+                        if "javascript" in assess_tokens or "react" in assess_tokens or "angular" in assess_tokens:
+                            mismatch_triggered = True
+                    if mismatch_triggered and base_confidence < 65:
+                        continue
+
+                    assess_skills = {s.lower() for s in getattr(res.assessment, "skills", [])}
+                    if requested_specs.intersection(assess_tokens) or requested_specs.intersection(assess_skills):
+                        quality_reason = "Exact Technology Match"
+                    elif assess_domain == Domain.FRONTEND:
+                        quality_reason = "Adjacent Frontend Competency"
+                    elif assess_domain == Domain.BACKEND:
+                        quality_reason = "General Backend Validation"
+                    elif assess_domain == Domain.DEVOPS:
+                        quality_reason = "Semantic Infrastructure Match"
+                    elif assess_domain == Domain.DATA_AI:
+                        quality_reason = "Adjacent ML Competency Validation"
+                    else:
+                        quality_reason = "Core Technical Signal"
+
                     is_expanded = any(
                         t in (res.explanation or "")
-                        for t in ["Expanded Match", "Related Competency Match", "Related Competency:"]
+                        for t in ["Expanded Match", "Related Competency Match", "Related Competency:", "FALLBACK MATCH"]
                     )
                     decay = 0 if is_expanded else 2
                     final_confidence = max(55, min(99, base_confidence - decay))
@@ -152,7 +244,7 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                         ideal_use_case=str(res.assessment.description[:120]) + "...",
                         domain=str(assess_domain),
                         matched_skills=list(res.matched_skills),
-                        recruiter_signal=str(getattr(res, "recruiter_signal", "Core Technical Signal"))
+                        recruiter_signal=quality_reason
                     ))
 
             # HARD RECALL PATCH for DATA_AI sparse catalogs:
@@ -247,7 +339,10 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
 
             # Premium Recruiter Narrative
             domain_label = query_domain.lower().replace("_", " ")
-            reply = f"I've optimized an enterprise {domain_label} hiring pipeline. {getattr(optimized, 'strategic_advice', '')}"
+            if sparse_catalog_msg:
+                reply = f"I've optimized an enterprise {domain_label} hiring pipeline. {sparse_catalog_msg} {getattr(optimized, 'strategic_advice', '')}"
+            else:
+                reply = f"I've optimized an enterprise {domain_label} hiring pipeline. {getattr(optimized, 'strategic_advice', '')}"
             
             total_time = time.time() - overall_start
             logger.info(f"PERF_REPORT: Total={total_time:.3f}s | Analysis={analysis_time:.3f}s | Domain={domain_time:.3f}s | Retrieval={retrieval_time:.3f}s | Ranking={ranking_time:.3f}s | Orch={orch_time:.3f}s")

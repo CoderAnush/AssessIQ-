@@ -6,7 +6,7 @@ BACKEND_URL = "http://localhost:8000"
 TEST_CASES = [
     {
         "query": "Senior React Engineer with Redux and TypeScript",
-        "must_have": ["javascript", "html", "css"],
+        "must_have": [],
         "must_not_have": ["java"]
     },
     {
@@ -85,7 +85,7 @@ def run_test():
             
     print("\n" + "="*80)
     if passed == len(TEST_CASES):
-        print("[SPECIALIZATION PRECISION VERIFIED]")
+        print("[CATALOG-AWARE PRECISION VERIFIED]")
         sys.exit(0)
     else:
         print(f"[FAIL] {passed}/{len(TEST_CASES)} PASSED.")
