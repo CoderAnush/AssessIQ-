@@ -1,0 +1,2044 @@
+[
+  {
+    "scenario": "Senior Java Engineer",
+    "status": "PASSED",
+    "has_recommendations": true,
+    "recommendation_count": 10,
+    "is_clarification": false,
+    "keywords_found": [
+      "Java",
+      "backend"
+    ],
+    "all_grounded": true,
+    "response_time_ms": 565,
+    "reply_preview": "I've generated an adaptive hiring pipeline for java backend. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+    "raw_response": {
+      "reply": "I've generated an adaptive hiring pipeline for java backend. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+      "recommendations": [
+        {
+          "name": "Core Java (Advanced Level) (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for Core Java (Advanced Level) (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Core Java (Entry Level) (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/core-java-entry-level-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for Core Java (Entry Level) (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Enterprise Java Beans (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for Enterprise Java Beans (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java 2 Platform Enterprise Edition 1.4 Fundamental",
+          "url": "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for Java 2 Platform Enterprise Edition 1.4 Fundamental, focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java 8 (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-8-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for Java 8 (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java Design Patterns (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-design-patterns-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for Java Design Patterns (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java Frameworks (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-frameworks-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for Java Frameworks (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java Platform Enterprise Edition 7 (Java EE 7)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for Java Platform Enterprise Edition 7 (Java EE 7), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java Web Services (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-web-services-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for Java Web Services (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "JavaScript (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/javascript-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 10,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates core backend API problem-solving and technical proficiency for java for production engineering roles.",
+          "ideal_use_case": "Standard SHL assessment for JavaScript (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        }
+      ],
+      "pipeline": {
+        "stages": [
+          {
+            "name": "Initial Screening",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Core Java (Advanced Level) (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Core Java (Entry Level) (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Enterprise Java Beans (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Java 2 Platform Enterprise Edition 1.4 Fundamental"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Java 8 (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          }
+        ],
+        "fatigue": {
+          "fatigue_score": 0.74,
+          "risk_level": "HIGH",
+          "total_duration": 150,
+          "dropout_probability": 0.37
+        },
+        "signal": {
+          "signal_score": 0.25,
+          "coverage": {
+            "technical": 1.0,
+            "behavioral": 0.0,
+            "leadership": 0.0,
+            "cognitive": 0.0
+          },
+          "confidence_levels": {
+            "technical": "High",
+            "behavioral": "Low",
+            "leadership": "Low",
+            "cognitive": "Low"
+          }
+        },
+        "tradeoff_analysis": "Balanced approach: Moderate duration with good cross-domain coverage.",
+        "strategic_guidance": "\ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout."
+      },
+      "detail": null,
+      "end_of_conversation": false
+    }
+  },
+  {
+    "scenario": "DevOps / SRE",
+    "status": "PASSED",
+    "has_recommendations": true,
+    "recommendation_count": 6,
+    "is_clarification": false,
+    "keywords_found": [
+      "Kubernetes",
+      "Cloud",
+      "Infrastructure"
+    ],
+    "all_grounded": true,
+    "response_time_ms": 533,
+    "reply_preview": "I've generated an adaptive hiring pipeline for devops. \u2705 Strategy aligned: Pipeline matches enterprise standards for this role.",
+    "raw_response": {
+      "reply": "I've generated an adaptive hiring pipeline for devops. \u2705 Strategy aligned: Pipeline matches enterprise standards for this role.",
+      "recommendations": [
+        {
+          "name": "Amazon Web Services (AWS) Development (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/amazon-web-services-aws-development-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates infrastructure automation and systems reliability competencies relevant for Kubernetes and cloud platform teams.",
+          "ideal_use_case": "Standard SHL assessment for Amazon Web Services (AWS) Development (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Docker (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/docker-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for devops that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Docker (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "ITIL (IT Infrastructure Library) (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/itil-it-infrastructure-library-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Evaluates infrastructure automation and systems reliability competencies relevant for Kubernetes and cloud platform teams.",
+          "ideal_use_case": "Standard SHL assessment for ITIL (IT Infrastructure Library) (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Dependability and Safety Instrument (DSI)",
+          "url": "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi",
+          "test_type": "A",
+          "subtitle": "ability assessment",
+          "confidence": 0,
+          "category": "ability",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for devops that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Dependability and Safety Instrument (DSI), focused on Personality evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Global Skills Assessment",
+          "url": "https://www.shl.com/products/product-catalog/view/global-skills-assessment",
+          "test_type": "A",
+          "subtitle": "ability assessment",
+          "confidence": 0,
+          "category": "ability",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for devops that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Global Skills Assessment, focused on Cognitive, Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "HiPo Unlocking Potential Report 2.0",
+          "url": "https://www.shl.com/products/product-catalog/view/hipo-unlocking-potential-report-2-0",
+          "test_type": "A",
+          "subtitle": "ability assessment",
+          "confidence": 0,
+          "category": "ability",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for devops that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for HiPo Unlocking Potential Report 2.0, focused on Cognitive evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        }
+      ],
+      "pipeline": {
+        "stages": [
+          {
+            "name": "Initial Screening",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Amazon Web Services (AWS) Development (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Docker (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "ITIL (IT Infrastructure Library) (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Dependability and Safety Instrument (DSI)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Global Skills Assessment"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          }
+        ],
+        "fatigue": {
+          "fatigue_score": 0.66,
+          "risk_level": "MODERATE",
+          "total_duration": 150,
+          "dropout_probability": 0.33
+        },
+        "signal": {
+          "signal_score": 0.5,
+          "coverage": {
+            "technical": 1.0,
+            "behavioral": 0.0,
+            "leadership": 0.0,
+            "cognitive": 1.0
+          },
+          "confidence_levels": {
+            "technical": "High",
+            "behavioral": "Low",
+            "leadership": "Low",
+            "cognitive": "High"
+          }
+        },
+        "tradeoff_analysis": "Balanced approach: Moderate duration with good cross-domain coverage.",
+        "strategic_guidance": "\u2705 Strategy aligned: Pipeline matches enterprise standards for this role."
+      },
+      "detail": null,
+      "end_of_conversation": false
+    }
+  },
+  {
+    "scenario": "Data Scientist",
+    "status": "PASSED",
+    "has_recommendations": true,
+    "recommendation_count": 10,
+    "is_clarification": false,
+    "keywords_found": [
+      "Data"
+    ],
+    "all_grounded": true,
+    "response_time_ms": 899,
+    "reply_preview": "I've generated an adaptive hiring pipeline for data scientist. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+    "raw_response": {
+      "reply": "I've generated an adaptive hiring pipeline for data scientist. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+      "recommendations": [
+        {
+          "name": "Automata Data Science (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/automata-data-science-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 50,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for data scientist that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Automata Data Science (New), focused on Skill evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Automata Data Science Pro (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/automata-data-science-pro-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 50,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for data scientist that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Automata Data Science Pro (New), focused on Skill evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Data Science (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/data-science-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 50,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for data scientist that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Data Science (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 1.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Automata - SQL (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/automata-sql-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for data scientist that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Automata - SQL (New), focused on Skill evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Core Java (Advanced Level) (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing machine learning, this assessment evaluates the core systems reasoning and logic critical for high-performance data scientist environments.",
+          "ideal_use_case": "Standard SHL assessment for Core Java (Advanced Level) (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Core Java (Entry Level) (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/core-java-entry-level-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing machine learning, this assessment evaluates the core systems reasoning and logic critical for high-performance data scientist environments.",
+          "ideal_use_case": "Standard SHL assessment for Core Java (Entry Level) (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Enterprise Java Beans (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing machine learning, this assessment evaluates the core systems reasoning and logic critical for high-performance data scientist environments.",
+          "ideal_use_case": "Standard SHL assessment for Enterprise Java Beans (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java 2 Platform Enterprise Edition 1.4 Fundamental",
+          "url": "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing machine learning, this assessment evaluates the core systems reasoning and logic critical for high-performance data scientist environments.",
+          "ideal_use_case": "Standard SHL assessment for Java 2 Platform Enterprise Edition 1.4 Fundamental, focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java 8 (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-8-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing machine learning, this assessment evaluates the core systems reasoning and logic critical for high-performance data scientist environments.",
+          "ideal_use_case": "Standard SHL assessment for Java 8 (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java Design Patterns (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-design-patterns-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing machine learning, this assessment evaluates the core systems reasoning and logic critical for high-performance data scientist environments.",
+          "ideal_use_case": "Standard SHL assessment for Java Design Patterns (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        }
+      ],
+      "pipeline": {
+        "stages": [
+          {
+            "name": "Initial Screening",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Automata Data Science (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Automata Data Science Pro (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Data Science (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Automata - SQL (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Core Java (Advanced Level) (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          }
+        ],
+        "fatigue": {
+          "fatigue_score": 0.74,
+          "risk_level": "HIGH",
+          "total_duration": 150,
+          "dropout_probability": 0.37
+        },
+        "signal": {
+          "signal_score": 0.25,
+          "coverage": {
+            "technical": 1.0,
+            "behavioral": 0.0,
+            "leadership": 0.0,
+            "cognitive": 0.0
+          },
+          "confidence_levels": {
+            "technical": "High",
+            "behavioral": "Low",
+            "leadership": "Low",
+            "cognitive": "Low"
+          }
+        },
+        "tradeoff_analysis": "Balanced approach: Moderate duration with good cross-domain coverage.",
+        "strategic_guidance": "\ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout."
+      },
+      "detail": null,
+      "end_of_conversation": false
+    }
+  },
+  {
+    "scenario": "Frontend Developer",
+    "status": "PASSED",
+    "has_recommendations": true,
+    "recommendation_count": 5,
+    "is_clarification": false,
+    "keywords_found": [
+      "JavaScript",
+      "Frontend"
+    ],
+    "all_grounded": true,
+    "response_time_ms": 580,
+    "reply_preview": "I've generated an adaptive hiring pipeline for frontend. \u2705 Strategy aligned: Pipeline matches enterprise standards for this role.",
+    "raw_response": {
+      "reply": "I've generated an adaptive hiring pipeline for frontend. \u2705 Strategy aligned: Pipeline matches enterprise standards for this role.",
+      "recommendations": [
+        {
+          "name": "JavaScript (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/javascript-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing react, this assessment evaluates the core systems reasoning and logic critical for high-performance frontend environments.",
+          "ideal_use_case": "Standard SHL assessment for JavaScript (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Angular 6 (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/angular-6-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for frontend that validates key competencies in the frontend engineering domain.",
+          "ideal_use_case": "Standard SHL assessment for Angular 6 (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Dependability and Safety Instrument (DSI)",
+          "url": "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi",
+          "test_type": "A",
+          "subtitle": "ability assessment",
+          "confidence": 0,
+          "category": "ability",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for frontend that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Dependability and Safety Instrument (DSI), focused on Personality evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Global Skills Assessment",
+          "url": "https://www.shl.com/products/product-catalog/view/global-skills-assessment",
+          "test_type": "A",
+          "subtitle": "ability assessment",
+          "confidence": 0,
+          "category": "ability",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for frontend that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Global Skills Assessment, focused on Cognitive, Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "HiPo Unlocking Potential Report 2.0",
+          "url": "https://www.shl.com/products/product-catalog/view/hipo-unlocking-potential-report-2-0",
+          "test_type": "A",
+          "subtitle": "ability assessment",
+          "confidence": 0,
+          "category": "ability",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for frontend that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for HiPo Unlocking Potential Report 2.0, focused on Cognitive evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        }
+      ],
+      "pipeline": {
+        "stages": [
+          {
+            "name": "Initial Screening",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "JavaScript (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Angular 6 (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Dependability and Safety Instrument (DSI)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Global Skills Assessment"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "HiPo Unlocking Potential Report 2.0"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          }
+        ],
+        "fatigue": {
+          "fatigue_score": 0.66,
+          "risk_level": "MODERATE",
+          "total_duration": 150,
+          "dropout_probability": 0.33
+        },
+        "signal": {
+          "signal_score": 0.45,
+          "coverage": {
+            "technical": 0.8,
+            "behavioral": 0.0,
+            "leadership": 0.0,
+            "cognitive": 1.0
+          },
+          "confidence_levels": {
+            "technical": "High",
+            "behavioral": "Low",
+            "leadership": "Low",
+            "cognitive": "High"
+          }
+        },
+        "tradeoff_analysis": "Balanced approach: Moderate duration with good cross-domain coverage.",
+        "strategic_guidance": "\u2705 Strategy aligned: Pipeline matches enterprise standards for this role."
+      },
+      "detail": null,
+      "end_of_conversation": false
+    }
+  },
+  {
+    "scenario": "Sales Executive",
+    "status": "PASSED",
+    "has_recommendations": true,
+    "recommendation_count": 10,
+    "is_clarification": false,
+    "keywords_found": [
+      "Sales",
+      "Account"
+    ],
+    "all_grounded": true,
+    "response_time_ms": 582,
+    "reply_preview": "I've generated an adaptive hiring pipeline for executive. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+    "raw_response": {
+      "reply": "I've generated an adaptive hiring pipeline for executive. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+      "recommendations": [
+        {
+          "name": "Executive Scenarios",
+          "url": "https://www.shl.com/products/product-catalog/view/executive-scenarios",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 70,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for executive that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Executive Scenarios, focused on Behavioral evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.3,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Executive Scenarios Narrative Report",
+          "url": "https://www.shl.com/products/product-catalog/view/executive-scenarios-narrative-report",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 70,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for executive that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Executive Scenarios Narrative Report, focused on Behavioral evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.3,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Executive Scenarios Profile Report",
+          "url": "https://www.shl.com/products/product-catalog/view/executive-scenarios-profile-report",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 70,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for executive that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Executive Scenarios Profile Report, focused on Behavioral evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.5,
+          "graph_relevance": 1.0,
+          "role_boost": 0.3,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Entry Level Sales Solution",
+          "url": "https://www.shl.com/products/product-catalog/view/entry-level-sales-solution",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 0,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for executive that validates key competencies in the business domain.",
+          "ideal_use_case": "Standard SHL assessment for Entry Level Sales Solution, focused on Cognitive, Personality evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Account Manager Solution",
+          "url": "https://www.shl.com/products/product-catalog/view/account-manager-solution",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 0,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Useful for screening executive who need to lead teams and collaborate cross-functionally with stakeholders.",
+          "ideal_use_case": "Standard SHL assessment for Account Manager Solution, focused on Cognitive, Personality, Ability, Behavioral evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Agency Manager Solution",
+          "url": "https://www.shl.com/products/product-catalog/view/agency-manager-solution",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 0,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Useful for screening executive who need to lead teams and collaborate cross-functionally with stakeholders.",
+          "ideal_use_case": "Standard SHL assessment for Agency Manager Solution, focused on Ability, Behavioral, Personality, Skill evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Apprentice + 8.0 Job Focused Assessment",
+          "url": "https://www.shl.com/products/product-catalog/view/apprentice-8-0-job-focused-assessment-4261",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 0,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for executive that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Apprentice + 8.0 Job Focused Assessment, focused on Behavioral, Personality evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Apprentice 8.0 Job Focused Assessment",
+          "url": "https://www.shl.com/products/product-catalog/view/apprentice-8-0-job-focused-assessment",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 0,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for executive that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Apprentice 8.0 Job Focused Assessment, focused on Behavioral, Personality evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Bank Collections Agent - Short Form",
+          "url": "https://www.shl.com/products/product-catalog/view/bank-collections-agent-short-form",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 0,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for executive that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Bank Collections Agent - Short Form, focused on Ability, Behavioral, Personality evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Bank Operations Supervisor - Short Form",
+          "url": "https://www.shl.com/products/product-catalog/view/bank-operations-supervisor-short-form",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 0,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for executive that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Bank Operations Supervisor - Short Form, focused on Ability, Behavioral, Personality, Skill evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        }
+      ],
+      "pipeline": {
+        "stages": [
+          {
+            "name": "Initial Screening",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Executive Scenarios"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Executive Scenarios Narrative Report"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Executive Scenarios Profile Report"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Entry Level Sales Solution"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Account Manager Solution"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          }
+        ],
+        "fatigue": {
+          "fatigue_score": 0.74,
+          "risk_level": "HIGH",
+          "total_duration": 150,
+          "dropout_probability": 0.37
+        },
+        "signal": {
+          "signal_score": 0.25,
+          "coverage": {
+            "technical": 0.0,
+            "behavioral": 1.0,
+            "leadership": 0.0,
+            "cognitive": 0.0
+          },
+          "confidence_levels": {
+            "technical": "Low",
+            "behavioral": "High",
+            "leadership": "Low",
+            "cognitive": "Low"
+          }
+        },
+        "tradeoff_analysis": "Balanced approach: Moderate duration with good cross-domain coverage.",
+        "strategic_guidance": "\ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout."
+      },
+      "detail": null,
+      "end_of_conversation": false
+    }
+  },
+  {
+    "scenario": "Project Manager",
+    "status": "PASSED",
+    "has_recommendations": true,
+    "recommendation_count": 8,
+    "is_clarification": false,
+    "keywords_found": [
+      "Manager"
+    ],
+    "all_grounded": true,
+    "response_time_ms": 583,
+    "reply_preview": "I've generated an adaptive hiring pipeline for manager. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+    "raw_response": {
+      "reply": "I've generated an adaptive hiring pipeline for manager. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+      "recommendations": [
+        {
+          "name": "Account Manager Solution",
+          "url": "https://www.shl.com/products/product-catalog/view/account-manager-solution",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 3,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Useful for screening manager who need to lead teams and collaborate cross-functionally with stakeholders.",
+          "ideal_use_case": "Standard SHL assessment for Account Manager Solution, focused on Cognitive, Personality, Ability, Behavioral evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.3,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Agency Manager Solution",
+          "url": "https://www.shl.com/products/product-catalog/view/agency-manager-solution",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 3,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Useful for screening manager who need to lead teams and collaborate cross-functionally with stakeholders.",
+          "ideal_use_case": "Standard SHL assessment for Agency Manager Solution, focused on Ability, Behavioral, Personality, Skill evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.3,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Branch Manager - Short Form",
+          "url": "https://www.shl.com/products/product-catalog/view/branch-manager-short-form",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 3,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Useful for screening manager who need to lead teams and collaborate cross-functionally with stakeholders.",
+          "ideal_use_case": "Standard SHL assessment for Branch Manager - Short Form, focused on Ability, Behavioral, Personality evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.3,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Adobe Experience Manager (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 3,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Useful for screening manager who need to lead teams and collaborate cross-functionally with stakeholders.",
+          "ideal_use_case": "Standard SHL assessment for Adobe Experience Manager (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.3,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Digital Readiness Development Report - Manager",
+          "url": "https://www.shl.com/products/product-catalog/view/digital-readiness-development-report-manager",
+          "test_type": "P",
+          "subtitle": "personality assessment",
+          "confidence": 3,
+          "category": "personality",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "Useful for screening manager who need to lead teams and collaborate cross-functionally with stakeholders.",
+          "ideal_use_case": "Standard SHL assessment for Digital Readiness Development Report - Manager, focused on Personality evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.3,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Dependability and Safety Instrument (DSI)",
+          "url": "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi",
+          "test_type": "A",
+          "subtitle": "ability assessment",
+          "confidence": 0,
+          "category": "ability",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for manager that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Dependability and Safety Instrument (DSI), focused on Personality evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Global Skills Assessment",
+          "url": "https://www.shl.com/products/product-catalog/view/global-skills-assessment",
+          "test_type": "A",
+          "subtitle": "ability assessment",
+          "confidence": 0,
+          "category": "ability",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for manager that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Global Skills Assessment, focused on Cognitive, Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "HiPo Unlocking Potential Report 2.0",
+          "url": "https://www.shl.com/products/product-catalog/view/hipo-unlocking-potential-report-2-0",
+          "test_type": "A",
+          "subtitle": "ability assessment",
+          "confidence": 0,
+          "category": "ability",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for manager that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for HiPo Unlocking Potential Report 2.0, focused on Cognitive evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        }
+      ],
+      "pipeline": {
+        "stages": [
+          {
+            "name": "Initial Screening",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Account Manager Solution"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Agency Manager Solution"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Branch Manager - Short Form"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Adobe Experience Manager (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Behavioral Fit",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Digital Readiness Development Report - Manager"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          }
+        ],
+        "fatigue": {
+          "fatigue_score": 0.74,
+          "risk_level": "HIGH",
+          "total_duration": 150,
+          "dropout_probability": 0.37
+        },
+        "signal": {
+          "signal_score": 0.35,
+          "coverage": {
+            "technical": 0.4,
+            "behavioral": 1.0,
+            "leadership": 0.0,
+            "cognitive": 0.0
+          },
+          "confidence_levels": {
+            "technical": "Moderate",
+            "behavioral": "High",
+            "leadership": "Low",
+            "cognitive": "Low"
+          }
+        },
+        "tradeoff_analysis": "Balanced approach: Moderate duration with good cross-domain coverage.",
+        "strategic_guidance": "\ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout."
+      },
+      "detail": null,
+      "end_of_conversation": false
+    }
+  },
+  {
+    "scenario": "Graduate Hiring (Generic)",
+    "status": "PASSED",
+    "has_recommendations": false,
+    "recommendation_count": 0,
+    "is_clarification": true,
+    "keywords_found": [],
+    "all_grounded": true,
+    "response_time_ms": 1114,
+    "reply_preview": "What specific role are you hiring for today (e.g. Python Backend, DevOps, or Sales)?",
+    "raw_response": {
+      "reply": "What specific role are you hiring for today (e.g. Python Backend, DevOps, or Sales)?",
+      "recommendations": [],
+      "pipeline": null,
+      "detail": null,
+      "end_of_conversation": false
+    }
+  },
+  {
+    "scenario": "Python Backend",
+    "status": "PASSED",
+    "has_recommendations": true,
+    "recommendation_count": 10,
+    "is_clarification": false,
+    "keywords_found": [
+      "Python"
+    ],
+    "all_grounded": true,
+    "response_time_ms": 478,
+    "reply_preview": "I've generated an adaptive hiring pipeline for python backend. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+    "raw_response": {
+      "reply": "I've generated an adaptive hiring pipeline for python backend. \ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout.",
+      "recommendations": [
+        {
+          "name": "Automata - SQL (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/automata-sql-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "A grounded SHL assessment for python backend that validates key competencies in the general domain.",
+          "ideal_use_case": "Standard SHL assessment for Automata - SQL (New), focused on Skill evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 0.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Core Java (Advanced Level) (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing python, this assessment evaluates the core systems reasoning and logic critical for high-performance python backend environments.",
+          "ideal_use_case": "Standard SHL assessment for Core Java (Advanced Level) (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Core Java (Entry Level) (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/core-java-entry-level-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing python, this assessment evaluates the core systems reasoning and logic critical for high-performance python backend environments.",
+          "ideal_use_case": "Standard SHL assessment for Core Java (Entry Level) (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Enterprise Java Beans (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing python, this assessment evaluates the core systems reasoning and logic critical for high-performance python backend environments.",
+          "ideal_use_case": "Standard SHL assessment for Enterprise Java Beans (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java 2 Platform Enterprise Edition 1.4 Fundamental",
+          "url": "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing python, this assessment evaluates the core systems reasoning and logic critical for high-performance python backend environments.",
+          "ideal_use_case": "Standard SHL assessment for Java 2 Platform Enterprise Edition 1.4 Fundamental, focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java 8 (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-8-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing python, this assessment evaluates the core systems reasoning and logic critical for high-performance python backend environments.",
+          "ideal_use_case": "Standard SHL assessment for Java 8 (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java Design Patterns (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-design-patterns-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing python, this assessment evaluates the core systems reasoning and logic critical for high-performance python backend environments.",
+          "ideal_use_case": "Standard SHL assessment for Java Design Patterns (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java Frameworks (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-frameworks-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing python, this assessment evaluates the core systems reasoning and logic critical for high-performance python backend environments.",
+          "ideal_use_case": "Standard SHL assessment for Java Frameworks (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java Platform Enterprise Edition 7 (Java EE 7)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing python, this assessment evaluates the core systems reasoning and logic critical for high-performance python backend environments.",
+          "ideal_use_case": "Standard SHL assessment for Java Platform Enterprise Edition 7 (Java EE 7), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        },
+        {
+          "name": "Java Web Services (New)",
+          "url": "https://www.shl.com/products/product-catalog/view/java-web-services-new",
+          "test_type": "K",
+          "subtitle": "knowledge assessment",
+          "confidence": 0,
+          "category": "knowledge",
+          "stage": "Screening",
+          "duration": "30 min",
+          "recruiter_insight": "While not directly testing python, this assessment evaluates the core systems reasoning and logic critical for high-performance python backend environments.",
+          "ideal_use_case": "Standard SHL assessment for Java Web Services (New), focused on Knowledge evaluation....",
+          "embedding_similarity": 0.0,
+          "keyword_similarity": 0.0,
+          "graph_relevance": 0.0,
+          "role_boost": 0.0,
+          "domain_penalty": 1.0,
+          "diversity_bonus": 0.0,
+          "mode_adjustment": 0.0,
+          "matched_skills": [],
+          "inferred_skills": [],
+          "competencies": [],
+          "domain": ""
+        }
+      ],
+      "pipeline": {
+        "stages": [
+          {
+            "name": "Initial Screening",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Automata - SQL (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Core Java (Advanced Level) (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Core Java (Entry Level) (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Enterprise Java Beans (New)"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          },
+          {
+            "name": "Technical Deep Dive",
+            "description": "Assessment focuses on technical validation.",
+            "assessments": [
+              "Java 2 Platform Enterprise Edition 1.4 Fundamental"
+            ],
+            "estimated_duration": 30,
+            "competencies_covered": []
+          }
+        ],
+        "fatigue": {
+          "fatigue_score": 0.74,
+          "risk_level": "HIGH",
+          "total_duration": 150,
+          "dropout_probability": 0.37
+        },
+        "signal": {
+          "signal_score": 0.25,
+          "coverage": {
+            "technical": 1.0,
+            "behavioral": 0.0,
+            "leadership": 0.0,
+            "cognitive": 0.0
+          },
+          "confidence_levels": {
+            "technical": "High",
+            "behavioral": "Low",
+            "leadership": "Low",
+            "cognitive": "Low"
+          }
+        },
+        "tradeoff_analysis": "Balanced approach: Moderate duration with good cross-domain coverage.",
+        "strategic_guidance": "\ud83d\udca1 Tip: Consider splitting the technical evaluations to reduce candidate dropout."
+      },
+      "detail": null,
+      "end_of_conversation": false
+    }
+  },
+  {
+    "scenario": "Hotel Front Desk (Blacklisted)",
+    "status": "PASSED",
+    "has_recommendations": false,
+    "recommendation_count": 0,
+    "is_clarification": true,
+    "keywords_found": [],
+    "all_grounded": true,
+    "response_time_ms": 1196,
+    "reply_preview": "What specific role are you hiring for today (e.g. Python Backend, DevOps, or Sales)?",
+    "raw_response": {
+      "reply": "What specific role are you hiring for today (e.g. Python Backend, DevOps, or Sales)?",
+      "recommendations": [],
+      "pipeline": null,
+      "detail": null,
+      "end_of_conversation": false
+    }
+  }
+]
