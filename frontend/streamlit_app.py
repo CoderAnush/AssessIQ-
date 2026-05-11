@@ -12,7 +12,7 @@ import requests
 import streamlit as st
 
 # --- CONFIGURATION ---
-BACKEND_URL = os.environ.get("BACKEND_URL", "https://assess-iq-backend.onrender.com")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
 
 TYPE_LABELS = {"K": "Knowledge", "A": "Ability", "P": "Personality"}
 
