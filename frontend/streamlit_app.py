@@ -77,6 +77,8 @@ def init_session_state():
         st.session_state.last_query_time = 0
     if "latest_recommendations" not in st.session_state:
         st.session_state.latest_recommendations = []
+    if "latest_pipeline" not in st.session_state:
+        st.session_state.latest_pipeline = []
     if "latest_comparison" not in st.session_state:
         st.session_state.latest_comparison = None
     if "latest_user_query" not in st.session_state:
@@ -89,6 +91,8 @@ def init_session_state():
         st.session_state.request_in_progress = False
     if "compare_selection" not in st.session_state:
         st.session_state.compare_selection = []
+    if "comparison_selection" not in st.session_state:
+        st.session_state.comparison_selection = []
 
 
 @st.cache_data(show_spinner=False)
@@ -413,9 +417,9 @@ def _format_recommendation_table(recommendations: List[Dict[str, Any]]) -> str:
 
 def build_export_report() -> str:
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    recommendations = st.session_state.latest_recommendations
-    pipeline = st.session_state.latest_pipeline
-    latest_query = st.session_state.latest_user_query or "No recruiter query captured yet."
+    recommendations = st.session_state.get("latest_recommendations", [])
+    pipeline = st.session_state.get("latest_pipeline", [])
+    latest_query = st.session_state.get("latest_user_query") or "No recruiter query captured yet."
 
     lines = [
         "# AssessIQ Hiring Orchestration Report",
