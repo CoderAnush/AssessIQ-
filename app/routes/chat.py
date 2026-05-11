@@ -234,11 +234,33 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         )
 
     except Exception as e:
-        logger.error(f"FATAL ERROR IN CHAT: {e}")
-        trace_str = traceback.format_exc()
-        logger.debug("CRITICAL EXCEPTION:\n%s", trace_str)
-        return ChatResponse(
-            reply="I encountered a technical issue while processing your request. Please try a simpler SHL assessment query.",
-            recommendations=[],
-            end_of_conversation=False,
-        )
+        logger.exception("FATAL ERROR IN CHAT PIPELINE")
+        try:
+            # Emergency fallback: Return top 3 generic technical assessments
+            catalog = services.catalog_loader.get_all()
+            generic_recs = []
+            for a in catalog[:3]:
+                generic_recs.append(Recommendation(
+                    name=a.name,
+                    url=a.url,
+                    test_type=a.test_type.value,
+                    subtitle="General Assessment",
+                    confidence=85,
+                    category="general",
+                    stage="Screening",
+                    duration="30 min",
+                    recruiter_insight="I've selected this broadly applicable assessment as a starting point while I refine my deep-retrieval logic.",
+                    ideal_use_case=a.description[:100] + "..."
+                ))
+            
+            return ChatResponse(
+                reply="I'm experiencing a temporary intelligence hiccup, but here are 3 broadly applicable assessments from the SHL catalog to get you started.",
+                recommendations=generic_recs,
+                end_of_conversation=False
+            )
+        except Exception:
+            return ChatResponse(
+                reply="I specialize in recommending SHL assessments and cannot assist with unrelated topics.",
+                recommendations=[],
+                end_of_conversation=False
+            )

@@ -4,7 +4,7 @@ Implements deterministic clarification state machine and robust skill extraction
 """
 
 from dataclasses import dataclass, field
-from typing import List, Set, Optional, Tuple, Dict
+from typing import List, Set, Optional, Tuple, Dict, Any
 import re
 from enum import Enum
 from app.logger_config.logger import get_logger
@@ -28,6 +28,7 @@ class HiringContext:
     tech_stack: Set[str] = field(default_factory=set)
     workflow_mode: str = "default"
     leadership_needs: bool = False
+    normalized_role: Optional[Any] = None
     
     # State tracking (Phase 4)
     asked_slots: Set[str] = field(default_factory=set)
@@ -79,6 +80,11 @@ class ConversationAnalyzer:
         if context.role: context.inferred_slots.add("role")
         if context.tech_stack: context.inferred_slots.add("tech_stack")
         if "senior" in full_text or "junior" in full_text: context.inferred_slots.add("seniority")
+
+        # 4. Role Normalization (Phase 4)
+        from app.services.role_normalizer import RoleNormalizer
+        normalizer = RoleNormalizer()
+        context.normalized_role, _, _ = normalizer.normalize(context.role or last_user_msg)
 
         # 4. Convergence Logic (Phase 4 & 6)
         missing = context.get_missing_slots()

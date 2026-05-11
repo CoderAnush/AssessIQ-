@@ -32,29 +32,39 @@ class AdaptiveOrchestrator:
         """
         Generates an optimized, adaptive hiring pipeline (Phase 2 & 6).
         """
-        # 1. Greedy Optimization for Coverage vs Fatigue (Phase 2)
-        selected_ids = self._optimize_selection(ranked_assessments, context)
-        
-        # 2. Adaptive Stage Distribution (Phase 6)
-        stages = self._distribute_stages(selected_ids, catalog, context)
-        
-        # 3. Intelligence Analysis (Phase 3 & 4)
-        fatigue = self.fatigue_engine.calculate_fatigue(selected_ids, catalog)
-        signal = self.signal_engine.estimate_signal(selected_ids, catalog)
-        
-        # 4. Tradeoff Analysis (Phase 5)
-        tradeoff = self._analyze_tradeoffs(fatigue, signal, context)
-        
-        # 5. Strategic Advice (Phase 10)
-        advice = self._generate_strategic_advice(signal, fatigue, context)
-        
-        return OptimizedPipeline(
-            stages=stages,
-            fatigue_report=fatigue,
-            signal_report=signal,
-            tradeoff_analysis=tradeoff,
-            strategic_advice=advice
-        )
+        try:
+            # 1. Greedy Optimization for Coverage vs Fatigue (Phase 2)
+            selected_ids = self._optimize_selection(ranked_assessments, context)
+            
+            # 2. Adaptive Stage Distribution (Phase 6)
+            stages = self._distribute_stages(selected_ids, catalog, context)
+            
+            # 3. Intelligence Analysis (Phase 3 & 4)
+            fatigue = self.fatigue_engine.calculate_fatigue(selected_ids, catalog)
+            signal = self.signal_engine.estimate_signal(selected_ids, catalog)
+            
+            # 4. Tradeoff Analysis (Phase 5)
+            tradeoff = self._analyze_tradeoffs(fatigue, signal, context)
+            
+            # 5. Strategic Advice (Phase 10)
+            advice = self._generate_strategic_advice(signal, fatigue, context)
+            
+            return OptimizedPipeline(
+                stages=stages,
+                fatigue_report=fatigue,
+                signal_report=signal,
+                tradeoff_analysis=tradeoff,
+                strategic_advice=advice
+            )
+        except Exception as e:
+            logger.exception("ORCHESTRATION FAILURE: Falling back to basic recommendations")
+            return OptimizedPipeline(
+                stages=[],
+                fatigue_report={"fatigue_score": 0.0, "risk_level": "LOW", "total_duration": 0},
+                signal_report={"signal_score": 0.5, "coverage": {}, "confidence_levels": {}},
+                tradeoff_analysis="Orchestration limited. Showing individual recommendations.",
+                strategic_advice="I've provided the top matching assessments for this role."
+            )
 
     def _optimize_selection(self, ranked: List[Any], context: HiringContext) -> List[str]:
         """Greedy optimization to maximize coverage and minimize redundancy/fatigue."""

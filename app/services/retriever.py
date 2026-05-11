@@ -51,9 +51,10 @@ class HybridRetriever:
             query_terms.update(t.lower() for t in context.tech_stack)
         query_terms.update(expanded_query_skills)
 
-        # 2. ROLE NORMALIZATION
-        if context.normalized_role:
-            role_domain_keywords = self.role_normalizer.get_domain_keywords(context.normalized_role)
+        # 2. ROLE NORMALIZATION (Phase 4)
+        n_role = getattr(context, "normalized_role", None)
+        if n_role:
+            role_domain_keywords = self.role_normalizer.get_domain_keywords(n_role)
             query_terms.update(role_domain_keywords)
 
         role_domain = self.taxonomy.classify_role(context.role or "", list(context.tech_stack or []))
@@ -77,7 +78,7 @@ class HybridRetriever:
             skill_hits = len(query_terms.intersection(assess_skills))
             if skill_hits:
                 score += 0.1 * min(skill_hits, 5)
-
+            
             # C. Intent Weighting
             for intent, weight in intents.items():
                 if intent in metadata_str:
@@ -145,4 +146,3 @@ class HybridRetriever:
                 return True
 
         return False
-
