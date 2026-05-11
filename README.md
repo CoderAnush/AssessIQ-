@@ -326,33 +326,40 @@ The frontend is deployed on Streamlit Cloud for optimal recruiter UX.
 
 ---
 
-## Recent Fixes (May 11, 2026)
+## Recent Fixes (May 11, 2026) - DEPLOYMENT PENDING
 
-### Issues Fixed
+### Issues Fixed & Committed
 
 | Issue | Fix | Status |
 |:---|:---|:---:|
-| **Only Java showing** (not Python) | Added explicit language filtering in retriever to penalize Java assessments when Python is requested (and vice versa) | ✓ Committed |
-| **All confidence at 67%** | Backend now calculates natural spread (95%, 90%, 85%, 80%...) with minimum 65%; frontend respects backend confidence | ✓ Committed |
-| **Confidence showing 0** | Added fallback to ensure minimum 65% confidence for all recommendations | ✓ Committed |
-| **double_arrow_right visible** | Under investigation - likely Streamlit rendering issue | ⏳ Pending |
+| **Clarification loop** (asking for role when query is specific) | Fixed role extraction to recognize standalone keywords (java, python, backend, engineer) and infer tech_stack from role | ✓ Committed |
+| **Only Java showing** (not Python) | Added language filtering to completely exclude wrong-language assessments | ✓ Committed |
+| **DevOps giving Java** | Added DevOps-specific detection and filtering | ✓ Committed |
+| **All confidence at 67%** | Backend now calculates natural spread (95%, 90%, 85%...) with minimum 65% | ✓ Committed |
+| **Confidence showing 0** | Added fallback to ensure minimum 65% confidence | ✓ Committed |
+| **double_arrow_right visible** | Under investigation | ⏳ Pending |
+
+**Note:** All fixes are committed and pushed. Waiting for Render backend redeploy (~2-5 minutes).
 
 ### Technical Changes
 
-1. **Retriever** (`app/services/retriever.py`):
-   - Added `explicit_python` and `explicit_java` detection
-   - Added `language_penalty_keywords` to filter wrong language assessments
-   - Applied -0.5 penalty for mismatched language assessments
-   - Updated fallback logic to respect language preferences
+1. **Conversation Analyzer** (`app/services/conversation_analyzer.py`):
+   - Fixed `_extract_role()` to prioritize tech keywords (java, python) over generic terms (engineer, developer)
+   - Added tech_stack inference from role keywords (e.g., "Java Engineer" → tech_stack includes Java)
+   - Prevents unnecessary clarification for specific role queries
 
-2. **Chat API** (`app/routes/chat.py`):
+2. **Retriever** (`app/services/retriever.py`):
+   - Added `explicit_python`, `explicit_java`, `explicit_devops` detection
+   - Completely excludes wrong-language assessments (not just penalty)
+   - Updated fallback logic to respect language/domain preferences
+
+3. **Chat API** (`app/routes/chat.py`):
    - Fixed confidence calculation with natural spread (95, 90, 85, 80, 75...)
    - Added `position_decay` (5% per rank position)
    - Minimum confidence clamped to 65%, maximum to 98%
 
-3. **Frontend** (`frontend/streamlit_app.py`):
+4. **Frontend** (`frontend/streamlit_app.py`):
    - Now respects backend confidence scores instead of recalculating
-   - Falls back to estimation only if backend doesn't provide confidence
 
 ---
 
