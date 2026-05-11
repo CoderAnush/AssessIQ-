@@ -191,18 +191,18 @@ class EnterpriseRanker:
         query_domain = query_class.get("primaryDomain", Domain.GENERAL)
         
         if query_domain == Domain.BACKEND:
-            base = "Recommended because it validates API architecture, backend systems, and distributed service design relevant to the engineering role"
+            base = "Evaluates API architecture, distributed systems reliability, and backend service design."
         elif query_domain == Domain.FRONTEND:
-            base = "Recommended because it evaluates modern frontend architecture, JavaScript competency, and UI engineering fundamentals"
+            base = "Validates component architecture, frontend scalability, and modern UI engineering workflows."
         elif query_domain == Domain.DATA_AI:
-            base = "Recommended because it measures machine learning foundations, NLP reasoning, and data science competency overlap"
+            base = "Assesses machine learning foundations, NLP reasoning, and applied AI competency."
         elif query_domain == Domain.DEVOPS:
-            base = "Recommended because it validates infrastructure reliability, cloud deployment workflows, and Kubernetes-oriented operational skills"
+            base = "Measures infrastructure automation, deployment reliability, and cloud operations competency."
         else:
-            base = f"Recommended because it evaluates core {primary_domain.value.lower().replace('_', ' ')} principles essential for this role"
+            base = f"Evaluates core {primary_domain.value.lower().replace('_', ' ')} principles essential for this role."
 
         if is_expansion:
-            base = f"FALLBACK MATCH: While an exact match was unavailable, this recommendation strongly aligns with the required competencies. {base}"
+            base = f"CATALOG-LIMITED MATCH: {base}"
         elif len(matched_skills) > 0:
             base = f"EXACT MATCH: {base}"
         else:

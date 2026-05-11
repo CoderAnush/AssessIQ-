@@ -113,6 +113,12 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     spec_str = "/".join(list(requested_specs)[:2])
                     sparse_catalog_msg = f"Specialized assessments for {spec_str} are limited in the current catalog. Showing closest validated competencies."
 
+            PHYS_ENG_BLOCK = [
+                "geoscience", "geoinformatics", "instrumentation", "industrial engineering",
+                "fire engineering", "petroleum", "mining", "naval", "agricultural",
+                "biomedical engineering", "metallurgy", "textile"
+            ]
+
             recommendations = []
             for idx, res in enumerate(ranked_results):
                 # The ranker already enforced domain safety dynamically.
@@ -121,6 +127,11 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
 
                 assess_text = (res.assessment.name + " " + res.assessment.description).lower()
                 assess_tokens = set(re.findall(r'\b[a-z0-9.]+\b', assess_text))
+
+                # UNIVERSAL PHYSICAL ENGINEERING BLOCK (safety net beyond ranker)
+                if query_domain in [Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI]:
+                    if any(eng in assess_text for eng in PHYS_ENG_BLOCK):
+                        continue
                 
                 # STRICT SUPPRESSION RULE
                 mismatch_triggered = False
@@ -196,10 +207,17 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                         continue
 
                     assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
+                    base_confidence = int((res.final_score or 0.6) * 100)
                     # Minimum pipeline guarantee
                     # Suppress mismatches here as well!
                     assess_text = (res.assessment.name + " " + res.assessment.description).lower()
                     assess_tokens = set(re.findall(r'\b[a-z0-9.]+\b', assess_text))
+
+                    # Universal block applies here too
+                    if query_domain in [Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI]:
+                        if any(eng in assess_text for eng in PHYS_ENG_BLOCK):
+                            continue
+
                     mismatch_triggered = False
                     if "react" in requested_specs or "angular" in requested_specs:
                         if "java" in assess_tokens or "spring" in assess_tokens or "backend" in assess_tokens:
