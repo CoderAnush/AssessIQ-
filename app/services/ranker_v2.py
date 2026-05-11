@@ -57,21 +57,28 @@ class EnterpriseRanker:
             # DYNAMIC RE-TAGGING
             assess_domain = self.domain_classifier.normalize_assessment_domain(assess.name, assess.description)
 
+            assess_text = (assess.name + " " + assess.description).lower()
+
+            # HARD FILTER: Physical Engineering Domains
+            engineering_blacklist = [
+                "civil", "mechanical", "electrical", "chemical", "aeronautical", 
+                "aerospace", "ceramic", "automotive", "electronics", "fire engineering", "geoinformatics", "general engineering"
+            ]
+            if query_domain in [Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI]:
+                if any(kw in assess_text for kw in engineering_blacklist) or assess_domain == Domain.ENGINEERING_CORE:
+                    continue
+
             is_expansion = res.get("expansion_matched", False)
             # ABSOLUTE GATE (prevents cross-domain leakage)
-            # For expanded candidates, relax locking ONLY to adjacency within ADJACENCY_MAP.
-            if not self.domain_classifier.is_allowed_domain(query_domain, assess_domain):
+            if not self.domain_classifier.is_strictly_allowed(query_domain, assess_domain):
                 if not is_expansion:
                     continue
 
                 # DATA_AI sparse catalogs may normalize NLP/ML assessments into GENERAL.
-                # Allow expanded DATA_AI candidates into GENERAL without cross-domain leakage.
                 if query_domain == Domain.DATA_AI and is_expansion and assess_domain == Domain.GENERAL:
                     pass
                 else:
-                    adjacent = assess_domain in self.domain_classifier.ADJACENCY_MAP.get(query_domain, [])
-                    if not adjacent:
-                        continue
+                    continue
 
             assess_text = (assess.name + " " + assess.description).lower()
 
@@ -104,8 +111,7 @@ class EnterpriseRanker:
             if assess_domain == query_domain:
                 domain_match = 1.0
             else:
-                adjacent = assess_domain in self.domain_classifier.ADJACENCY_MAP.get(query_domain, [])
-                domain_match = 0.55 if (adjacent and is_expansion) else (0.6 if adjacent else 0.0)
+                domain_match = 0.55 if is_expansion else 0.0
 
             tech_stack = {str(t).lower() for t in (getattr(context, "tech_stack", set()) or set())}
             assess_skills = {s.lower() for s in getattr(assess, "skills", [])}

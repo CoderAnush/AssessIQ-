@@ -51,11 +51,11 @@ class DomainClassifier:
     }
 
     ADJACENCY_MAP = {
-        Domain.BACKEND: [Domain.DEVOPS, Domain.ENGINEERING_CORE],
-        Domain.FRONTEND: [Domain.ENGINEERING_CORE],
-        Domain.DATA_AI: [Domain.BACKEND, Domain.ENGINEERING_CORE],
-        Domain.DEVOPS: [Domain.BACKEND, Domain.ENGINEERING_CORE],
-        Domain.QA: [Domain.BACKEND, Domain.ENGINEERING_CORE],
+        Domain.BACKEND: [],
+        Domain.FRONTEND: [],
+        Domain.DATA_AI: [],
+        Domain.DEVOPS: [],
+        Domain.QA: [],
         Domain.MANAGEMENT: [Domain.GENERAL]
     }
 
@@ -176,23 +176,16 @@ class DomainClassifier:
 
         return Domain.GENERAL
 
-    def is_allowed_domain(self, query_domain: Domain, assessment_domain: Domain) -> bool:
+    def is_strictly_allowed(self, query_domain: Domain, assessment_domain: Domain) -> bool:
         """
-        Smart Safety Gate (Absolute Precision).
+        Absolute Domain Hard Lock.
+        NO ENGINEERING_CORE. NO partial overlap.
         """
+        strict_domains = {Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI}
+        if query_domain in strict_domains:
+            return query_domain == assessment_domain
+            
         if query_domain == Domain.GENERAL:
             return assessment_domain != Domain.MEDICAL
             
-        # ENGINEERING_CORE is the universal fallback for all technical domains
-        if assessment_domain == Domain.ENGINEERING_CORE:
-            technical_domains = {Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA}
-            return query_domain in technical_domains
-
-        # Strict Isolation for Core Technical Domains
-        technical_domains = [Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA, Domain.MANAGEMENT]
-        if query_domain in technical_domains:
-            if assessment_domain == Domain.GENERAL:
-                return False
-        
-        # Absolute domain locking
         return query_domain == assessment_domain

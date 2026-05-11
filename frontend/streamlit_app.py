@@ -108,7 +108,9 @@ def render_recommendation_card(rec: Dict[str, Any], index: int):
 
     skills = "".join([f'<span style="background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700; margin-right:4px; border:1px solid #e2e8f0;">{s}</span>' for s in n['matched_skills'][:3]])
     
-    if "Related Competency" in n['insight'] or "Expanded Match" in n['insight']:
+    if "fallback" in n['insight'].lower():
+        match_badge = '<span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; border: 1px solid rgba(239, 68, 68, 0.2);">FALLBACK MATCH</span>'
+    elif "Related Competency" in n['insight'] or "Expanded Match" in n['insight']:
         match_badge = '<span style="background: rgba(124, 58, 237, 0.1); color: #7c3aed; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; border: 1px solid rgba(124, 58, 237, 0.2);">EXPANDED MATCH</span>'
     else:
         match_badge = '<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.2);">EXACT MATCH</span>'
