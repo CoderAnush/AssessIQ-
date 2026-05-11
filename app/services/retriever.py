@@ -70,11 +70,15 @@ class HybridRetriever:
         # Language-specific filtering (NEW: prevent Java/Python cross-contamination)
         explicit_python = "python" in query_text or "django" in query_text or "flask" in query_text
         explicit_java = "java" in query_text and "javascript" not in query_text  # Exclude JavaScript false positives
+        explicit_devops = any(w in query_text for w in ["devops", "sre", "kubernetes", "terraform", "docker", "aws", "azure", "gcp", "cloud"])
         
         if explicit_python:
             language_penalty_keywords = ["java (", "java enterprise", "java beans", "j2ee", "java 8", "java framework", "core java"]
         elif explicit_java:
             language_penalty_keywords = ["python", "django", "flask", "pandas", "numpy"]
+        elif explicit_devops:
+            # For DevOps, penalize pure language assessments
+            language_penalty_keywords = ["java programming", "python programming", "java coding", "python coding"]
         else:
             language_penalty_keywords = []
 
@@ -88,9 +92,9 @@ class HybridRetriever:
             desc_low = assessment.description.lower()
             metadata_str = (name_low + " " + desc_low).lower()
             
-            # Language penalty (NEW: prevent Java/Python cross-contamination)
+            # Language filtering (NEW: completely exclude wrong language for explicit queries)
             if language_penalty_keywords and any(kw in name_low for kw in language_penalty_keywords):
-                score -= 0.5  # Heavy penalty for wrong language
+                continue  # Skip this assessment entirely - wrong language
             
             # A. Name exact/partial match
             name_words = set(name_low.split())
@@ -155,14 +159,14 @@ class HybridRetriever:
                         matches_language = "python" in name_low or "django" in name_low or "flask" in name_low
                     elif explicit_java:
                         matches_language = "java" in name_low and "javascript" not in name_low
+                    elif explicit_devops:
+                        # For DevOps, look for cloud/DevOps keywords
+                        matches_language = any(w in name_low for w in ["cloud", "devops", "kubernetes", "docker", "aws", "azure", "infrastructure", "terraform"])
                     else:
                         # No explicit language - accept any technical
                         matches_language = any(w in name_low for w in ["java", "python", "software", "coding", "technical", "algorithm", "logic", "programming", "developer"])
                     
                     if matches_language and not any(bw in name_low for bw in blacklist):
-                        # Skip wrong language in fallback too
-                        if language_penalty_keywords and any(kw in name_low for kw in language_penalty_keywords):
-                            continue
                         scored_results.append({
                             "id": a.id,
                             "name": a.name,

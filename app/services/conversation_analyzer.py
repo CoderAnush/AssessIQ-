@@ -74,6 +74,24 @@ class ConversationAnalyzer:
         context.role = self._extract_role(full_text)
         context.seniority = self._extract_seniority(full_text) or "mid"
         context.tech_stack = self._extract_tech_stack(full_text)
+        
+        # NEW: Infer tech_stack from role if not explicitly provided
+        if not context.tech_stack and context.role:
+            role_lower = context.role.lower()
+            inferred_tech = []
+            if "java" in role_lower and "javascript" not in role_lower:
+                inferred_tech.append("Java")
+            if "python" in role_lower:
+                inferred_tech.append("Python")
+            if "react" in role_lower or "frontend" in role_lower:
+                inferred_tech.append("React")
+            if "node" in role_lower:
+                inferred_tech.append("Node.js")
+            if "devops" in role_lower or "sre" in role_lower:
+                inferred_tech.append("DevOps")
+            if inferred_tech:
+                context.tech_stack = inferred_tech
+        
         context.domain = self._infer_domain(context.role, context.tech_stack, full_text)
 
         # 3. Mark inferred slots
