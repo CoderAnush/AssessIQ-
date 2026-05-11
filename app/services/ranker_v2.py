@@ -165,10 +165,8 @@ class EnterpriseRanker:
             if is_expansion:
                 # Expanded/related items should remain visible but clearly lower confidence.
                 final_score = final_score * 0.60
-                if expansion_label:
-                    explanation = f"{expansion_label}: {explanation}"
-                else:
-                    explanation = f"Related Competency Match: {explanation}"
+                # Note: _generate_grounded_insight already prefixes CATALOG-LIMITED MATCH:
+                # Do NOT add another prefix here to avoid double-labeling.
 
             final_ranked.append(RankedAssessment(
                 assessment=assess,
