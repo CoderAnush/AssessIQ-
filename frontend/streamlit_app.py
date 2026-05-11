@@ -66,10 +66,10 @@ def apply_styles():
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
             html, body, [class*="st-"] { font-family: 'Outfit', sans-serif; }
-            .hero-section { background: #0f172a; padding: 2.5rem 2rem; border-radius: 1.5rem; text-align: center; margin-bottom: 1rem; border: 1px solid #1e293b; }
-            .hero-title { background: linear-gradient(to right, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem; font-weight: 800; }
-            .hero-subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 1rem; }
-            .accuracy-card { background: white; padding: 1rem 2rem; border-radius: 1rem; border: 1px solid #e2e8f0; text-align: center; margin: 0 auto 2rem auto; width: fit-content; }
+            .hero-section { background: #0f172a; padding: 2rem; border-radius: 1rem; text-align: center; margin-bottom: 1rem; border: 1px solid #1e293b; }
+            .hero-title { background: linear-gradient(to right, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.2rem; font-weight: 800; }
+            .hero-subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem; }
+            .accuracy-card { background: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; text-align: center; margin: 0 auto 1.5rem auto; width: fit-content; }
             .status-indicator { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 9999px; color: #166534; font-size: 0.7rem; font-weight: 800; }
             .status-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 2s infinite; }
             @keyframes pulse { 0% { transform: scale(0.9); } 70% { transform: scale(1.1); } 100% { transform: scale(0.9); } }
@@ -80,7 +80,7 @@ def apply_styles():
 def render_hero_landing():
     if st.session_state["messages"]: return
     st.markdown('<div class="hero-section"><div class="hero-title">Hiring Orchestration Copilot</div><div class="hero-subtitle">High-precision hiring grounded in SHL.</div></div>', unsafe_allow_html=True)
-    st.markdown('<div class="accuracy-card"><div style="font-size:3rem; font-weight:900;">95%</div><div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase;">Match Accuracy</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="accuracy-card"><div style="font-size:2.5rem; font-weight:900;">95%</div><div style="font-size:0.65rem; font-weight:700; color:#64748b; text-transform:uppercase;">Match Accuracy</div></div>', unsafe_allow_html=True)
     st.markdown("### ⚡ Quick Start")
     cols = st.columns(4)
     prompts = ["Senior React Engineer", "Backend Java Dev", "DevOps Cloud Engineer", "ML Engineer"]
@@ -93,8 +93,6 @@ def render_recommendation_card(rec: Dict[str, Any], index: int):
     n = _normalize_recommendation(rec)
     conf_color = "#10b981" if n['confidence'] >= 90 else "#f59e0b" if n['confidence'] >= 80 else "#ef4444"
     skills = "".join([f'<span style="background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700; margin-right:4px; border:1px solid #e2e8f0;">{s}</span>' for s in n['matched_skills'][:3]])
-    
-    # REMOVED INDENTS TO PREVENT MARKDOWN CODE BLOCK RENDERING
     card_html = f"""<div style="background:white; border-radius:1rem; border:1px solid #e2e8f0; padding:1.25rem; margin-bottom:1rem; min-height:400px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
 <div>
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
@@ -133,10 +131,9 @@ def render_pipeline_section(pipeline: Dict[str, Any]):
             for i in range(num):
                 s = stages[i]
                 with cols[i]:
-                    with st.container(border=True):
-                        st.markdown(f"**{s.get('name', 'Stage')}**")
-                        st.caption(s.get("description", "Competency validation."))
-                        for a in s.get("assessments", []): st.markdown(f"• `{a}`")
+                    st.markdown(f"**{s.get('name', 'Stage')}**")
+                    st.caption(s.get("description", "Competency validation."))
+                    for a in s.get("assessments", []): st.markdown(f"• `{a}`")
     except Exception as e:
         st.warning(f"Pipeline module loading issue: {str(e)}")
 
