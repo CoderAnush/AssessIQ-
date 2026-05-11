@@ -61,9 +61,9 @@ async def lifespan(app: FastAPI):
         app.state.retriever = HybridRetriever(app.state.catalog_loader)
         logger.info(f"STARTUP: Retriever ready in {time.time() - start_time:.2f}s")
 
-        # 4. Initialize Ranker & Embedding Service
-        logger.info("STARTUP: Initializing Ranker & Embedding Service...")
-        from app.services.embedding_service import EmbeddingService
+        # 4. Initialize Ranker (Semantic Search Disabled in Hotfix)
+        logger.info("STARTUP: Initializing Ranker (Lightweight Mode)...")
+        # from app.services.embedding_service import EmbeddingService
         # 4. Initialize Decision & Ranking Engine
         from app.services.ranker_v2 import EnterpriseRanker
         from app.services.competency_taxonomy_v2 import CompetencyTaxonomyV2
@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
         app.state.taxonomy = CompetencyTaxonomyV2()
         app.state.orchestration_analytics = OrchestrationAnalytics()
         app.state.adaptive_orchestrator = AdaptiveOrchestrator(app.state.taxonomy)
-        app.state.ranker = EnterpriseRanker(embedding_service=EmbeddingService(), skill_graph=None)
+        app.state.ranker = EnterpriseRanker(embedding_service=None, skill_graph=None)
         logger.info("STARTUP: Initializing Comparison Engine...")
 
         # 4b. Initialize Comparison Engine

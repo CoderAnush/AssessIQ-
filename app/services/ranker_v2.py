@@ -39,7 +39,7 @@ class EnterpriseRanker:
     ROLE_SPECIFICITY_BOOST = 0.3
     TECH_STACK_BOOST = 0.4
     
-    def __init__(self, embedding_service, skill_graph: Optional[SkillGraph] = None):
+    def __init__(self, embedding_service=None, skill_graph: Optional[SkillGraph] = None):
         self.embedding_service = embedding_service
         self.skill_graph = skill_graph or SkillGraph()
 
@@ -47,8 +47,14 @@ class EnterpriseRanker:
         """
         Hardened ranking with strict domain enforcement.
         """
-        query_text = f"{context.role} {context.seniority} {' '.join(context.tech_stack)}"
-        query_emb = self.embedding_service.get_embedding(query_text)
+        # Phase 8: Semantic similarity skipped in hotfix
+        query_emb = None
+        if self.embedding_service and hasattr(self.embedding_service, "get_embedding"):
+            try:
+                query_text = f"{context.role} {context.seniority} {' '.join(context.tech_stack)}"
+                query_emb = self.embedding_service.get_embedding(query_text)
+            except Exception:
+                query_emb = None
         
         scored = []
         for res in retrieved:
@@ -59,6 +65,7 @@ class EnterpriseRanker:
             
             # Final Score Calculation (Phase 6)
             # Prioritize Domain and Skills over Semantic Similarity
+            # In HOTFIX mode, embedding_similarity will be 0.0
             final_score = (
                 factors.graph_relevance * 0.5 +
                 factors.keyword_similarity * 0.35 +
@@ -104,10 +111,15 @@ class EnterpriseRanker:
         if context.role and context.role.lower() in assess.name.lower():
             role_boost = self.ROLE_SPECIFICITY_BOOST
         
-        # 5. Embedding Similarity
-        text = f"{assess.name} {assess.description} {assess.category}"
-        assess_emb = self.embedding_service.get_embedding(text)
-        embedding_sim = self.embedding_service.calculate_similarity(query_emb, assess_emb)
+        # 5. Embedding Similarity (SKIPPED in Hotfix)
+        embedding_sim = 0.0
+        if query_emb is not None and self.embedding_service:
+            try:
+                text = f"{assess.name} {assess.description} {assess.category}"
+                assess_emb = self.embedding_service.get_embedding(text)
+                embedding_sim = self.embedding_service.calculate_similarity(query_emb, assess_emb)
+            except Exception:
+                embedding_sim = 0.0
         
         return RankingFactors(
             embedding_similarity=embedding_sim,
