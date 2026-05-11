@@ -73,12 +73,14 @@ class HybridRetriever:
         explicit_devops = any(w in query_text for w in ["devops", "sre", "kubernetes", "terraform", "docker", "aws", "azure", "gcp", "cloud"])
         
         if explicit_python:
-            language_penalty_keywords = ["java (", "java enterprise", "java beans", "j2ee", "java 8", "java framework", "core java"]
+            # Exclude ANY Java assessment when Python is requested
+            language_penalty_keywords = ["java"]  # Simple and effective - catches all Java
         elif explicit_java:
-            language_penalty_keywords = ["python", "django", "flask", "pandas", "numpy"]
+            # Exclude Python assessments when Java is requested
+            language_penalty_keywords = ["python"]  # Simple and effective - catches all Python
         elif explicit_devops:
-            # For DevOps, penalize pure language assessments
-            language_penalty_keywords = ["java programming", "python programming", "java coding", "python coding"]
+            # For DevOps, exclude pure language programming assessments
+            language_penalty_keywords = ["java programming", "python programming", "java coding", "python coding", "core java", "python developer"]
         else:
             language_penalty_keywords = []
 
@@ -153,6 +155,12 @@ class HybridRetriever:
                 for a in all_assessments:
                     name_low = a.name.lower()
                     
+                    # STRICT language filtering: Skip if wrong language for explicit queries
+                    if explicit_python and "java" in name_low:
+                        continue
+                    if explicit_java and "python" in name_low:
+                        continue
+                    
                     # Check if matches language preference
                     matches_language = False
                     if explicit_python:
@@ -177,8 +185,8 @@ class HybridRetriever:
                         })
                         if len(scored_results) >= top_k: break
             
-            # Generic but safe fallback if still empty (still filtering blacklist)
-            if not scored_results:
+            # Only use generic fallback if NO explicit language was requested
+            if not scored_results and not explicit_python and not explicit_java and not explicit_devops:
                 for a in all_assessments:
                     name_low = a.name.lower()
                     if not any(bw in name_low for bw in blacklist):
