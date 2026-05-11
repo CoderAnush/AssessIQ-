@@ -23,30 +23,34 @@ class DomainClassifier:
     Handles smart domain normalization and precise safety gates (Final Intelligence Refinement).
     """
     
-    # AI/ML Alias Expansion (Part 2 Fix)
-    AI_ML_KEYWORDS = [
-        "ai", "artificial intelligence", "machine learning", "ml", 
-        "deep learning", "nlp", "computer vision", "neural networks", 
-        "tensorflow", "pytorch", "data science", "llm", "generative ai",
-        "python", "statistics", "data engineering", "spark", "hadoop", "analytics"
-    ]
+    # Contextual Indicators for Disambiguation
+    BACKEND_INDICATORS = {
+        "backend", "api", "rest api", "flask", "django", "fastapi", "microservice",
+        "server", "web app", "postgres", "redis", "celery", "sqlalchemy", "distributed systems",
+        "sql", "nosql", "database", "mongodb", "postgresql", "enterprise java", "spring", "j2ee"
+    }
+
+    AI_ML_INDICATORS = {
+        "ai", "ml", "machine learning", "deep learning", "tensorflow", "pytorch",
+        "nlp", "llm", "generative ai", "data science", "computer vision", "statistics",
+        "data engineering", "spark", "hadoop", "analytics", "neural networks"
+    }
+
+    FRONTEND_INDICATORS = {
+        "frontend", "javascript", "typescript", "react", "angular", "vue", "nextjs",
+        "web", "ui", "ux", "frontend architecture", "html", "css", "sass", "redux"
+    }
+
+    DEVOPS_INDICATORS = {
+        "devops", "cloud", "aws", "docker", "terraform", "kubernetes", "sre",
+        "infrastructure", "azure", "gcp", "ci/cd", "observability", "jenkins", "ansible"
+    }
 
     DOMAIN_GROUPS = {
-        Domain.FRONTEND: [
-            "frontend", "javascript", "typescript", "react", "angular", 
-            "angularjs", "vue", "nextjs", "web", "ui", "frontend architecture", 
-            "html", "css", "sass", "redux", "web development"
-        ],
-        Domain.BACKEND: [
-            "backend", "api", "java", "spring", "nodejs", "microservices", 
-            "distributed systems", "python", "django", "flask", "fastapi", 
-            "sql", "nosql", "database", "mongodb", "postgresql", "enterprise java"
-        ],
-        Domain.DEVOPS: [
-            "devops", "cloud", "aws", "docker", "terraform", "kubernetes", 
-            "sre", "infrastructure", "azure", "gcp", "ci/cd", "observability", "jenkins", "ansible"
-        ],
-        Domain.DATA_AI: AI_ML_KEYWORDS,
+        Domain.FRONTEND: list(FRONTEND_INDICATORS),
+        Domain.BACKEND: list(BACKEND_INDICATORS),
+        Domain.DEVOPS: list(DEVOPS_INDICATORS),
+        Domain.DATA_AI: list(AI_ML_INDICATORS),
         Domain.MANAGEMENT: [
             "management", "leadership", "behavioral", "stakeholder", 
             "engineering manager", "people management", "scrum", "agile", "strategic"
@@ -65,19 +69,44 @@ class DomainClassifier:
 
     def detect_query_domain(self, query: str) -> Dict:
         """
-        Detects primary domain using smart normalization.
+        Detects primary domain using Contextual Python Disambiguation.
         """
         query_low = query.lower()
-        scores = {domain: 0.0 for domain in self.DOMAIN_GROUPS}
         
+        # 1. EXPLICIT OVERRIDES (Highest Priority)
+        if any(kw in query_low for kw in ["backend", "api", "fastapi", "django", "flask", "server"]):
+            if not any(kw in query_low for kw in ["machine learning", "deep learning", "nlp", "llm"]):
+                 return {"primaryDomain": Domain.BACKEND, "confidence": 1.0, "reason": "Explicit Backend Keywords"}
+
+        if any(kw in query_low for kw in ["frontend", "react", "angular", "ui ", "ux ", "css"]):
+            return {"primaryDomain": Domain.FRONTEND, "confidence": 1.0, "reason": "Explicit Frontend Keywords"}
+
+        # 2. Check for Python Ambiguity
+        has_python = "python" in query_low
+        has_backend = any(kw in query_low for kw in self.BACKEND_INDICATORS)
+        has_ai = any(kw in query_low for kw in self.AI_ML_INDICATORS)
+
+        if has_python:
+            if has_backend and not has_ai:
+                return {"primaryDomain": Domain.BACKEND, "confidence": 0.95, "reason": "Python Backend Context"}
+            if has_ai:
+                return {"primaryDomain": Domain.DATA_AI, "confidence": 0.95, "reason": "Python AI/ML Context"}
+
+        # 3. Standard Weighted Scoring
+        scores = {domain: 0.0 for domain in self.DOMAIN_GROUPS}
         for domain, keywords in self.DOMAIN_GROUPS.items():
             for kw in keywords:
-                # Part 2: Explicit weight for AI/ML keywords
                 pattern = rf"\b{re.escape(kw)}\b"
                 if re.search(pattern, query_low):
-                    weight = 3.0 if domain == Domain.DATA_AI else 2.0 if " " in kw else 1.0
+                    weight = 3.0 if " " in kw else 1.5
                     scores[domain] += weight
         
+        # Add CRITICAL boost for direct domain mentions
+        if "backend" in query_low: scores[Domain.BACKEND] += 10.0
+        if "frontend" in query_low: scores[Domain.FRONTEND] += 10.0
+        if "devops" in query_low: scores[Domain.DEVOPS] += 10.0
+        if "data science" in query_low or "machine learning" in query_low: scores[Domain.DATA_AI] += 10.0
+
         sorted_domains = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         
         primary_domain = Domain.GENERAL
@@ -85,7 +114,7 @@ class DomainClassifier:
         
         if sorted_domains and sorted_domains[0][1] > 0:
             primary_domain = sorted_domains[0][0]
-            confidence = min(1.0, sorted_domains[0][1] / 2.0)
+            confidence = min(1.0, sorted_domains[0][1] / 10.0)
         
         return {
             "primaryDomain": primary_domain,
@@ -98,14 +127,26 @@ class DomainClassifier:
         Normalizes assessment domains into canonical groups.
         """
         text = (name + " " + description).lower()
-        scores = {domain: 0 for domain in self.DOMAIN_GROUPS}
         
+        # Hard Negative Checks for Assessment Tagging
+        if any(kw in text for kw in ["aws", "cloud", "kubernetes", "docker", "terraform", "infrastructure", "devops"]):
+            return Domain.DEVOPS
+        if any(kw in text for kw in ["react", "frontend", "ui ", "ux ", "angular", "javascript", "typescript", "css"]):
+             # Re-verify it's not a backend test for frontend developers
+             if "java" in text or "python" in text or "backend" in text:
+                 return Domain.BACKEND
+             return Domain.FRONTEND
+        if any(re.search(rf"\b{re.escape(kw)}\b", text) for kw in ["machine learning", "data science", "nlp", "llm"]):
+            return Domain.DATA_AI
+        # Special check for 'AI' or 'ML' as standalone words
+        if any(re.search(rf"\b{kw}\b", text, re.I) for kw in ["ai", "ml"]):
+            return Domain.DATA_AI
+
+        scores = {domain: 0 for domain in self.DOMAIN_GROUPS}
         for domain, keywords in self.DOMAIN_GROUPS.items():
             for kw in keywords:
                 if kw in text:
-                    # Give AI/ML a boost during catalog normalization too
-                    weight = 2 if domain == Domain.DATA_AI else 1
-                    scores[domain] += weight
+                    scores[domain] += 1
         
         sorted_domains = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         if sorted_domains and sorted_domains[0][1] > 0:
@@ -115,8 +156,7 @@ class DomainClassifier:
 
     def is_allowed_domain(self, query_domain: Domain, assessment_domain: Domain) -> bool:
         """
-        Smart Safety Gate (Recovery Fix).
-        Allows semantic subdomain matching while rejecting unrelated engineering.
+        Smart Safety Gate (Absolute Precision).
         """
         if query_domain == Domain.GENERAL:
             return assessment_domain not in [Domain.ENGINEERING_CORE, Domain.MEDICAL]
@@ -124,15 +164,11 @@ class DomainClassifier:
         if assessment_domain in [Domain.ENGINEERING_CORE, Domain.MEDICAL]:
             return False
             
+        # Strict Isolation for Core Technical Domains
         technical_domains = [Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA, Domain.MANAGEMENT]
         if query_domain in technical_domains:
             if assessment_domain == Domain.GENERAL:
                 return False
-                
-        # Specialized AI logic: AI queries can use Python/Data Science (which might be in Backend/General)
-        if query_domain == Domain.DATA_AI:
-            if assessment_domain == Domain.DATA_AI: return True
-            # Allow pure Python/Data fallback if needed (Part 2 Fix)
-            return False 
-
+        
+        # Absolute domain locking
         return query_domain == assessment_domain

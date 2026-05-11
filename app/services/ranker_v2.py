@@ -40,14 +40,11 @@ class EnterpriseRanker:
         """
         STRICT DOMAIN GATING PASS (Part 1, 3, 5 Fix).
         """
-        query = getattr(context, "query", "")
-        if not query and hasattr(context, "history") and context.history:
-            query = context.history[-1].get("content", "")
-            
-        query_classification = self.domain_classifier.detect_query_domain(query)
-        query_domain = query_classification["primaryDomain"]
+        # Use the domain already detected by the chat route for consistency
+        query_domain = getattr(context, "domain", Domain.GENERAL)
+        query_classification = {"primaryDomain": query_domain}
         
-        logger.info(f"RANKER: Detected Query Domain: {query_domain}")
+        logger.info(f"RANKER: Using Context Domain: {query_domain}")
 
         # 1. INITIAL STRICT FILTERING (Part 1 & 5 Fix)
         # We filter BEFORE any ranking or diversity logic.
@@ -57,12 +54,39 @@ class EnterpriseRanker:
             assess = catalog.get(res["id"])
             if not assess: continue
 
-            assess_domain = getattr(assess, "primary_domain", Domain.GENERAL)
+            # DYNAMIC RE-TAGGING (Ensure latest intelligence rules apply)
+            # This handles cases where catalog startup tagging was less precise
+            assess_domain = self.domain_classifier.normalize_assessment_domain(assess.name, assess.description)
             
             # ABSOLUTE GATE (Part 1 & 2 Fix)
             if not self.domain_classifier.is_allowed_domain(query_domain, assess_domain):
                 continue
             
+            # --- FINAL PRECISION NEGATIVE FILTERS ---
+            assess_text = (assess.name + " " + assess.description).lower()
+            
+            # 1. FRONTEND Precision: No DevOps/Cloud unless explicitly asked
+            if query_domain == Domain.FRONTEND:
+                devops_cloud = ["aws", "cloud", "kubernetes", "docker", "terraform", "infrastructure", "devops", "networking", "azure", "gcp"]
+                if any(kw in assess_text for kw in devops_cloud):
+                    # Only allow if explicitly in query
+                    if not any(kw in query.lower() for kw in devops_cloud):
+                        continue
+
+            # 2. BACKEND Precision: No Frontend unless explicitly asked
+            if query_domain == Domain.BACKEND:
+                frontend_tech = ["angular", "react", "vue", "ui ", "frontend", "css", "html", "nextjs", "ux "]
+                if any(kw in assess_text for kw in frontend_tech):
+                    if not any(kw in query.lower() for kw in frontend_tech):
+                        continue
+
+            # 3. AI/ML Precision: No generic Backend/Frontend unless asked
+            if query_domain == Domain.DATA_AI:
+                generic_tech = ["java developer", "frontend engineer", "sales representative"]
+                if any(kw in assess_text for kw in generic_tech):
+                    if not any(kw in query.lower() for kw in generic_tech):
+                        continue
+
             # Base Factors
             semantic_sim = res.get("hybrid_score", 0.0)
             

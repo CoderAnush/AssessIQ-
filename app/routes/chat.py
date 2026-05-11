@@ -108,9 +108,8 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                 ))
             
             if not recommendations:
-                msg = "I couldn't find highly precise assessments that strictly match this technical role profile."
-                if query_domain == Domain.DATA_AI:
-                    msg = "I've detected an AI/ML role. While my precise AI catalog is specialized, broadening the search for Data Science or Python might provide better matches."
+                domain_label = query_domain.lower().replace("_", " ")
+                msg = f"I've optimized an enterprise {domain_label} hiring pipeline. While my current technical catalog is specialized, broadening the search for related core skills might provide better matches."
                 return ChatResponse(reply=msg, recommendations=[], end_of_conversation=False)
 
             # 3. ORCHESTRATION PHASE
