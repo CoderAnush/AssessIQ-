@@ -57,36 +57,62 @@ class HybridRetriever:
             if any(term in metadata_str for term in query_low.split()):
                 score += 0.2
             
+            import re
+            query_tokens = set(re.findall(r'\b[a-z0-9.]+\b', query_low))
+            metadata_tokens = set(re.findall(r'\b[a-z0-9.]+\b', metadata_str))
+            
             # Explicit tech boosts
-            if explicit_python and "python" in metadata_str: score += 0.5
-            if explicit_java and "java" in metadata_str: score += 0.5
-            if explicit_devops and any(w in metadata_str for w in ["devops", "kubernetes", "terraform", "cloud", "ci/cd", "infrastructure"]):
+            if explicit_python and "python" in metadata_tokens: score += 0.5
+            if explicit_java and "java" in metadata_tokens: score += 0.5
+            if explicit_devops and any(w in metadata_tokens for w in ["devops", "kubernetes", "terraform", "cloud", "infrastructure"]):
                 score += 0.5
                 
-            # Framework Specialization Boost & Penalties (React/Angular/Vue)
-            is_react_query = any(w in query_low for w in ["react", "next.js", "nextjs", "redux", "typescript frontend"])
-            is_angular_query = "angular" in query_low
-            is_vue_query = "vue" in query_low
-            
-            if is_react_query:
-                if any(w in metadata_str for w in ["react", "next.js", "nextjs", "typescript", "ui architecture", "frontend systems", "modern frontend"]):
-                    score += 0.8
-                # Penalize legacy or generic JS
-                if any(w in metadata_str for w in ["angularjs", "angular", "legacy"]):
-                    score -= 1.0
-                if "javascript" in metadata_str and not any(w in metadata_str for w in ["react", "typescript", "ui", "frontend"]):
-                    score -= 0.5
-            elif is_angular_query:
-                if any(w in metadata_str for w in ["angular", "rxjs", "frontend architecture"]):
-                    score += 0.8
-                if "react" in metadata_str and "angular" not in metadata_str:
-                    score -= 1.0
-            elif is_vue_query:
-                if any(w in metadata_str for w in ["vue", "frontend component architecture"]):
-                    score += 0.8
-            elif explicit_frontend:
-                if any(w in metadata_str for w in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web"]):
-                    score += 0.5
+            # Framework Specialization Boost & Penalties
+            if "react" in query_tokens:
+                if "react" in metadata_tokens: score += 3.0
+                if "redux" in metadata_tokens: score += 2.0
+                if "typescript" in metadata_tokens: score += 2.0
+                if "next.js" in metadata_tokens or "nextjs" in metadata_tokens: score += 2.0
+                
+                # Penalties
+                if "java" in metadata_tokens: score -= 3.0
+                if "angular" in metadata_tokens or "angularjs" in metadata_tokens: score -= 3.0
+
+            elif "angular" in query_tokens:
+                if "angular" in metadata_tokens: score += 3.0
+                if "rxjs" in metadata_tokens: score += 2.0
+                if "vue" in metadata_tokens: score += 2.0
+                # Penalties
+                if "react" in metadata_tokens: score -= 3.0
+
+            elif "vue" in query_tokens:
+                if "vue" in metadata_tokens: score += 2.0
+
+            if "spring" in query_tokens or "springboot" in query_tokens or ("java" in query_tokens and "backend" in query_tokens):
+                if "spring" in metadata_tokens: score += 3.0
+                if "springboot" in metadata_tokens or "spring boot" in metadata_str: score += 3.0
+                # Penalties
+                if "javascript" in metadata_tokens: score -= 3.0
+                if "react" in metadata_tokens or "angular" in metadata_tokens: score -= 3.0
+
+            if "fastapi" in query_tokens or "django" in query_tokens:
+                if "fastapi" in metadata_tokens: score += 3.0
+                if "django" in metadata_tokens: score += 3.0
+                
+            if "tensorflow" in query_tokens or "pytorch" in query_tokens or "nlp" in query_tokens:
+                if "tensorflow" in metadata_tokens: score += 3.0
+                if "pytorch" in metadata_tokens: score += 3.0
+                if "nlp" in metadata_tokens: score += 2.0
+                if "llm" in metadata_tokens: score += 2.0
+                
+                if "analytics" in metadata_tokens and "deep" not in metadata_tokens and "machine" not in metadata_tokens:
+                    score -= 2.0
+
+            if "kubernetes" in query_tokens or "terraform" in query_tokens or "devops" in query_tokens:
+                if "kubernetes" in metadata_tokens: score += 3.0
+                if "terraform" in metadata_tokens: score += 3.0
+                if "docker" in metadata_tokens: score += 2.0
+                if "aws" in metadata_tokens: score += 2.0
             
             # Skill Graph Expansion
             tech_stack = getattr(context, "tech_stack", set())

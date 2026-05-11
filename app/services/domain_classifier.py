@@ -41,8 +41,8 @@ class DomainClassifier:
 
     FRONTEND_INDICATORS = {
         "frontend", "javascript", "typescript", "react", "angular", "vue", "nextjs",
-        "web", "ui", "ux", "frontend architecture", "html", "css", "sass", "redux",
-        "interface", "design", "architecture", "styling"
+        "ui", "ux", "frontend architecture", "html", "css", "sass", "redux",
+        "interface", "styling", "ui design", "user interface"
     }
 
     DEVOPS_INDICATORS = {
@@ -162,8 +162,12 @@ class DomainClassifier:
         scores = {domain: 0 for domain in self.DOMAIN_GROUPS}
         for domain, keywords in self.DOMAIN_GROUPS.items():
             for kw in keywords:
-                if kw in text:
+                if re.search(rf"\b{re.escape(kw)}\b", text):
                     scores[domain] += 1
+        
+        # Add a heavy bias for backend if java is present
+        if re.search(r"\bjava\b", text) and not re.search(r"\bjavascript\b", text):
+            scores[Domain.BACKEND] += 5
         
         sorted_domains = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         if sorted_domains and sorted_domains[0][1] > 0:

@@ -202,7 +202,11 @@ class EnterpriseRanker:
             base = f"Recommended because it evaluates core {primary_domain.value.lower().replace('_', ' ')} principles essential for this role"
 
         if is_expansion:
-            base = f"While an exact match was unavailable, this recommendation strongly aligns with the required competencies. {base}"
+            base = f"FALLBACK MATCH: While an exact match was unavailable, this recommendation strongly aligns with the required competencies. {base}"
+        elif len(matched_skills) > 0:
+            base = f"EXACT MATCH: {base}"
+        else:
+            base = f"RELEVANT MATCH: {base}"
 
         if matched_skills:
             skills_str = ", ".join(list(matched_skills)[:3])
