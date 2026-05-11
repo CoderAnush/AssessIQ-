@@ -170,19 +170,31 @@ class EnterpriseRanker:
 
     def _infer_domain(self, assess: Any) -> str:
         text = (assess.name + " " + assess.description).lower()
-        # Phase 1: Expanded Metadata Inference
-        if any(w in text for w in ["kubernetes", "terraform", "platform", "infrastructure", "sre", "automation", "amazon", "aws", "cloud", "azure", "google", "gcp"]):
+        
+        # Priority 1: Core Backend Languages (Avoid DevOps leakage)
+        if any(w in text for w in ["python", "java", "fastapi", "django", "spring", "microservice"]):
+            return "backend engineering"
+            
+        # Priority 2: Infrastructure & DevOps
+        if any(w in text for w in ["kubernetes", "terraform", "infrastructure", "sre", "amazon", "aws", "cloud", "azure", "gcp"]):
             return "devops"
-        if any(w in text for w in ["pytorch", "tensorflow", "ml", "machine learning", "data engineering", "spark", "hadoop", "hive", "big data", "analytics"]):
+            
+        # Priority 3: Data Science
+        if any(w in text for w in ["pytorch", "tensorflow", "ml", "machine learning", "data engineering", "big data", "analytics"]):
             return "data science"
-        if any(w in text for w in ["python", "java", "backend", "api", "microservice", "distributed", "fastapi", "django", "node", "ruby", "php", "c#", ".net"]):
+            
+        # Priority 4: Other Technical Domains
+        if any(w in text for w in ["backend", "api", "distributed", "node", "ruby", "php", "c#", ".net"]):
             return "backend engineering"
         if any(w in text for w in ["frontend", "react", "ui", "javascript", "playwright", "cypress", "angular", "html", "css"]):
-            if any(w in text for w in ["playwright", "cypress", "selenium", "test"]): return "qa automation"
             return "frontend engineering"
-        if any(w in text for w in ["qa", "test", "selenium", "automation"]): return "qa automation"
-        if any(w in text for w in ["leadership", "management", "strategic", "people", "manager"]): return "management"
-        if any(w in text for w in ["sales", "negotiation", "customer", "support"]): return "business"
+        if any(w in text for w in ["manager", "lead", "leadership", "stakeholder", "strategy"]):
+            return "management"
+        if any(w in text for w in ["qa", "test", "selenium", "automation", "playwright", "cypress"]):
+            return "qa automation"
+        if any(w in text for w in ["sales", "negotiation", "customer", "support", "business"]):
+            return "business"
+            
         return "general"
 
     def _generate_grounded_insight(self, assess: Any, context: Any) -> str:

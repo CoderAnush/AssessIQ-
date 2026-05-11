@@ -63,8 +63,8 @@ class HybridRetriever:
 
         # 2b. Global Technical Filter (Phase 11)
         role_text = (context.role or "").lower()
-        is_tech = any(w in role_text for w in ["python", "java", "backend", "engineer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect"])
-        blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections", "agency manager"]
+        is_tech = any(w in role_text for w in ["python", "java", "backend", "engineer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect", "graduate", "intern"])
+        blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections", "agency manager", "hotel", "front desk", "receptionist", "hospitality", "store manager"]
 
         scored_results = []
         for assessment in all_assessments:
