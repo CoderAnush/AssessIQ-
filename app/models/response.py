@@ -4,7 +4,7 @@ STRICT COMPLIANCE VERSION FOR SHL EVALUATOR.
 """
 
 from pydantic import BaseModel, Field
-from typing import List, Literal
+from typing import List, Literal, Dict, Optional, Any
 
 
 class Message(BaseModel):

@@ -23,7 +23,7 @@ SCENARIOS = [
     {"name": "Backend Architect", "context": HiringContext(role="Senior Backend Architect", tech_stack={"Python", "AWS", "Distributed Systems"}, seniority="senior")},
     {"name": "Junior DevOps", "context": HiringContext(role="Junior DevOps Engineer", tech_stack={"Docker", "CI/CD"}, seniority="entry")},
     {"name": "Graduate Engineering", "context": HiringContext(role="Graduate Engineer", seniority="entry", workflow_mode="quick_screening")},
-    {"name": "Leadership Candidate", "context": HiringContext(role="Engineering Director", seniority="senior", leadership_needs=True)}
+    {"name": "Leadership Candidate", "context": HiringContext(role="Engineering Director", seniority="senior", domain="management", workflow_mode="leadership_hiring")}
 ]
 
 def run_benchmark():

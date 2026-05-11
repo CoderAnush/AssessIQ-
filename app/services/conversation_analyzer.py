@@ -27,6 +27,7 @@ class HiringContext:
     seniority: str = "mid"
     tech_stack: Set[str] = field(default_factory=set)
     workflow_mode: str = "default"
+    leadership_needs: bool = False
     
     # State tracking (Phase 4)
     asked_slots: Set[str] = field(default_factory=set)

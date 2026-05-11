@@ -92,6 +92,17 @@ class AssessmentWithMetadata(Assessment):
     
     # Enterprise Metadata (Phase 6)
     inferred_skills: List[str] = Field(default_factory=list)
+    
+    @validator("inferred_skills", pre=True)
+    def flatten_inferred_skills(cls, v):
+        if isinstance(v, dict):
+            skills = []
+            for category, items in v.items():
+                if isinstance(items, list):
+                    skills.extend(items)
+            return list(set(skills))
+        return v
+
     engineering_domains: List[str] = Field(default_factory=list)
     suitable_stages: List[str] = Field(default_factory=list)
     category: str = Field(default="general")
