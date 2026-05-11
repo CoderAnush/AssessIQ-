@@ -1,6 +1,6 @@
 """
 Stateless chat route for the SHL evaluator.
-Final Production Hardening Pass (Empty States + Data Safety).
+Implements ABSOLUTE DOMAIN LOCKING safety guards.
 """
 
 from fastapi import APIRouter, Body, Request
@@ -15,18 +15,19 @@ from app.models.response import (
 from app.agents.decision_engine import AgentAction
 from app.config import settings
 from app.logger_config.logger import get_logger
+from app.services.domain_classifier import DomainClassifier, Domain
 
 logger = get_logger("chat_endpoint")
 router = APIRouter()
 
-
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
     """
-    Stateless chat endpoint with elite empty state handling (Part 7 Fix).
+    Stateless chat endpoint with ABSOLUTE DOMAIN LOCKING (Step 4 Fix).
     """
     try:
         services = request_obj.app.state
+        domain_classifier = DomainClassifier()
 
         if "messages" in payload:
             chat_request = ChatRequest(**payload)
@@ -35,10 +36,11 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
 
         messages = [m.dict() for m in chat_request.messages]
         
-        # Analysis
+        # 1. Analysis
         decision = services.decision_engine.decide(messages)
         context, _ = services.decision_engine.analyzer.analyze(messages)
-        context.query = messages[-1]["content"] if messages else ""
+        user_query = messages[-1]["content"] if messages else ""
+        context.query = user_query
 
         if decision.action == AgentAction.REFUSE:
             return ChatResponse(reply=decision.reasoning, recommendations=[], end_of_conversation=False)
@@ -47,23 +49,24 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             return ChatResponse(reply=decision.next_question, recommendations=[], end_of_conversation=False)
 
         if decision.action in {AgentAction.RECOMMEND, AgentAction.REFINE}:
+            # 2. Retrieval & Ranking
             query = f"{context.role} {context.seniority} {' '.join(context.tech_stack)}"
             retrieved = services.retriever.retrieve(query, context, top_k=20)
             
             catalog = {a.id: a for a in services.catalog_loader.get_all()}
             ranked_results = services.ranker.rank(retrieved, context, catalog, top_k=10)
 
-            # Part 7 Fix: Empty State Safety
-            if not ranked_results:
-                return ChatResponse(
-                    reply="No highly aligned assessments found for this specific role profile. Try broadening the technical requirements or seniority level to see broader catalog matches.",
-                    recommendations=[],
-                    end_of_conversation=False
-                )
+            # 3. DETECT DOMAIN FOR FINAL SAFETY GUARD (Step 4 Fix)
+            query_domain = domain_classifier.detect_query_domain(user_query)["primaryDomain"]
 
             recommendations = []
             for idx, res in enumerate(ranked_results):
-                # Data Hardening (Part 8)
+                # FINAL SAFETY GUARD: ABSOLUTE ASSERTION (Step 4 Fix)
+                assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
+                if not domain_classifier.is_allowed_domain(query_domain, assess_domain):
+                    logger.warning(f"FINAL GUARD: Rejecting {res.assessment.name} ({assess_domain}) for query {query_domain}")
+                    continue
+
                 base_confidence = int((res.final_score or 0.6) * 100)
                 final_confidence = max(60, min(99, base_confidence - (idx * 3)))
                 
@@ -78,12 +81,22 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     duration=f"{getattr(res.assessment, 'duration_minutes', 30)} min",
                     recruiter_insight=str(res.explanation),
                     ideal_use_case=str(res.assessment.description[:120]) + "...",
-                    domain=str(getattr(res.assessment, "primary_domain", "GENERAL")),
+                    domain=str(assess_domain),
                     matched_skills=list(res.matched_skills)
                 ))
             
-            # Orchestration
-            optimized = services.adaptive_orchestrator.orchestrate(ranked_results, context, catalog)
+            # Part 7 Fix: Professional Empty State if final guard cleared everything
+            if not recommendations:
+                return ChatResponse(
+                    reply="I couldn't find any assessments that strictly match the technical domain requirements for this role. Try broadening your search or specifying different skills.",
+                    recommendations=[],
+                    end_of_conversation=False
+                )
+
+            # 4. Orchestration
+            # We must only orchestrate the items that passed the final guard
+            filtered_ranked = [r for r in ranked_results if any(rec.name == r.assessment.name for rec in recommendations)]
+            optimized = services.adaptive_orchestrator.orchestrate(filtered_ranked, context, catalog)
             
             pipeline_model = HiringPipelineModel(
                 stages=[PipelineStageModel(
@@ -110,6 +123,6 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
 
         return ChatResponse(reply="How can I assist with your hiring orchestration today?", recommendations=[], end_of_conversation=False)
 
-    except Exception as e:
+    except Exception:
         logger.exception("CHAT FATAL ERROR")
         return ChatResponse(reply="Technical synchronization issue. Please retry.", recommendations=[], end_of_conversation=False)
