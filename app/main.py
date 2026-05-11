@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
         # 1. Load Catalog
         logger.info("STARTUP: Loading Catalog...")
         from app.services.catalog_loader import CatalogLoader
-        catalog_path = getattr(settings, "catalog_path", "data/processed/catalog_processed.json")
+        catalog_path = getattr(settings, "catalog_path", "data/processed/catalog_enriched_v2.json")
         app.state.catalog_loader = CatalogLoader(catalog_path)
         logger.info(f"STARTUP: Catalog loaded in {time.time() - start_time:.2f}s")
 
@@ -61,13 +61,22 @@ async def lifespan(app: FastAPI):
         app.state.retriever = HybridRetriever(app.state.catalog_loader)
         logger.info(f"STARTUP: Retriever ready in {time.time() - start_time:.2f}s")
 
-        # 4. Initialize Ranker
-        logger.info("STARTUP: Initializing Ranker...")
-        from app.services.ranker import RecommendationRanker
-        app.state.ranker = RecommendationRanker()
+        # 4. Initialize Ranker & Embedding Service
+        logger.info("STARTUP: Initializing Ranker & Embedding Service...")
+        from app.services.embedding_service import EmbeddingService
+        # 4. Initialize Decision & Ranking Engine
+        from app.services.ranker_v2 import EnterpriseRanker
+        from app.services.competency_taxonomy_v2 import CompetencyTaxonomyV2
+        from app.services.adaptive_orchestrator import AdaptiveOrchestrator
+        from app.services.orchestration_analytics import OrchestrationAnalytics
+        
+        app.state.taxonomy = CompetencyTaxonomyV2()
+        app.state.orchestration_analytics = OrchestrationAnalytics()
+        app.state.adaptive_orchestrator = AdaptiveOrchestrator(app.state.taxonomy)
+        app.state.ranker = EnterpriseRanker(embedding_service=EmbeddingService(), skill_graph=None)
+        logger.info("STARTUP: Initializing Comparison Engine...")
 
         # 4b. Initialize Comparison Engine
-        logger.info("STARTUP: Initializing Comparison Engine...")
         from app.services.comparison_engine import ComparisonEngine
         app.state.comparison_engine = ComparisonEngine()
 
@@ -167,6 +176,25 @@ def create_app() -> FastAPI:
 # Create app instance
 app = create_app()
 
+
+@app.post("/feedback")
+async def post_feedback(request: Request):
+    """
+    POST /feedback endpoint for recruiter actions (Phase 7).
+    """
+    data = await request.json()
+    assessment_id = data.get("id")
+    action = data.get("action") # select, reject
+    
+    if assessment_id and action:
+        # In a real app, this would be per session in a DB.
+        # Here we update the stateful ranker in app.state.
+        from app.services.ranker_v2 import EnterpriseRanker
+        if isinstance(app.state.ranker, EnterpriseRanker):
+            app.state.ranker.update_feedback(assessment_id, action)
+            return {"status": "success", "message": f"Feedback {action} recorded for {assessment_id}"}
+    
+    return {"status": "error", "message": "Invalid feedback data"}
 
 if __name__ == "__main__":
     import uvicorn

@@ -118,82 +118,91 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         conversation_complete = turn_limit_reached
 
         decision = services.decision_engine.decide(messages)
-        context = services.decision_engine.get_context_from_messages(messages)
+        context, _ = services.decision_engine.analyzer.analyze(messages)
         
-        # Part 7: Detect and handle new hiring request context reset
-        from app.services.conversation_memory import get_memory_store
-        memory = get_memory_store()
-        session_id = request_obj.headers.get("X-Session-ID", "default_session")
-        
-        # Check if the LATEST user message was a new hiring request
-        latest_user_msg = messages[-1].get("content", "") if messages[-1]["role"] == "user" else ""
-        if latest_user_msg and services.decision_engine.analyzer.is_new_hiring_request(latest_user_msg, context):
-            logger.info(f"CHAT: New hiring request detected. Resetting session context for {session_id}")
-            memory.reset_session_context(session_id)
-            # Re-analyze context after reset if needed (though analyze_conversation already does boundary check)
-            
-        logger.info("CHAT: action=%s turns=%s completeness=%.2f", decision.action, turn_count, context.get_completeness_score())
+        turn_count = sum(1 for m in messages if m["role"] == "assistant")
+        logger.info("CHAT: action=%s turns=%s", decision.action, turn_count)
 
         catalog = {assessment.id: assessment for assessment in services.catalog_loader.get_all()}
 
         if decision.action == AgentAction.REFUSE:
             reply = decision.reasoning or _fallback_reply(decision.action)
-            return ChatResponse(reply=reply, recommendations=[], end_of_conversation=conversation_complete)
+            return ChatResponse(reply=reply, recommendations=[], end_of_conversation=False)
 
         if decision.action == AgentAction.CLARIFY:
             reply = decision.next_question or _fallback_reply(decision.action)
-            return ChatResponse(reply=reply, recommendations=[], end_of_conversation=conversation_complete)
+            return ChatResponse(reply=reply, recommendations=[], end_of_conversation=False)
 
         if decision.action in {AgentAction.RECOMMEND, AgentAction.REFINE}:
-            query = _build_query(context)
-            if not query and messages:
-                query = messages[-1].get("content", "")
-
+            query = f"{context.role} {context.seniority} {' '.join(context.tech_stack)}"
             retrieved = services.retriever.retrieve(query, context, top_k=20)
-            ranked, _ = await services.ranker.rank(retrieved, context, catalog, top_k=settings.max_recommendations)
+            
+            # Enterprise Hardened Ranker
+            ranked_results = services.ranker.rank(retrieved, context, catalog, top_k=10)
 
-            if ranked:
-                # Use the ranker's structured API method (already provides reply and recommendations)
-                ranker_payload = await services.ranker.get_recommendations_for_api(ranked, context, top_k=settings.max_recommendations)
-                reply = ranker_payload.get("reply", _fallback_reply(decision.action))
-                recommendations = [Recommendation(**rec) for rec in ranker_payload.get("recommendations", [])]
-            else:
-                recommendations = []
-                for item in retrieved[:1]:
-                    if item.get("name") and item.get("url"):
-                        recommendations.append(Recommendation(
-                            name=str(item.get("name", "")),
-                            url=str(item.get("url", "")),
-                            test_type=str(item.get("test_type", "K")),
-                            subtitle="Knowledge assessment",
-                            confidence=70,
-                            category="General",
-                            stage="Early screening",
-                            duration="30 min",
-                            recruiter_insight="Grounded catalog recommendation.",
-                            ideal_use_case="Initial screening focus."
-                        ))
+            recommendations = []
+            if ranked_results:
+                for res in ranked_results:
+                    recommendations.append(Recommendation(
+                        name=res.assessment.name,
+                        url=res.assessment.url,
+                        test_type=res.assessment.test_type.value,
+                        subtitle=f"{res.assessment.category} assessment",
+                        confidence=int(res.final_score * 100),
+                        category=res.assessment.category,
+                        stage="Screening", # Simplified
+                        duration=f"{getattr(res.assessment, 'duration_minutes', 30)} min",
+                        recruiter_insight=res.explanation,
+                        ideal_use_case=res.assessment.description[:150] + "...",
+                        
+                        # Enterprise Debug fields (Phase 8)
+                        embedding_similarity=res.factors.embedding_similarity,
+                        keyword_similarity=res.factors.keyword_similarity,
+                        graph_relevance=res.factors.graph_relevance,
+                        role_boost=res.factors.role_boost,
+                        domain_penalty=res.factors.domain_penalty,
+                        diversity_bonus=0.0,
+                        mode_adjustment=0.0,
+                        matched_skills=res.matched_skills,
+                        inferred_skills=[],
+                        competencies=[],
+                        domain=", ".join(getattr(res.assessment, "engineering_domains", []))
+                    ))
                 
-                if not recommendations and services.catalog_loader.get_all():
-                    first_item = services.catalog_loader.get_all()[0]
-                    recommendations = [Recommendation(
-                        name=str(first_item.name),
-                        url=str(first_item.url),
-                        test_type=str(first_item.test_type.value),
-                        subtitle="Knowledge assessment",
-                        confidence=60,
-                        category="General",
-                        stage="Early screening",
-                        duration="30 min",
-                        recruiter_insight="Catalog-grounded fallback.",
-                        ideal_use_case="General assessment."
-                    )]
-                reply = _fallback_reply(decision.action)
+                # 2. Adaptive Orchestration (Phase 6)
+                optimized = services.adaptive_orchestrator.orchestrate(ranked_results, context, catalog)
+                
+                pipeline_model = HiringPipelineModel(
+                    stages=[PipelineStageModel(
+                        name=s["name"],
+                        description=f"Assessment focuses on {s['type']} validation.",
+                        assessments=s["assessments"],
+                        estimated_duration=s["duration"],
+                        competencies_covered=[] # Simplified for now
+                    ) for s in optimized.stages],
+                    fatigue=FatigueReportModel(**optimized.fatigue_report),
+                    signal=SignalReportModel(**optimized.signal_report),
+                    tradeoff_analysis=optimized.tradeoff_analysis,
+                    strategic_guidance=optimized.strategic_advice
+                )
+
+                # 3. Log Interaction (Phase 7)
+                services.orchestration_analytics.log_interaction(
+                    session_id=str(getattr(request_obj.state, "session_id", "default")),
+                    action="orchestrate",
+                    data={"query": query_text, "pipeline_stages": len(optimized.stages)}
+                )
+
+                reply = f"I've generated an adaptive hiring pipeline for {context.role}. {optimized.strategic_advice}"
+            else:
+                reply = "I couldn't find any assessments that match those requirements."
+                pipeline_model = None
 
             return ChatResponse(
                 reply=reply,
                 recommendations=recommendations,
-                end_of_conversation=conversation_complete,
+                pipeline=pipeline_model,
+                end_of_conversation=False
             )
 
         if decision.action == AgentAction.COMPARE:

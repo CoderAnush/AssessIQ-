@@ -51,70 +51,47 @@ class DecisionEngine:
     def decide(self, messages: List[dict]) -> Decision:
         """
         Decide what to do based on conversation.
-
-        Args:
-            messages: Full conversation history
-
-        Returns:
-            Decision with action and reasoning
         """
+        # Analyze conversation (Phase 4)
+        context, intent = self.analyzer.analyze(messages)
 
-        # Analyze conversation
-        context, intent = self.analyzer.analyze_conversation(messages)
+        logger.debug(f"Decision Context: {context}")
+        logger.debug(f"Detected Intent: {intent}")
 
-        logger.debug(f"Context: {context}")
-        logger.debug(f"Intent: {intent}")
-
-        # Decision tree (in order of priority)
-
-        # 1. REFUSE if unsafe
-        refuse_reason = self._check_refuse(intent, messages[-1]["content"])
-        if refuse_reason:
+        # 1. REFUSE if unsafe or off-topic
+        if intent == UserIntent.OFF_TOPIC:
             return Decision(
                 action=AgentAction.REFUSE,
-                reasoning=refuse_reason,
-                confidence=0.95,
+                reasoning="I specialize in recommending SHL assessments and cannot assist with unrelated topics.",
+                confidence=1.0,
             )
 
         # 2. COMPARE if requested
         if intent == UserIntent.COMPARISON:
-            comparison_items = self._extract_comparison_items(messages)
             return Decision(
                 action=AgentAction.COMPARE,
-                reasoning="User asked to compare assessments",
-                confidence=0.9,
-                comparison_items=comparison_items,
+                reasoning="User asked for assessment comparison.",
+                confidence=0.9
             )
 
-        # 3. REFINE if context changed
-        if intent == UserIntent.REFINEMENT:
-            return Decision(
-                action=AgentAction.REFINE,
-                reasoning="User modified constraints mid-conversation",
-                confidence=0.85,
-            )
-
-        # 4. CLARIFY if insufficient context (Part 9)
-        completeness_score = context.get_completeness_score()
-        is_sufficient = context.is_sufficient()
+        # 3. CLARIFY if insufficient context (Phase 4)
+        # Convergence logic: Max 8 turns (pair of user/assistant is 1 turn each)
+        turn_count = sum(1 for m in messages if m["role"] == "assistant")
         
-        logger.info(f"Context Completeness: {completeness_score:.2f} | Sufficient: {is_sufficient}")
-
-        # Enterprise threshold: need role + at least one major specificity marker
-        if not is_sufficient or completeness_score < 0.6:
+        if not context.is_sufficient and turn_count < 4: # 4 assistant turns = 8 turns total roughly
             next_q = self.analyzer.get_clarification_question(context)
             if next_q:
                 return Decision(
                     action=AgentAction.CLARIFY,
-                    reasoning=f"Context incomplete (score {completeness_score:.2f}). Triggering intelligent clarification.",
+                    reasoning=f"Context incomplete. Turn {turn_count+1}/8.",
                     confidence=0.9,
                     next_question=next_q,
                 )
 
-        # 5. RECOMMEND if we have context
+        # 4. RECOMMEND if sufficient or turn limit reached
         return Decision(
             action=AgentAction.RECOMMEND,
-            reasoning=f"Sufficient context (score {completeness_score:.2f}) to generate recommendations",
+            reasoning="Sufficient context reached.",
             confidence=0.85,
         )
 

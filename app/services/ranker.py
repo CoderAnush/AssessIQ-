@@ -82,7 +82,7 @@ class RecruiterRanker:
     """
     
     DOMAIN_MISMATCH_PENALTY = -0.40  # -40% penalty for wrong domain
-    MINIMUM_RECOMMENDATION_SCORE = 0.75  # 75% threshold
+    MINIMUM_RECOMMENDATION_SCORE = 0.64  # 64% threshold - adjusted to allow quality backend assessments (FIX 5)
     
     def __init__(self, taxonomy: Optional[AssessmentTaxonomy] = None):
         self.taxonomy = taxonomy or AssessmentTaxonomy()
@@ -147,25 +147,32 @@ class RecruiterRanker:
             
             # Score shortlisted assessments
             scored_assessments: List[Tuple[AssessmentWithMetadata, RankingFactors, float]] = []
-            
+
             for result in candidate_pool:
                 assessment_id = result.get("id")
                 if not assessment_id:
                     continue
-                    
+
                 assessment = catalog_assessments.get(assessment_id)
-                
+
                 if not assessment:
                     continue
-                
+
                 factors = self._calculate_factors(assessment, context, role_domain, result)
                 raw_score = factors.calculate_final()
-                
+
                 scored_assessments.append((assessment, factors, raw_score))
-            
+
             # Sort by raw score
             scored_assessments.sort(key=lambda x: x[2], reverse=True)
-            
+
+            # FIX 5: Apply minimum quality filter to scored assessments
+            scored_assessments = [
+                (a, f, s) for a, f, s in scored_assessments
+                if s >= self.MINIMUM_RECOMMENDATION_SCORE
+            ]
+            logger.info(f"After quality filter: {len(scored_assessments)} assessments remain")
+
             # Part 11: Structured Logs
             logger.info(f"RANKING_DIAGNOSTIC: role={context.role} domain={role_domain.value} completeness={context.get_completeness_score():.2f}")
             
@@ -203,22 +210,33 @@ class RecruiterRanker:
         """Calculate all ranking factors for an assessment."""
         factors = RankingFactors()
         context_terms = self._build_context_terms(context)
-        
+
         # Determine Recruiter Domains for hard penalties
         TECH_DOMAINS = {
             "java": ["java", "spring", "j2ee", "hibernate"],
-            "python": ["python", "django", "flask", "asyncio"],
+            "python": ["python", "django", "flask", "asyncio", "fastapi", "backend api"],
             "frontend": ["react", "javascript", "typescript", "frontend"],
             "data_science": ["machine learning", "ml", "ai", "sql", "data science", "analytics"],
             "devops": ["docker", "kubernetes", "aws", "devops"],
+            "qa": ["qa", "testing", "automation", "sdet", "test engineer", "quality assurance", "selenium"],
             "sales": ["sales", "account executive", "business development"],
             "support": ["customer support", "support", "service desk"],
             "leadership": ["manager", "leadership", "director", "vp"],
             "generic": ["data entry", "basic office", "general administrative", "typing test"]
         }
-        
-        # Identify the Recruiter Domain from context
+
+        # Domain tiers for ranking precision
+        DOMAIN_TIERS = {
+            "tier_1_exact": 1.5,      # Exact role + exact skill match
+            "tier_2_partial": 1.0,    # Exact role + partial skill match
+            "tier_3_generic": 0.2,    # Generic technical overlap
+            "tier_4_broad": -0.8      # Broad enterprise overlap
+        }
+
+        # Identify the Recruiter Domain from context + role normalization
         recruiter_domain = str(context.domain or "").lower()
+        normalized_role = str(context.role or "").lower()
+
         candidate_text = " ".join(
             [
                 assessment.name,
@@ -228,7 +246,47 @@ class RecruiterRanker:
                 " ".join(assessment.skill_tags or []),
             ]
         ).lower()
-        
+
+        # FIX 1: Determine normalized role domain (QA, Python Backend, etc)
+        role_tier = "tier_4_broad"  # Default fallback tier
+        role_boost = 0.0
+
+        # Python Backend specialization
+        if any(term in normalized_role for term in ["python", "backend", "api", "fastapi", "flask", "django"]):
+            detected_domain = "python"
+            if any(kw in candidate_text for kw in TECH_DOMAINS["python"]):
+                role_tier = "tier_1_exact"
+                role_boost = DOMAIN_TIERS["tier_1_exact"]
+            elif any(kw in candidate_text for kw in ["backend", "api", "web", "microservice"]):
+                role_tier = "tier_2_partial"
+                role_boost = DOMAIN_TIERS["tier_2_partial"]
+            else:
+                role_tier = "tier_3_generic"
+                role_boost = DOMAIN_TIERS["tier_3_generic"]
+
+        # QA/Testing specialization (NEW - Fix 6)
+        elif any(term in normalized_role for term in ["qa", "testing", "automation", "sdet", "test"]):
+            detected_domain = "qa"
+            if any(kw in candidate_text for kw in TECH_DOMAINS["qa"]):
+                role_tier = "tier_1_exact"
+                role_boost = DOMAIN_TIERS["tier_1_exact"]
+            elif any(kw in candidate_text for kw in ["quality", "validation", "debugging"]):
+                role_tier = "tier_2_partial"
+                role_boost = DOMAIN_TIERS["tier_2_partial"]
+            else:
+                role_tier = "tier_3_generic"
+                role_boost = DOMAIN_TIERS["tier_3_generic"]
+
+        # Java backend specialization
+        elif any(term in normalized_role for term in ["java", "spring", "j2ee"]):
+            detected_domain = "java"
+            if any(kw in candidate_text for kw in TECH_DOMAINS["java"]):
+                role_tier = "tier_1_exact"
+                role_boost = DOMAIN_TIERS["tier_1_exact"]
+            else:
+                role_tier = "tier_3_generic"
+                role_boost = DOMAIN_TIERS["tier_3_generic"]
+
         # 1. Semantic Relevance (10%)
         factors.semantic_relevance = retrieval_result.get("hybrid_score", 0.5)
 
@@ -236,13 +294,17 @@ class RecruiterRanker:
             hits = sum(1 for term in context_terms if term in candidate_text)
             overlap = hits / max(1, min(len(context_terms), 8))
             factors.semantic_relevance = max(factors.semantic_relevance, min(1.0, 0.35 + overlap * 0.65))
-        
-        # 2. Domain Match (30% - Boosted)
+
+        # 2. Domain Match (30% - Boosted with STRONG EXACT ROLE BOOST)
         alignment_score, _ = self.taxonomy.calculate_domain_alignment(
             assessment.id, role_domain
         )
         factors.domain_match = alignment_score
-        
+
+        # FIX 1: Apply tier-based role boost
+        if role_boost > 0:
+            factors.domain_match = min(1.0, factors.domain_match + role_boost)
+
         # Phase 5: HARD DOMAIN PENALTIES & BOOSTS
         classification = self.taxonomy.get_assessment_classification(assessment.id)
         if classification:
@@ -255,48 +317,64 @@ class RecruiterRanker:
                     domain_keywords = TECH_DOMAINS[recruiter_domain]
                     if any(kw in candidate_text for kw in domain_keywords):
                         is_match = True
-                        factors.domain_match = min(1.0, factors.domain_match + 0.40) # BOOST Exact Match
-                
-                # B. SPECIFIC CROSS-PENALTIES
-                if recruiter_domain == "python" and ("java" in candidate_text or "j2ee" in candidate_text):
-                    factors.domain_match -= 0.70 # Severe Java penalty for Python
-                
-                if recruiter_domain == "java" and ("python" in candidate_text or "django" in candidate_text):
-                    factors.domain_match -= 0.70 # Severe Python penalty for Java
+                        factors.domain_match = min(1.0, factors.domain_match + 0.40)  # BOOST Exact Match
+
+                # B. SPECIFIC CROSS-PENALTIES (FIX 2: HARD NEGATIVE PENALTIES)
+                if recruiter_domain == "python":
+                    # Extreme penalty for wrong backend language
+                    if any(kw in candidate_text for kw in ["java", "spring", "j2ee", ".net", "csharp"]):
+                        factors.domain_match = max(0.0, factors.domain_match - 0.95)  # Increased from 0.85
+                    # Penalize non-backend
+                    if any(kw in candidate_text for kw in TECH_DOMAINS["sales"] + TECH_DOMAINS["support"]):
+                        factors.domain_match = max(0.0, factors.domain_match - 0.75)
+
+                if recruiter_domain == "java":
+                    # Hard penalty for wrong language
+                    if any(kw in candidate_text for kw in ["python", "django", "flask"]):
+                        factors.domain_match = max(0.0, factors.domain_match - 0.85)
+
+                # FIX 6: QA domain penalties for non-QA
+                if recruiter_domain == "qa":
+                    # Penalize completely unrelated enterprise tools
+                    if any(kw in candidate_text for kw in ["adobe", "aem", "salesforce", "photoshop"]):
+                        factors.domain_match = max(0.0, factors.domain_match - 0.90)
+                    # Penalize personality/sales for QA
+                    if any(kw in candidate_text for kw in ["personality", "sales", "customer support"]):
+                        factors.domain_match = max(0.0, factors.domain_match - 0.80)
 
                 # If it's a known domain but the assessment is for a DIFFERENT known domain
                 if recruiter_domain and not is_match:
                     for other_domain, other_kws in TECH_DOMAINS.items():
-                        if other_domain != recruiter_domain and any(kw in candidate_text for kw in other_kws):
+                        if other_domain != recruiter_domain and other_domain != "generic" and any(kw in candidate_text for kw in other_kws):
                             # This is a different domain assessment!
-                            factors.domain_match -= 0.60 # HUGE PENALTY
+                            factors.domain_match = max(0.0, factors.domain_match - 0.70)  # HUGE PENALTY
                             break
-                
+
                 # If no match found for a specific tech domain, penalize "Generic" knowledge tests
-                if not is_match and recruiter_domain in ["java", "python", "data_science", "devops", "frontend"]:
+                if not is_match and recruiter_domain in ["java", "python", "data_science", "devops", "frontend", "qa"]:
                     if classification.primary_domain in [AssessmentDomain.GENERAL, AssessmentDomain.PERSONALITY] and role_domain != RoleDomain.GENERAL:
-                         factors.domain_match -= 0.25 # Technical roles want technical tests
+                        factors.domain_match = max(0.0, factors.domain_match - 0.45)
 
                 # D. GENERIC FALLBACK PENALTY (Part 7)
                 if any(kw in candidate_text for kw in TECH_DOMAINS["generic"]) and role_domain != RoleDomain.GENERAL:
-                    factors.domain_match -= 0.60 # HUGE penalty for "Data Entry" in tech roles
+                    factors.domain_match = max(0.0, factors.domain_match - 0.70)
 
             # C. SPECIFIC ROLE-BASED PENALTIES
             if role_domain in [RoleDomain.DATA_SCIENTIST, RoleDomain.DATA_ANALYST]:
                 if "java" in candidate_text or "spring" in candidate_text:
-                    factors.domain_match -= 0.50 # Java is irrelevant for DS/Analytics
+                    factors.domain_match = max(0.0, factors.domain_match - 0.50)
                 if any(kw in candidate_text for kw in ["sql", "analytics", "machine learning", "data science", "statistics"]):
-                    factors.domain_match += 0.35
-            
+                    factors.domain_match = min(1.0, factors.domain_match + 0.35)
+
             if role_domain in [RoleDomain.SALES_REP, RoleDomain.CUSTOMER_SUPPORT, RoleDomain.HR_PROFESSIONAL]:
                 if classification.primary_domain == AssessmentDomain.TECHNICAL:
-                    factors.domain_match -= 0.80 # No coding tests for sales/HR
-            
+                    factors.domain_match = max(0.0, factors.domain_match - 0.80)
+
             if role_domain == RoleDomain.ENGINEERING_MANAGER:
                 if classification.primary_domain == AssessmentDomain.TECHNICAL and "management" not in candidate_text:
-                    factors.domain_match -= 0.20 # EM needs less focus on syntax
+                    factors.domain_match = max(0.0, factors.domain_match - 0.20)
                 if classification.primary_domain in [AssessmentDomain.LEADERSHIP, AssessmentDomain.BEHAVIORAL]:
-                    factors.domain_match += 0.30
+                    factors.domain_match = min(1.0, factors.domain_match + 0.30)
 
         # Natural Score Normalization
         factors.domain_match = max(0.0, min(1.0, factors.domain_match))
@@ -343,10 +421,35 @@ class RecruiterRanker:
                 factors.skill_overlap = min(1.0, 0.4 + (tech_hits * 0.3))
                 factors.semantic_relevance = min(1.0, factors.semantic_relevance + 0.2)
 
-        # DEBUG RANKING LOG
+        # Set reasonable defaults for technical roles to boost overall score
+        if role_tier in ["tier_1_exact", "tier_2_partial"]:
+            # For exact or partial role matches, set strong defaults on all factors
+            if factors.seniority_fit == 0:
+                factors.seniority_fit = 0.75  # Default for technical screening
+            if factors.type_alignment == 0:
+                factors.type_alignment = 0.85  # Technical roles prefer technical tests
+            if factors.role_completeness == 0:
+                factors.role_completeness = 0.80  # Strong alignment with role requirements
+            if factors.soft_skill_match == 0:
+                factors.soft_skill_match = 0.60  # Moderate soft skill baseline
+
+        # DEBUG RANKING LOG - FIX 8: Structured ranking debug logs
         score = factors.calculate_final()
-        print(f"[RANK] {assessment.name} | domain={recruiter_domain} | role={role_domain.value} | score={score:.3f}")
-        
+        penalties_applied = []
+        if role_boost != 0:
+            penalties_applied.append(f"tier_boost:{role_boost:+.2f}")
+        if factors.domain_match < 0.5:
+            penalties_applied.append(f"domain_penalty_active")
+
+        print(
+            f"[RANK_DEBUG] {assessment.name[:50]} | "
+            f"role_tier={role_tier} | "
+            f"domain_match={factors.domain_match:.3f} | "
+            f"tech_stack_boost={role_boost:+.2f} | "
+            f"semantic={factors.semantic_relevance:.3f} | "
+            f"final_score={score:.3f} | "
+            f"penalties={','.join(penalties_applied) if penalties_applied else 'none'}"
+        )
 
         # --- RECRUITER WORKFLOW INTELLIGENCE (Priority 2 & 4) ---
         
@@ -760,7 +863,7 @@ class RecruiterRanker:
             # Apply position decay
             final_score = normalized_score * position_factor
             
-            # Apply hard threshold
+        # Apply hard threshold
             if final_score < self.MINIMUM_RECOMMENDATION_SCORE:
                 continue
 

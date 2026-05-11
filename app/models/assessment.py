@@ -89,6 +89,12 @@ class AssessmentWithMetadata(Assessment):
         default=False,
         description="Explicitly measures technical skills"
     )
+    
+    # Enterprise Metadata (Phase 6)
+    inferred_skills: List[str] = Field(default_factory=list)
+    engineering_domains: List[str] = Field(default_factory=list)
+    suitable_stages: List[str] = Field(default_factory=list)
+    category: str = Field(default="general")
 
     class Config:
         json_schema_extra = {

@@ -51,9 +51,11 @@ class StructuredHiringContext:
     # Refinement history
     previous_recommendations: List[str] = field(default_factory=list)
     refinements: List[str] = field(default_factory=list)
+    question_history: List[str] = field(default_factory=list)
 
     # Retrieval state
     retrieval_confidence: float = 0.0
+    inferred_details: Dict[str, Any] = field(default_factory=dict)
 
     def calculate_sufficiency(self) -> ContextSufficiency:
         """Calculate how sufficient our context is for good recommendations."""
@@ -207,6 +209,14 @@ class ConversationIntelligence:
         for msg in messages:
             if msg.get("role") == "user":
                 self._extract_from_message(msg.get("content", ""), context)
+            elif msg.get("role") == "assistant":
+                # Track questions asked
+                content = msg.get("content", "")
+                if "?" in content:
+                    context.question_history.append(content)
+
+        # Infer missing details
+        self._infer_missing_details(context)
 
         # Calculate confidence
         sufficiency = context.calculate_sufficiency()
@@ -307,23 +317,63 @@ class ConversationIntelligence:
     def get_highest_value_question(self, context: StructuredHiringContext) -> Optional[str]:
         """
         Get the single highest-value clarification question.
-
-        Returns:
-            Question to ask, or None if context is sufficient
+        Avoids repetitive questions (Phase 5).
         """
-
         missing = context.get_highest_value_missing()
-
         if not missing:
             return None
 
-        # Generate intelligent question
+        # Intelligent question mapping with domain awareness
         questions = {
-            "job_role": "What role are you hiring for?",
-            "seniority_level": "What seniority level? (junior, mid-level, senior, or executive)",
-            "soft_skills": "What soft skills are most important? (e.g., communication, leadership, teamwork)",
-            "technical_or_cognitive_requirements": "Are there specific technical skills or cognitive abilities needed?",
-            "team_context": "What's the team context? (size, reporting structure, cross-functional needs)",
+            "job_role": "What is the primary role you are hiring for? (e.g., Python Backend, Frontend, QA)",
+            "seniority_level": "What seniority level are we targeting? (e.g., Junior, Senior, Engineering Manager)",
+            "soft_skills": "Should we focus more on technical skills, or are leadership and communication critical for this role?",
+            "technical_or_cognitive_requirements": "What's the primary tech stack or core competency required? (e.g., React, Java, AWS)",
+            "team_context": "Can you describe the team context? (e.g., people management, operations, or technical execution)",
         }
 
-        return questions.get(missing, f"Can you provide more detail about {missing}?")
+        # Role-specific follow-ups (Phase 5)
+        role_lower = (context.role or "").lower()
+        if "management" in role_lower or "manager" in role_lower:
+            questions["seniority_level"] = "What level of leadership is this? (e.g., Team Lead, Director, or Executive)"
+            questions["team_context"] = "Is the focus more on people management or operational strategy?"
+        
+        question = questions.get(missing, f"Can you provide more detail about {missing}?")
+        
+        # Avoid asking the same question twice
+        if any(q.lower() in [h.lower() for h in context.question_history] for q in [question]):
+            return None
+            
+        context.question_history.append(question)
+        return question
+
+    def _infer_missing_details(self, context: StructuredHiringContext) -> None:
+        """Automatically infer details when confidence is high (Phase 5)."""
+        role_low = (context.role or "").lower()
+        
+        # Infer tech stack from role if not specified
+        if not context.tech_stack:
+            if "java" in role_low:
+                context.tech_stack.add("java")
+                context.tech_stack.add("spring")
+                context.inferred_details["tech_stack"] = "java_backend"
+            elif "python" in role_low:
+                context.tech_stack.add("python")
+                context.tech_stack.add("django")
+                context.inferred_details["tech_stack"] = "python_backend"
+            elif "react" in role_low or "frontend" in role_low:
+                context.tech_stack.add("react")
+                context.tech_stack.add("javascript")
+                context.inferred_details["tech_stack"] = "frontend"
+                
+        # Infer soft skills for management
+        if "manager" in role_low or "lead" in role_low:
+            context.leadership_required = True
+            context.communication_required = True
+            context.inferred_details["soft_skills"] = "management_defaults"
+            
+        # Infer cognitive focus for senior roles
+        if context.seniority == "senior" or context.seniority == "executive":
+            context.cognitive_focus = True
+            context.reasoning_required = True
+            context.inferred_details["focus"] = "advanced_reasoning"

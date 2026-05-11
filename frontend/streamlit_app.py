@@ -264,50 +264,62 @@ def send_chat_request(messages: List[Dict]) -> Optional[Dict]:
 # --- UI COMPONENTS ---
 
 def render_recommendation_card(rec: Dict[str, Any], index: int, compact: bool = False) -> None:
-    """Render a polished assessment card using native Streamlit components."""
+    """Render a polished enterprise-grade assessment card."""
     try:
-        # Sanitize all text fields from backend/enrichment
         name = _sanitize_display_text(rec.get("name", "Assessment"))
         category = _sanitize_display_text(rec.get("category", "General"))
         insight = _sanitize_display_text(rec.get("recruiter_insight", ""))
         ideal_use_case = _sanitize_display_text(rec.get("ideal_use_case", ""))
-        stage = _sanitize_display_text(rec.get("best_hiring_stage", ""))
-        duration = _sanitize_display_text(str(rec.get("duration_minutes", "N/A")))
+        stage = _sanitize_display_text(rec.get("stage", "Early Screening"))
+        duration = _sanitize_display_text(str(rec.get("duration", "N/A")))
         url = str(rec.get("url", "#"))
         confidence = int(rec.get("confidence", 0))
         test_type = str(rec.get("test_type", "K"))
         type_label = TYPE_LABELS.get(test_type, "Assessment")
+        
+        matched_skills = rec.get("matched_skills", [])
+        inferred_skills = rec.get("inferred_skills", [])
+        domain = rec.get("domain", "General")
 
-        # Use st.container with border for the card structure
         with st.container(border=True):
-            # Header Row
             col_h1, col_h2 = st.columns([0.8, 0.2])
             with col_h1:
                 st.markdown(f"### {index}. {name}")
-                st.caption(f"**{category}** • {type_label}")
+                st.caption(f"**{domain.title()}** • {type_label}")
             with col_h2:
-                st.markdown(f"### {confidence}%")
-                st.caption("Confidence")
+                color = "#22c55e" if confidence >= 90 else "#eab308" if confidence >= 80 else "#ef4444"
+                st.markdown(f"<h3 style='color: {color}; margin: 0;'>{confidence}%</h3>", unsafe_allow_html=True)
+                st.caption("Recruiter Fit")
 
-            # Badges
-            st.markdown(f"🏷️ `{category}` &nbsp; 🎯 `{stage}` &nbsp; ⏱️ `{duration} min`")
+            if matched_skills:
+                skill_html = " ".join([f'<span style="background: #dbeafe; color: #1e40af; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-right: 4px; display: inline-block; border: 1px solid #bfdbfe;">{s}</span>' for s in matched_skills])
+                st.markdown(f"**Target Skills:** {skill_html}", unsafe_allow_html=True)
 
-            # Recruiter Insight
+            st.markdown(f"🎯 `{stage}` &nbsp; ⏱️ `{duration}` &nbsp; 📂 `{category}`")
+
             st.markdown("**Recruiter Insight**")
             st.info(insight)
 
-            if not compact:
-                # Detail Grid
-                col_d1, col_d2 = st.columns(2)
-                with col_d1:
-                    st.markdown("**Best Hiring Stage**")
-                    st.write(stage)
-                with col_d2:
-                    st.markdown("**Ideal Use Case**")
-                    st.write(ideal_use_case)
+            with st.expander("🔬 Intelligence Dashboard (Recruiter Debug)"):
+                col_b1, col_b2, col_b3 = st.columns(3)
+                with col_b1:
+                    st.metric("Semantic Fit", f"{rec.get('embedding_similarity', 0.0):.2f}")
+                    st.metric("Graph Relevance", f"{rec.get('graph_relevance', 0.0):.2f}")
+                with col_b2:
+                    st.metric("Role Boost", f"+{rec.get('role_boost', 0.0):.2f}")
+                    st.metric("Domain Logic", f"-{rec.get('domain_penalty', 0.0):.2f}")
+                with col_b3:
+                    st.metric("Keyword Overlap", f"{rec.get('keyword_similarity', 0.0):.2f}")
+                    st.metric("Diversity Adj", f"{rec.get('diversity_bonus', 0.0):.2f}")
+                
+                if inferred_skills:
+                    st.markdown("**Inferred Technical Context:**")
+                    st.caption(", ".join(inferred_skills))
 
-            # Footer
-            st.link_button("Open SHL Assessment", url, use_container_width=True)
+            st.link_button("View Assessment Details", url, use_container_width=True)
+
+    except Exception as e:
+        st.warning(f"Could not render card {index}: {e}")
 
     except Exception as e:
         st.warning(f"Could not render card {index}: {e}")
@@ -402,40 +414,58 @@ def _format_recommendation_table(recommendations: List[Dict[str, Any]]) -> str:
 def build_export_report() -> str:
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     recommendations = st.session_state.latest_recommendations
-    comparison = st.session_state.latest_comparison
+    pipeline = st.session_state.latest_pipeline
     latest_query = st.session_state.latest_user_query or "No recruiter query captured yet."
-    latest_reply = st.session_state.latest_reply or "No assistant response captured yet."
 
     lines = [
-        "# AssessIQ Recruiter Report",
+        "# AssessIQ Hiring Orchestration Report",
         "",
         f"Generated: {timestamp}",
         "",
-        "## Recruiter Query",
-        latest_query,
-        "",
-        "## Assistant Summary",
-        latest_reply,
+        "## Strategic Recruiter Query",
+        f"> {latest_query}",
         "",
     ]
 
+    if pipeline:
+        lines.extend([
+            "## 🏗️ Orchestrated Hiring Pipeline",
+            f"**Total Estimated Duration:** {pipeline.get('total_duration')} minutes",
+            f"**Strategic Guidance:** {pipeline.get('strategic_guidance')}",
+            "",
+            "### Pipeline Stages",
+        ])
+        for i, stage in enumerate(pipeline.get("stages", []), 1):
+            lines.extend([
+                f"#### Stage {i}: {stage['name']}",
+                f"- **Description:** {stage['description']}",
+                f"- **Duration:** {stage['estimated_duration']} min",
+                f"- **Assessments:** {', '.join(stage['assessments'])}",
+                f"- **Competencies:** {', '.join(stage['competencies_covered'])}",
+                "",
+            ])
+        
+        lines.extend([
+            "### 📊 Competency Coverage",
+        ])
+        for cluster, score in pipeline.get("competency_coverage", {}).items():
+            lines.append(f"- **{cluster.title()}:** {int(score * 100)}%")
+        
+        if pipeline.get("gaps"):
+            lines.extend(["", "### ⚠️ Hiring Gaps Detected", "The following competency areas require additional evaluation:"])
+            for gap in pipeline["gaps"]:
+                lines.append(f"- {gap.title()}")
+        lines.append("")
+
     if recommendations:
         lines.extend([
-            "## Recommendations",
+            "## 🎯 Detailed Assessment Recommendations",
             _format_recommendation_table(recommendations),
             "",
         ])
 
-    if comparison:
-        lines.extend([
-            "## Comparison Results",
-            comparison.get("summary", ""),
-            "",
-            _format_recommendation_table(comparison.get("items", [])),
-            "",
-        ])
-
     lines.extend([
+        "---",
         "## Conversation Transcript",
     ])
 
@@ -446,6 +476,63 @@ def build_export_report() -> str:
 
     return "\n".join(lines).strip() + "\n"
 
+
+def render_pipeline_section(pipeline: Dict[str, Any]) -> None:
+    """Render adaptive hiring intelligence metrics (Phase 9)."""
+    if not pipeline or not pipeline.get("stages"):
+        return
+
+    st.markdown("---")
+    st.markdown("## 🧠 Adaptive Hiring Intelligence")
+    
+    # 1. Strategic Advisor (Phase 10)
+    if pipeline.get("strategic_guidance"):
+        st.info(f"💡 **Strategic Advisor:** {pipeline['strategic_guidance']}")
+
+    # 2. Intelligence Metrics Grid
+    col_m1, col_m2, col_m3 = st.columns(3)
+    
+    with col_m1:
+        fatigue = pipeline.get("fatigue", {})
+        score = fatigue.get("fatigue_score", 0.0)
+        risk = fatigue.get("risk_level", "LOW")
+        color = "green" if risk == "LOW" else "orange" if risk == "MODERATE" else "red"
+        st.markdown(f"### 😫 Candidate Fatigue")
+        st.markdown(f"<h2 style='color: {color};'>{int(score * 100)}%</h2>", unsafe_allow_html=True)
+        st.caption(f"Risk: **{risk}** | Duration: {fatigue.get('total_duration')}m")
+        st.progress(score)
+
+    with col_m2:
+        signal = pipeline.get("signal", {})
+        score = signal.get("signal_score", 0.0)
+        st.markdown(f"### 📡 Signal Quality")
+        st.markdown(f"<h2 style='color: #2563eb;'>{int(score * 100)}%</h2>", unsafe_allow_html=True)
+        st.caption("Overall Validation Strength")
+        st.progress(score)
+
+    with col_m3:
+        st.markdown(f"### ⚖️ Strategic Tradeoff")
+        st.warning(pipeline.get("tradeoff_analysis", "Balanced approach."))
+
+    # 3. Competency Validation Heatmap
+    st.markdown("#### 📊 Competency Validation Strength")
+    cov = signal.get("coverage", {})
+    conf = signal.get("confidence_levels", {})
+    cols = st.columns(len(cov))
+    for i, (cluster, score) in enumerate(cov.items()):
+        with cols[i]:
+            st.metric(cluster.title(), f"{int(score * 100)}%", delta=conf.get(cluster))
+
+    # 4. Pipeline Flow
+    st.markdown("#### 🏗️ Orchestrated Pipeline Flow")
+    p_cols = st.columns(len(pipeline["stages"]))
+    for i, stage in enumerate(pipeline["stages"]):
+        with p_cols[i]:
+            with st.container(border=True):
+                st.markdown(f"**Stage {i+1}: {stage['name']}**")
+                st.caption(stage["description"])
+                for assess_name in stage["assessments"]:
+                    st.markdown(f"- {assess_name}")
 
 def render_comparison_section(comparison: Dict[str, Any]) -> None:
     items = comparison.get("items", [])
@@ -468,15 +555,14 @@ def render_comparison_section(comparison: Dict[str, Any]) -> None:
         render_recommendation_card(right, 2, compact=True)
 
     rows = [
-        ("Best for", left.get("best_hiring_stage", ""), right.get("best_hiring_stage", "")),
+        ("Best for", left.get("stage", ""), right.get("stage", "")),
         ("Category", left.get("category", ""), right.get("category", "")),
         ("Confidence", f"{left.get('confidence', 0)}%", f"{right.get('confidence', 0)}%"),
-        ("Duration", f"{left.get('duration_minutes', 'N/A')} min", f"{right.get('duration_minutes', 'N/A')} min"),
+        ("Duration", left.get('duration', 'N/A'), right.get('duration', 'N/A')),
         ("Ideal use case", left.get("ideal_use_case", ""), right.get("ideal_use_case", "")),
         ("Recruiter insight", left.get("recruiter_insight", ""), right.get("recruiter_insight", "")),
     ]
 
-    # Render comparison table using st.table or st.dataframe for clean UI
     comparison_data = {
         "Dimension": [r[0] for r in rows],
         "Assessment A": [sanitize_text(r[1]) for r in rows],
@@ -485,15 +571,15 @@ def render_comparison_section(comparison: Dict[str, Any]) -> None:
     st.table(comparison_data)
 
 
-def _is_assistant_pending(messages: List[Dict[str, Any]]) -> bool:
-    return bool(messages) and messages[-1].get("role") == "user"
+    if "latest_pipeline" not in st.session_state:
+        st.session_state.latest_pipeline = None
 
-
-def _append_assistant_response(reply: str, recommendations: List[Dict[str, Any]], comparison: Optional[Dict[str, Any]]) -> None:
+def _append_assistant_response(reply: str, recommendations: List[Dict[str, Any]], comparison: Optional[Dict[str, Any]], pipeline: Optional[Dict[str, Any]] = None) -> None:
     assistant_message: Dict[str, Any] = {
         "role": "assistant",
         "content": reply,
         "recommendations": recommendations,
+        "pipeline": pipeline
     }
     if comparison:
         assistant_message["comparison"] = comparison
@@ -624,42 +710,31 @@ def render_sidebar_examples() -> None:
     st.markdown("---")
     render_sidebar_export()
 
+def _is_assistant_pending(messages: List[Dict[str, Any]]) -> bool:
+    return bool(messages) and messages[-1].get("role") == "user"
+
+# --- MAIN LOOP ---
 def main():
-    st.set_page_config(page_title="AssessIQ | SHL Evaluator Mode", page_icon="🎯", layout="wide")
+    st.set_page_config(page_title="AssessIQ | Hiring Orchestration", page_icon="🏗️", layout="wide")
     init_session_state()
     apply_styles()
 
     # --- SIDEBAR ---
     with st.sidebar:
-        st.title("🎯 AssessIQ")
-        st.caption("Enterprise recruiter demo")
+        st.title("🏗️ AssessIQ")
+        st.caption("AI Hiring Orchestration Platform")
         st.markdown("---")
-        if st.button("🗑️ Clear Conversation", use_container_width=True, key="clear_conversation_sidebar"):
-            st.session_state.messages = []
+        if st.button("🗑️ Clear Conversation", use_container_width=True):
+            for key in ["messages", "latest_recommendations", "latest_comparison", "latest_pipeline"]:
+                if key in st.session_state: st.session_state[key] = [] if "messages" in key else None
             st.session_state.conversation_id = str(uuid.uuid4())
-            st.session_state.last_processed_signature = ""
-            st.session_state.latest_recommendations = []
-            st.session_state.latest_comparison = None
-            st.session_state.latest_user_query = ""
-            st.session_state.latest_reply = ""
-            st.session_state.request_errors = []
             st.rerun()
         st.markdown("---")
-        st.markdown("#### Comparison")
-        sel = st.session_state.compare_selection or []
-        if sel:
-            for name in sel:
-                st.markdown(f"- {name}")
-        if st.button("Clear comparison selection", use_container_width=True, key="clear_comparison_selection_sidebar"):
-            st.session_state.compare_selection = []
-            st.session_state.latest_comparison = None
-            st.experimental_rerun()
-
         render_sidebar_examples()
 
     # --- HEADER ---
-    st.title("AssessIQ Copilot")
-    st.markdown("Stateless, catalog-grounded SHL assessment selection for recruiters.")
+    st.title("Hiring Orchestration Copilot")
+    st.markdown("Generate multi-stage assessment pipelines grounded in the SHL catalog.")
 
     if not st.session_state.messages:
         render_empty_state()
@@ -671,127 +746,51 @@ def main():
         role, content = msg.get("role", "user"), msg.get("content", "")
         with st.chat_message(role, avatar="🤖" if role == "assistant" else "👤"):
             st.markdown(_sanitize_display_text(content))
+            
+            if msg.get("pipeline"):
+                render_pipeline_section(msg["pipeline"])
+                
             if msg.get("recommendations"):
-                # Use msg_idx in enrichment to keep keys stable
-                enriched_recommendations = msg.get("enriched_recommendations") or enrich_recommendations(msg["recommendations"], msg.get("user_query", ""))
-                for idx, rec in enumerate(enriched_recommendations, 1):
+                enriched = msg["recommendations"]
+                for idx, rec in enumerate(enriched, 1):
                     render_recommendation_card(rec, idx)
-                    # Interactive controls for comparison selection
-                    cols = st.columns([1, 1, 8])
-                    # Deterministic unique key based on message index, item index, and item ID
-                    rec_id = rec.get("id", rec.get("name", str(idx)).replace(" ","_"))
-                    compare_key = f"compare_btn_{msg_idx}_{idx}_{rec_id}"
-                    
-                    with cols[0]:
-                        if st.button("Select for compare", key=compare_key):
-                            sel = st.session_state.compare_selection
-                            name = rec.get("name")
-                            if name in sel:
-                                sel.remove(name)
-                            else:
-                                if len(sel) < 2:
-                                    sel.append(name)
-                                else:
-                                    st.warning("Only two items can be compared at once.")
-                            st.session_state.compare_selection = sel
-                    with cols[1]:
-                        if st.session_state.compare_selection and rec.get("name") in st.session_state.compare_selection:
-                            st.success("Selected")
-                    
-                    # If two items selected, build and render comparison
-                    if len(st.session_state.compare_selection) == 2:
-                        c_items = []
-                        catalog_index = load_catalog_index()
-                        for sel_name in st.session_state.compare_selection:
-                            meta = catalog_index.get(sel_name.lower(), {})
-                            # map to expected comparison item shape
-                            c_items.append({
-                                "name": meta.get("name", sel_name),
-                                "url": meta.get("url", "#"),
-                                "category": meta.get("category", "General"),
-                                "confidence": 95,
-                                "duration_minutes": meta.get("duration_minutes", "N/A"),
-                                "ideal_use_case": (meta.get("recruiter_use_cases") or [meta.get("description", "")])[0],
-                                "recruiter_insight": (meta.get("recruiter_use_cases") or [meta.get("description", "")])[0],
-                                "best_hiring_stage": _infer_best_stage(meta.get("category"), meta.get("difficulty_level"), meta.get("recruiter_use_cases") or []),
-                            })
-                        comparison = {"summary": "Comparison generated by recruiter selection.", "items": c_items}
-                        st.session_state.latest_comparison = comparison
-                        render_comparison_section(comparison)
+            
             if msg.get("comparison"):
                 render_comparison_section(msg["comparison"])
 
     # --- INPUT ---
-    if prompt := st.chat_input("Describe the role or ask a question...", key="chat_input_main"):
+    if prompt := st.chat_input("Describe the role (e.g. 'Senior Java Dev' or 'Engineering Manager')..."):
         st.session_state.latest_user_query = _clean_message_text(prompt)
         st.session_state.messages.append({"role": "user", "content": st.session_state.latest_user_query})
-        # Part 6: Clear stale results on new prompt
         st.session_state.latest_recommendations = []
-        st.session_state.latest_comparison = None
+        st.session_state.latest_pipeline = None
         st.rerun()
 
     # --- PROCESSING ---
     if _is_assistant_pending(st.session_state.messages):
-        signature = _current_signature(st.session_state.messages)
-        if signature != st.session_state.last_processed_signature:
-            with st.chat_message("assistant", avatar="🤖"):
-                with st.spinner("Reconstructing context..."):
-                    # Prevent duplicate requests from multiple reruns
-                    if st.session_state.request_in_progress:
-                        st.info("Request already in progress — waiting for result...")
-                        response = None
-                    else:
-                        st.session_state.request_in_progress = True
-                        try:
-                            start_t = time.time()
-                            response = send_chat_request(st.session_state.messages)
-                            st.session_state.last_query_time = time.time() - start_t
-                        except Exception as e:
-                            response = None
-                            st.session_state.request_errors.append(f"Request failed: {e}")
-                        finally:
-                            st.session_state.request_in_progress = False
-
+        with st.chat_message("assistant", avatar="🤖"):
+            with st.spinner("Orchestrating hiring pipeline..."):
+                try:
+                    response = send_chat_request(st.session_state.messages)
                     if response:
                         reply = str(response.get("reply", ""))
                         recs = response.get("recommendations", []) or []
-                        enriched = enrich_recommendations(recs, st.session_state.latest_user_query)
-                        comparison = _build_comparison_context(reply) if is_comparison_request(st.session_state.latest_user_query) else None
-
+                        pipeline = response.get("pipeline")
+                        
                         st.markdown(reply)
-                        if comparison:
-                            st.session_state.latest_comparison = comparison
-                            render_comparison_section(comparison)
-
-                        if enriched:
-                            st.session_state.latest_recommendations = enriched
-                            for e_idx, rec in enumerate(enriched, 1):
+                        if pipeline:
+                            render_pipeline_section(pipeline)
+                            st.session_state.latest_pipeline = pipeline
+                        
+                        if recs:
+                            st.session_state.latest_recommendations = recs
+                            for e_idx, rec in enumerate(recs, 1):
                                 render_recommendation_card(rec, e_idx)
-                        elif st.session_state.latest_recommendations:
-                            for e_idx, rec in enumerate(st.session_state.latest_recommendations, 1):
-                                render_recommendation_card(rec, e_idx)
-
-                        st.session_state.latest_reply = reply
-                        st.session_state.messages.append(
-                            {
-                                "role": "assistant",
-                                "content": reply,
-                                "recommendations": recs,
-                                "enriched_recommendations": enriched,
-                                "comparison": comparison,
-                                "user_query": st.session_state.latest_user_query,
-                            }
-                        )
-
-                        st.session_state.last_processed_signature = signature
-
-                        if comparison:
-                            st.session_state.latest_comparison = comparison
-
-                        st.caption(f"Latency: {st.session_state.last_query_time:.2f}s | Schema: Strict")
-                    else:
-                        if st.session_state.request_errors:
-                            st.error(st.session_state.request_errors[-1])
+                        
+                        _append_assistant_response(reply, recs, None, pipeline)
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Orchestration failed: {e}")
 
 if __name__ == "__main__":
     main()
