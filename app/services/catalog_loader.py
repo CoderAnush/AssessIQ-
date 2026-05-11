@@ -55,10 +55,10 @@ class CatalogLoader:
                     if not item.get("test_type"):
                         item["test_type"] = "K"
 
-                    # Infer Domain (Step 3 Fix)
+                    # Infer Domain (Recovery Fix: Smart Normalization)
                     name = item.get("name", "")
                     desc = item.get("description", "")
-                    item["primary_domain"] = self.domain_classifier.infer_assessment_domain(name, desc)
+                    item["primary_domain"] = self.domain_classifier.normalize_assessment_domain(name, desc)
 
                     assessment = AssessmentWithMetadata(**item)
                     self.assessments.append(assessment)
@@ -143,6 +143,7 @@ class CatalogLoader:
 
     def get_stats(self) -> Dict:
         """Get catalog statistics."""
+        if not self.assessments: return {}
         return {
             "total_assessments": len(self.assessments),
             "by_type": {
@@ -150,7 +151,7 @@ class CatalogLoader:
                 "A": len(self.get_by_type("A")),
                 "P": len(self.get_by_type("P")),
             },
-            "avg_duration": sum(a.duration_minutes for a in self.assessments) / len(self.assessments) if self.assessments else 0,
+            "avg_duration": sum(a.duration_minutes for a in self.assessments) / len(self.assessments),
             "total_skills": len(set(s for a in self.assessments for s in a.skills)),
             "total_roles": len(set(r for a in self.assessments for r in a.recommended_roles))
         }
