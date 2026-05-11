@@ -63,8 +63,20 @@ class HybridRetriever:
 
         # 2b. Global Technical Filter (Phase 11)
         role_text = (context.role or "").lower()
+        query_text = query_low
         is_tech = any(w in role_text for w in ["python", "java", "backend", "engineer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect", "graduate", "intern"])
         blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections", "agency manager", "hotel", "front desk", "receptionist", "hospitality", "store manager"]
+        
+        # Language-specific filtering (NEW: prevent Java/Python cross-contamination)
+        explicit_python = "python" in query_text or "django" in query_text or "flask" in query_text
+        explicit_java = "java" in query_text and "javascript" not in query_text  # Exclude JavaScript false positives
+        
+        if explicit_python:
+            language_penalty_keywords = ["java (", "java enterprise", "java beans", "j2ee", "java 8", "java framework", "core java"]
+        elif explicit_java:
+            language_penalty_keywords = ["python", "django", "flask", "pandas", "numpy"]
+        else:
+            language_penalty_keywords = []
 
         scored_results = []
         for assessment in all_assessments:
@@ -75,6 +87,10 @@ class HybridRetriever:
             score = 0.0
             desc_low = assessment.description.lower()
             metadata_str = (name_low + " " + desc_low).lower()
+            
+            # Language penalty (NEW: prevent Java/Python cross-contamination)
+            if language_penalty_keywords and any(kw in name_low for kw in language_penalty_keywords):
+                score -= 0.5  # Heavy penalty for wrong language
             
             # A. Name exact/partial match
             name_words = set(name_low.split())
@@ -129,20 +145,33 @@ class HybridRetriever:
             blacklist = ["account manager", "sales", "collections", "reservation agent", "cashier", "clerk", "bilingual", "bank collections"]
             
             if is_tech:
-                # Fallback to top technical assessments
+                # Fallback to top technical assessments (respecting language preference)
                 for a in all_assessments:
                     name_low = a.name.lower()
-                    if any(w in name_low for w in ["java", "python", "software", "coding", "technical", "algorithm", "logic", "programming", "developer"]):
-                        if not any(bw in name_low for bw in blacklist):
-                            scored_results.append({
-                                "id": a.id,
-                                "name": a.name,
-                                "url": a.url,
-                                "test_type": a.test_type.value,
-                                "description": a.description,
-                                "hybrid_score": 0.5
-                            })
-                            if len(scored_results) >= top_k: break
+                    
+                    # Check if matches language preference
+                    matches_language = False
+                    if explicit_python:
+                        matches_language = "python" in name_low or "django" in name_low or "flask" in name_low
+                    elif explicit_java:
+                        matches_language = "java" in name_low and "javascript" not in name_low
+                    else:
+                        # No explicit language - accept any technical
+                        matches_language = any(w in name_low for w in ["java", "python", "software", "coding", "technical", "algorithm", "logic", "programming", "developer"])
+                    
+                    if matches_language and not any(bw in name_low for bw in blacklist):
+                        # Skip wrong language in fallback too
+                        if language_penalty_keywords and any(kw in name_low for kw in language_penalty_keywords):
+                            continue
+                        scored_results.append({
+                            "id": a.id,
+                            "name": a.name,
+                            "url": a.url,
+                            "test_type": a.test_type.value,
+                            "description": a.description,
+                            "hybrid_score": 0.5
+                        })
+                        if len(scored_results) >= top_k: break
             
             # Generic but safe fallback if still empty (still filtering blacklist)
             if not scored_results:

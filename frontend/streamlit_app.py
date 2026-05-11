@@ -174,6 +174,10 @@ def _catalog_lookup(rec: Dict[str, Any], catalog_index: Dict[str, Dict[str, Any]
     stage = _infer_best_stage(category, difficulty, use_cases)
     insight = _build_recruiter_insight(meta)
     ideal_use_case = use_cases[0] if use_cases else meta.get("description", "Grounded catalog recommendation.")
+    # Use backend confidence if available, otherwise estimate
+    backend_confidence = rec.get("confidence")
+    if backend_confidence is None:
+        backend_confidence = _estimate_confidence({**meta, **rec}, 1, [])
 
     return {
         "name": rec.get("name", ""),
@@ -189,7 +193,7 @@ def _catalog_lookup(rec: Dict[str, Any], catalog_index: Dict[str, Dict[str, Any]
         "difficulty_level": difficulty,
         "ideal_roles": meta.get("ideal_roles", []),
         "skill_tags": meta.get("skill_tags", []),
-        "confidence": _estimate_confidence({**meta, **rec}, 1, []),
+        "confidence": backend_confidence,
     }
 
 
@@ -199,7 +203,9 @@ def enrich_recommendations(recommendations: List[Dict[str, Any]], query: str = "
     enriched = []
     for idx, rec in enumerate(recommendations, 1):
         merged = _catalog_lookup(rec, catalog_index)
-        merged["confidence"] = _estimate_confidence(merged, idx, query_tokens)
+        # Only recalculate confidence if backend didn't provide it
+        if rec.get("confidence") is None:
+            merged["confidence"] = _estimate_confidence(merged, idx, query_tokens)
         merged["rank"] = idx
         enriched.append(merged)
     return enriched
