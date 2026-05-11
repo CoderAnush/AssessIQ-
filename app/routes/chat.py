@@ -87,9 +87,12 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             ranking_time = time.time() - ranking_start
 
             import re
-            query_tokens = set(re.findall(r'\b[a-z0-9.]+\b', query.lower()))
+            # CRITICAL: use only the CURRENT user message to detect requested specializations.
+            # Using the full `query` string (which includes context.tech_stack from ALL turns)
+            # causes previous turn's specs to suppress later queries (e.g. React suppressing Java).
+            user_query_tokens = set(re.findall(r'\b[a-z0-9.]+\b', user_query.lower()))
             specializations = {"react", "redux", "typescript", "nextjs", "next.js", "tensorflow", "pytorch", "nlp", "llm", "kubernetes", "terraform", "spring", "springboot", "django", "fastapi", "angular", "vue"}
-            requested_specs = query_tokens.intersection(specializations)
+            requested_specs = user_query_tokens.intersection(specializations)
             
             coverage_found = False
             if requested_specs:
