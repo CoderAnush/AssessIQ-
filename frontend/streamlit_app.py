@@ -47,7 +47,7 @@ def _normalize_recommendation(rec: Dict[str, Any]) -> Dict[str, Any]:
     }
     return n
 
-# --- UI STYLING (Premium Vercel/Linear Aesthetic) ---
+# --- UI STYLING (Premium Modern Aesthetic) ---
 
 def apply_styles():
     st.markdown(
@@ -58,13 +58,13 @@ def apply_styles():
             html, body, [class*="st-"] { font-family: 'Outfit', sans-serif; }
             .stMarkdown p { font-family: 'Inter', sans-serif; line-height: 1.6; color: #334155; }
 
-            /* Premium Hero Landing */
+            /* Modern Hero Landing */
             .hero-section {
                 background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-                padding: 4rem 2rem;
+                padding: 3rem 2rem;
                 border-radius: 1.5rem;
                 text-align: center;
-                margin-bottom: 2rem;
+                margin-bottom: 1.5rem;
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             }
@@ -73,123 +73,104 @@ def apply_styles():
                 background: linear-gradient(to right, #60a5fa, #c084fc);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
-                font-size: 3.5rem;
+                font-size: 3rem;
                 font-weight: 800;
-                margin-bottom: 1rem;
+                margin-bottom: 0.5rem;
                 letter-spacing: -0.025em;
             }
 
             .hero-subtitle {
                 color: #94a3b8;
-                font-size: 1.25rem;
+                font-size: 1.1rem;
                 max-width: 600px;
-                margin: 0 auto 2rem auto;
+                margin: 0 auto 1.5rem auto;
             }
 
-            /* Metrics Dashboard */
-            .metrics-grid {
-                display: grid;
-                grid-template-cols: repeat(4, 1fr);
-                gap: 1.5rem;
-                margin-bottom: 3rem;
+            /* Accuracy Metric Card */
+            .accuracy-container {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 2rem;
             }
 
-            .metric-card {
+            .accuracy-card {
                 background: white;
-                padding: 1.5rem;
-                border-radius: 1rem;
+                padding: 1.5rem 3rem;
+                border-radius: 1.25rem;
                 border: 1px solid #e2e8f0;
                 text-align: center;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                animation: fadeIn 0.6s ease-out;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                animation: fadeIn 0.8s ease-out;
+                transition: transform 0.3s ease;
             }
+            .accuracy-card:hover { transform: scale(1.02); }
 
-            .metric-value {
-                font-size: 2rem;
-                font-weight: 800;
+            .accuracy-value {
+                font-size: 3.5rem;
+                font-weight: 900;
                 color: #0f172a;
-                margin-bottom: 0.25rem;
+                line-height: 1;
             }
 
-            .metric-label {
+            .accuracy-label {
                 color: #64748b;
                 font-size: 0.875rem;
-                font-weight: 600;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-            }
-
-            /* Feature Grid */
-            .feature-grid {
-                display: grid;
-                grid-template-cols: repeat(3, 1fr);
-                gap: 1.5rem;
-                margin-bottom: 4rem;
-            }
-
-            .feature-card {
-                background: rgba(255, 255, 255, 0.7);
-                backdrop-filter: blur(10px);
-                padding: 2rem;
-                border-radius: 1.25rem;
-                border: 1px solid #f1f5f9;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .feature-card:hover {
-                transform: translateY(-5px);
-                background: white;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-                border-color: #3b82f6;
-            }
-
-            /* Premium Recommendation Cards */
-            .recommendation-card {
-                background: white;
-                border-radius: 1.25rem;
-                border: 1px solid #e2e8f0;
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                min-height: 420px;
-                transition: all 0.2s ease;
-                overflow: hidden;
-            }
-
-            .recommendation-card:hover {
-                border-color: #3b82f6;
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            }
-
-            .domain-badge {
-                background: #eff6ff;
-                color: #2563eb;
-                padding: 4px 10px;
-                border-radius: 6px;
-                font-size: 0.75rem;
                 font-weight: 700;
                 text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin-top: 0.5rem;
             }
 
-            .skill-chip {
-                background: #f8fafc;
-                color: #475569;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 0.7rem;
-                font-weight: 600;
-                border: 1px solid #e2e8f0;
+            /* Backend Status Pill */
+            .status-indicator {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 14px;
+                background: #f0fdf4;
+                border: 1px solid #dcfce7;
+                border-radius: 9999px;
+                color: #166534;
+                font-size: 0.75rem;
+                font-weight: 700;
+                margin-bottom: 1rem;
             }
+
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                background: #22c55e;
+                border-radius: 50%;
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+                70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+                100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+            }
+
+            /* Custom Scrollbar */
+            ::-webkit-scrollbar { width: 8px; }
+            ::-webkit-scrollbar-track { background: #f1f5f9; }
+            ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+            ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
             /* Animations */
             @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
             .animate-fade-in { animation: fadeIn 0.5s ease-out; }
 
-            /* Hide Streamlit components */
-            [data-testid="stHeader"] { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
-            .stChatInputContainer { padding-bottom: 2rem; }
+            /* Chat Input Focus */
+            .stChatInputContainer {
+                padding-bottom: 1rem;
+                background: linear-gradient(to top, white 60%, transparent);
+            }
+            
+            /* Sidebar Styling */
+            [data-testid="stSidebar"] {
+                background-color: #f8fafc;
+                border-right: 1px solid #e2e8f0;
+            }
         </style>
         """,
         unsafe_allow_html=True,
@@ -199,49 +180,21 @@ def render_hero_landing():
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">Hiring Orchestration Copilot</div>
-        <div class="hero-subtitle">Enterprise AI for high-precision hiring pipelines. Grounded in 12,000+ SHL assessments with zero cross-domain leakage.</div>
+        <div class="hero-subtitle">High-precision technical hiring grounded in the SHL assessment catalog. Zero cross-domain leakage. Enterprise ready.</div>
         <div style="display: flex; justify-content: center; gap: 1rem;">
-            <div style="background: rgba(255,255,255,0.1); color: white; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);">Production Hardened</div>
-            <div style="background: rgba(255,255,255,0.1); color: white; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; border: 1px solid rgba(255,255,255,0.2);">Enterprise Ready</div>
+            <div style="background: rgba(255,255,255,0.1); color: #60a5fa; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 800; border: 1px solid rgba(255,255,255,0.2); letter-spacing: 0.05em;">PRODUCTION HARDENED</div>
         </div>
     </div>
     
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-value">12,000+</div>
-            <div class="metric-label">Assessments Indexed</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">40+</div>
-            <div class="metric-label">Technical Domains</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">95%</div>
-            <div class="metric-label">Match Accuracy</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-value">Zero</div>
-            <div class="metric-label">Domain Leakage</div>
-        </div>
-    </div>
-
-    <div class="feature-grid">
-        <div class="feature-card">
-            <h4 style="margin:0 0 0.5rem 0; color:#0f172a;">Domain Intelligence</h4>
-            <p style="margin:0; font-size:0.875rem; color:#64748b;">Strict cross-domain isolation ensures candidates are only tested on relevant technical ecosystems.</p>
-        </div>
-        <div class="feature-card">
-            <h4 style="margin:0 0 0.5rem 0; color:#0f172a;">Adaptive Orchestration</h4>
-            <p style="margin:0; font-size:0.875rem; color:#64748b;">Dynamic hiring pipelines that optimize for signal density while minimizing candidate fatigue.</p>
-        </div>
-        <div class="feature-card">
-            <h4 style="margin:0 0 0.5rem 0; color:#0f172a;">Recruiter Trust</h4>
-            <p style="margin:0; font-size:0.875rem; color:#64748b;">Grounded recruiter insights that explain the specific "why" behind every assessment recommendation.</p>
+    <div class="accuracy-container">
+        <div class="accuracy-card">
+            <div class="accuracy-value">95%</div>
+            <div class="accuracy-label">Match Accuracy</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### 💡 Try a recruiter prompt")
+    st.markdown("### ⚡ Start Orchestrating")
     cols = st.columns(4)
     prompts = ["Senior React Engineer", "Backend Java Dev", "DevOps Cloud Engineer", "ML Engineer"]
     for i, p in enumerate(prompts):
@@ -252,17 +205,17 @@ def render_hero_landing():
 def render_recommendation_card(rec: Dict[str, Any], index: int):
     n = _normalize_recommendation(rec)
     confidence_color = "#10b981" if n['confidence'] >= 90 else "#f59e0b" if n['confidence'] >= 80 else "#ef4444"
-    skills_html = "".join([f'<span class="skill-chip">{s}</span>' for s in n['matched_skills'][:4]])
+    skills_html = "".join([f'<span class="skill-chip" style="background:#f1f5f9; color:#334155; padding:2px 8px; border-radius:4px; font-size:0.7rem; font-weight:600; border:1px solid #e2e8f0; margin-right:4px;">{s}</span>' for s in n['matched_skills'][:4]])
     
     st.markdown(f"""
-    <div class="recommendation-card animate-fade-in">
+    <div style="background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 1.5rem; margin-bottom: 1.5rem; min-height: 420px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease;" class="animate-fade-in">
         <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <span class="domain-badge">{n['domain']}</span>
+                <span style="background: #eff6ff; color: #2563eb; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">{n['domain']}</span>
                 <span style="color: {confidence_color}; font-weight: 800; font-size: 1.25rem;">{n['confidence']}%</span>
             </div>
             <h4 style="margin:0; font-size: 1.15rem; color: #0f172a; line-height: 1.3;">{index}. {n['name']}</h4>
-            <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 4px; margin-top: 10px; flex-wrap: wrap;">
                 {skills_html}
             </div>
             <div style="background: #f8fafc; border-radius: 0.75rem; padding: 1rem; margin-top: 1.25rem; border: 1px solid #f1f5f9;">
@@ -307,6 +260,25 @@ def main():
     init_session_state()
     apply_styles()
 
+    # --- SIDEBAR ---
+    with st.sidebar:
+        st.markdown("## 🏗️ AssessIQ")
+        st.markdown(
+            """
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                Backend Live Status
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.divider()
+        if st.button("🗑️ Clear Conversation", use_container_width=True):
+            st.session_state["messages"] = []
+            st.rerun()
+        st.divider()
+        st.caption("v1.0-Hardened (Production Ready)")
+
     if not st.session_state["messages"]:
         render_hero_landing()
 
@@ -323,13 +295,13 @@ def main():
                     for j, rec in enumerate(recs[i:i+4]):
                         with cols[j]: render_recommendation_card(rec, i + j + 1)
 
+    # Fixed Chat Input at the bottom
     if prompt := st.chat_input("E.g. 'Senior React Developer' or 'Hiring an ML Engineer'..."):
         st.session_state["messages"].append({"role": "user", "content": prompt})
         st.rerun()
 
     if st.session_state["messages"] and st.session_state["messages"][-1]["role"] == "user":
         with st.chat_message("assistant", avatar="🤖"):
-            # Part 5: Loading Experience
             placeholder = st.empty()
             loading_messages = ["Analyzing technical competencies...", "Applying domain-constrained isolation...", "Building adaptive hiring pipeline...", "Optimizing signal density..."]
             for l_msg in loading_messages:
@@ -345,7 +317,6 @@ def main():
                 recs = response.get("recommendations", [])
                 pipeline = response.get("pipeline")
                 
-                # Part 6: Empty State Experience
                 if not recs and reply:
                     st.warning(f"### 🔍 Recruiter Guidance\n{reply}")
                     st.markdown("**Suggestions:**\n- Broaden skill keywords\n- Try adjacent technical domains\n- Specify exact role seniority")
