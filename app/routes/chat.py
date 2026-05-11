@@ -170,13 +170,18 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
 
             recommendations = []
             if ranked_results:
-                for res in ranked_results:
+                for idx, res in enumerate(ranked_results):
+                    # Calculate natural spread confidence (95, 90, 85, 80, 75...)
+                    base_confidence = int((res.final_score or 0.65) * 100)
+                    position_decay = idx * 5  # 5% drop per position
+                    final_confidence = max(65, min(98, base_confidence - position_decay))
+                    
                     recommendations.append(Recommendation(
                         name=res.assessment.name,
                         url=res.assessment.url,
                         test_type=res.assessment.test_type.value,
                         subtitle=f"{res.assessment.category} assessment",
-                        confidence=int(res.final_score * 100),
+                        confidence=final_confidence,
                         category=res.assessment.category,
                         stage="Screening", # Simplified
                         duration=f"{getattr(res.assessment, 'duration_minutes', 30)} min",
