@@ -1,6 +1,6 @@
 """
 Catalog loader service.
-Loads SHL assessment catalog from JSON file.
+Loads SHL assessment catalog from JSON file and enriches with domain metadata.
 """
 
 import json
@@ -8,12 +8,13 @@ from pathlib import Path
 from typing import List, Dict, Optional
 from app.models.assessment import AssessmentWithMetadata
 from app.logger_config.logger import get_logger
+from app.services.domain_classifier import DomainClassifier
 
 logger = get_logger("catalog_loader")
 
 
 class CatalogLoader:
-    """Loads and manages SHL assessment catalog."""
+    """Loads and manages SHL assessment catalog with domain enrichment."""
 
     def __init__(self, catalog_path: str):
         """
@@ -24,10 +25,11 @@ class CatalogLoader:
         """
         self.catalog_path = Path(catalog_path)
         self.assessments: List[AssessmentWithMetadata] = []
+        self.domain_classifier = DomainClassifier()
         self._load_catalog()
 
     def _load_catalog(self) -> None:
-        """Load catalog from JSON file."""
+        """Load catalog from JSON file and infer domains."""
         if not self.catalog_path.exists():
             logger.warning(f"Catalog not found at {self.catalog_path}")
             return
@@ -36,7 +38,7 @@ class CatalogLoader:
             with open(self.catalog_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            # Parse assessments with failsafe repair
+            # Parse assessments with failsafe repair and domain inference
             import re
             for i, item in enumerate(data.get("assessments", [])):
                 try:
@@ -53,12 +55,17 @@ class CatalogLoader:
                     if not item.get("test_type"):
                         item["test_type"] = "K"
 
+                    # Infer Domain (Step 3 Fix)
+                    name = item.get("name", "")
+                    desc = item.get("description", "")
+                    item["primary_domain"] = self.domain_classifier.infer_assessment_domain(name, desc)
+
                     assessment = AssessmentWithMetadata(**item)
                     self.assessments.append(assessment)
                 except Exception as e:
                     logger.error(f"Failed to parse assessment {item.get('id') or i}: {e}")
 
-            logger.info(f"Loaded {len(self.assessments)} assessments from catalog")
+            logger.info(f"Loaded {len(self.assessments)} assessments from catalog with domain tagging")
 
         except Exception as e:
             logger.error(f"Failed to load catalog: {e}")

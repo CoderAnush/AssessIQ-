@@ -38,14 +38,15 @@ class SignalReportModel(BaseModel):
 
 class HiringPipelineModel(BaseModel):
     stages: List[PipelineStageModel]
-    fatigue: FatigueReportModel # Phase 3
-    signal: SignalReportModel # Phase 4
-    tradeoff_analysis: str # Phase 5
+    fatigue: FatigueReportModel
+    signal: SignalReportModel
+    tradeoff_analysis: str
     strategic_guidance: str
 
 class Recommendation(BaseModel):
     """
-    UPGRADED Recommendation model with enterprise intelligence.
+    CLEAN Recommendation model for production (Step 8 Fix).
+    Removed internal debug fields.
     """
     name: str = Field(..., description="Assessment name")
     url: str = Field(..., description="SHL URL")
@@ -57,19 +58,8 @@ class Recommendation(BaseModel):
     duration: str = Field("", description="Assessment duration")
     recruiter_insight: str = Field("", description="Grounded insight")
     ideal_use_case: str = Field("", description="Ideal scenario for use")
-    
-    # Enterprise Debug fields (Phase 10)
-    embedding_similarity: float = Field(0.0)
-    keyword_similarity: float = Field(0.0)
-    graph_relevance: float = Field(0.0)
-    role_boost: float = Field(0.0)
-    domain_penalty: float = Field(0.0)
-    diversity_bonus: float = Field(0.0)
-    mode_adjustment: float = Field(0.0)
-    matched_skills: List[str] = Field(default_factory=list)
-    inferred_skills: List[str] = Field(default_factory=list)
-    competencies: List[str] = Field(default_factory=list) # Phase 2
-    domain: str = Field("")
+    domain: str = Field("", description="Detected engineering domain")
+    matched_skills: List[str] = Field(default_factory=list, description="Directly matching skills")
 
     class Config:
         extra = "ignore"
@@ -77,12 +67,12 @@ class Recommendation(BaseModel):
 
 class ChatResponse(BaseModel):
     """
-    STRICT POST /chat response schema with Pipeline Orchestration.
+    STRICT POST /chat response schema.
     """
     reply: str = Field(..., description="Assistant response")
     recommendations: List[Recommendation] = Field(default_factory=list)
-    pipeline: Optional[HiringPipelineModel] = None # Phase 1
-    detail: Optional[str] = Field(None, description="Detailed error or debug information")
+    pipeline: Optional[HiringPipelineModel] = None
+    detail: Optional[str] = Field(None, description="Detailed error information")
     end_of_conversation: bool = Field(default=False)
 
     class Config:

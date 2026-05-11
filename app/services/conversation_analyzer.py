@@ -79,7 +79,7 @@ class ConversationAnalyzer:
             if m["role"] == "assistant":
                 content = m["content"].lower()
                 if any(w in content for w in ["seniority", "experience level"]): context.asked_slots.add("seniority")
-                if any(w in content for w in ["role", "position"]): context.asked_slots.add("role")
+                if any(w in content for w in ["role", "position", "technical area"]): context.asked_slots.add("role")
                 if any(w in content for w in ["tech stack", "skills", "framework"]): context.asked_slots.add("tech_stack")
 
         # 2. Robust Skill & Role Extraction (Phase 3)
@@ -106,7 +106,7 @@ class ConversationAnalyzer:
             if "devops" in role_lower or "sre" in role_lower:
                 inferred_tech.append("DevOps")
             if inferred_tech:
-                context.tech_stack = inferred_tech
+                context.tech_stack = set(inferred_tech)
         
         context.domain = self._infer_domain(context.role, context.tech_stack, full_text)
 
@@ -261,13 +261,13 @@ class ConversationAnalyzer:
         return "software engineering"
 
     def get_clarification_question(self, context: HiringContext) -> Optional[str]:
-        """Deterministic follow-up logic (Phase 4)."""
+        """Deterministic follow-up logic (Phase 4 & 5)."""
         missing = context.get_missing_slots()
         if not missing: return None
         
         slot = missing[0]
         if slot == "role":
-            return "What technical area are you hiring for? (Backend, Frontend, Data Science, DevOps, QA, Mobile, etc.)"
+            return "What type of engineering role are you hiring for? Examples: Backend, Frontend, DevOps, Data Science, QA, or Leadership."
         if slot == "tech_stack":
             return f"Are there specific frameworks or tools required for this {context.role} position (e.g. FastAPI, Kubernetes, or React)?"
         if slot == "seniority":

@@ -23,20 +23,14 @@ class FatigueEngine:
             duration = getattr(assess, "duration_minutes", 30)
             total_duration += duration
             
-            # Type weighting for cognitive load
-            t_type = assess.test_type.value
+            t_type = str(getattr(assess.test_type, "value", assess.test_type))
             type_counts[t_type] = type_counts.get(t_type, 0) + 1
             
             if t_type == "A": cognitive_load += 0.8
             elif t_type == "K": cognitive_load += 0.6
             else: cognitive_load += 0.3
             
-        # Fatigue Score Logic (0.0 to 1.0)
-        # 120 mins = 0.5 fatigue
-        # 240 mins = 1.0 fatigue
         duration_factor = min(1.0, total_duration / 240.0)
-        
-        # Repetitive burden
         max_repeats = max(type_counts.values()) if type_counts else 0
         repetition_factor = min(1.0, max_repeats / 4.0)
         
@@ -66,25 +60,26 @@ class SignalEngine:
             assess = catalog.get(aid)
             if not assess: continue
             
-            t_type = assess.test_type.value
+            t_type = str(getattr(assess.test_type, "value", assess.test_type))
             if t_type == "K": coverage["technical"] += 0.4
             elif t_type == "P": coverage["behavioral"] += 0.4
             elif t_type == "A": coverage["cognitive"] += 0.5
             
             if getattr(assess, "leadership_focus", False): coverage["leadership"] += 0.5
             
-        # Normalize and cap
         for k in coverage:
             coverage[k] = min(1.0, coverage[k])
             
-        overall_signal = sum(coverage.values()) / 4.0
+        # Hardening: Overall signal should be weighted by active clusters
+        active_clusters = [v for v in coverage.values() if v > 0]
+        if active_clusters:
+            overall_signal = sum(active_clusters) / len(active_clusters)
+            # Boost if multiple clusters covered
+            if len(active_clusters) > 1: overall_signal = min(1.0, overall_signal * 1.1)
+        else:
+            overall_signal = 0.0
         
-        confidence_mapping = {
-            "technical": "High" if coverage["technical"] > 0.7 else "Moderate" if coverage["technical"] > 0.3 else "Low",
-            "behavioral": "High" if coverage["behavioral"] > 0.7 else "Moderate" if coverage["behavioral"] > 0.3 else "Low",
-            "leadership": "High" if coverage["leadership"] > 0.7 else "Moderate" if coverage["leadership"] > 0.3 else "Low",
-            "cognitive": "High" if coverage["cognitive"] > 0.7 else "Moderate" if coverage["cognitive"] > 0.3 else "Low",
-        }
+        confidence_mapping = {k: ("High" if v > 0.7 else "Moderate" if v > 0.3 else "Low") for k, v in coverage.items()}
         
         return {
             "signal_score": round(overall_signal, 2),

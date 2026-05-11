@@ -50,9 +50,9 @@ class DecisionEngine:
 
     def decide(self, messages: List[dict]) -> Decision:
         """
-        Decide what to do based on conversation.
+        Decide what to do based on conversation (Phase 5: Clarify once).
         """
-        # Analyze conversation (Phase 4)
+        # Analyze conversation
         context, intent = self.analyzer.analyze(messages)
 
         logger.debug(f"Decision Context: {context}")
@@ -74,16 +74,17 @@ class DecisionEngine:
                 confidence=0.9
             )
 
-        # 3. CLARIFY if insufficient context (Phase 4)
-        # Convergence logic: Max 8 turns (pair of user/assistant is 1 turn each)
+        # 3. CLARIFY if insufficient context (Phase 5: Exactly ONCE)
         turn_count = sum(1 for m in messages if m["role"] == "assistant")
         
-        if not context.is_sufficient and turn_count < 4: # 4 assistant turns = 8 turns total roughly
+        # Phase 5: Only clarify if we haven't hit the turn limit AND we haven't already asked the missing slot
+        missing = context.get_missing_slots()
+        if missing and turn_count < 1: # Strict Phase 5: Clarify ONCE
             next_q = self.analyzer.get_clarification_question(context)
             if next_q:
                 return Decision(
                     action=AgentAction.CLARIFY,
-                    reasoning=f"Context incomplete. Turn {turn_count+1}/8.",
+                    reasoning=f"Context incomplete. Phase 5: Clarifying ONCE.",
                     confidence=0.9,
                     next_question=next_q,
                 )
@@ -91,7 +92,7 @@ class DecisionEngine:
         # 4. RECOMMEND if sufficient or turn limit reached
         return Decision(
             action=AgentAction.RECOMMEND,
-            reasoning="Sufficient context reached.",
+            reasoning="Sufficient context reached or clarification budget spent.",
             confidence=0.85,
         )
 
@@ -109,25 +110,21 @@ class DecisionEngine:
     def _extract_comparison_items(self, messages: List[dict]) -> List[str]:
         """
         Extract what user wants to compare.
-        Supports relative references like 'top 2', 'first two', 'them', 'which is better'.
-        Returns empty list if relative reference detected (caller should use memory).
         """
         message = messages[-1]["content"]
         msg_lower = message.lower()
         items = []
 
-        # 1. Check for relative references - these will be resolved by chat.py using memory
+        # 1. Check for relative references
         relative_refs = [
             "top 2", "top two", "first 2", "first two", "compare them", "both of them", 
             "top recommendations", "which is better", "difference between them", "compare these",
             "which one is better", "what's the difference", "difference?", "compare the first two"
         ]
         if any(ref in msg_lower for ref in relative_refs):
-            # Return empty - chat.py will resolve from conversation memory
-            logger.info("Relative reference detected for comparison - will resolve from memory")
             return []
 
-        # 2. Pattern matching: "between X and Y"
+        # 2. Pattern matching
         import re
         between_match = re.search(r"between\s+([^,]+?)\s+and\s+([^?\.!]+)", msg_lower)
         if between_match:
@@ -135,7 +132,6 @@ class DecisionEngine:
             items.append(between_match.group(2).strip())
             return items
 
-        # 3. Pattern matching: "X vs Y" or "X versus Y"
         vs_match = re.search(r"([A-Z][\w\-]+(?:\s+[A-Z][\w\-]+)*)\s+(?:vs|versus)\s+([A-Z][\w\-]+(?:\s+[A-Z][\w\-]+)*)", message)
         if not vs_match:
             vs_match = re.search(r"(\w+)\s+(?:vs|versus)\s+(\w+)", msg_lower)
@@ -144,100 +140,19 @@ class DecisionEngine:
             items.append(vs_match.group(2).strip())
             return items
 
-        # 4. Capitalized assessment names (filter out common words)
-        temp_message = re.sub(r"^[Cc]ompare\s+", "", message)
-        cap_words = re.findall(r"([A-Z][\w\-]+(?:\s+[A-Z][\w\-]+)*)", temp_message)
-        skip_words = {"and", "vs", "versus", "between", "the", "top", "for", "with", "shl", "assessment", "test"}
-        for word in cap_words:
-            if word.lower() not in skip_words and len(word) > 2:
-                items.append(word)
-
-        # 5. Known assessment names (expanded list)
-        known_assessments = [
-            "opq32r", "opq", "gsa", "16pf", "java 8", "java", "python", "leadership 7", 
-            "leadership", "verbal reasoning", "ceb verbal", "verify interactive", "react",
-            "data science", "ml assessment", "personality", "cognitive"
-        ]
-        for assessment in known_assessments:
-            if assessment in msg_lower:
-                # Avoid duplicates
-                if not any(assessment in item.lower() for item in items):
-                    items.append(assessment)
-
-        return items[:2] if items else []  # Return first 2 items
-
-    def get_context_from_messages(
-        self, messages: List[dict]
-    ) -> HiringContext:
-        """Extract current context from messages."""
-        context, _ = self.analyzer.analyze_conversation(messages)
-        return context
+        return items[:2] if items else []
 
     def get_turn_count(self, messages: List[dict]) -> int:
-        """Get number of turns (pairs of user-assistant messages)."""
-        # Count assistant messages (they're the full turns)
         return sum(1 for m in messages if m["role"] == "assistant")
 
     def is_conversation_complete(self, messages: List[dict]) -> bool:
-        """Check if conversation should end."""
-        # Conversation ends when:
-        # 1. We just gave recommendations
-        # 2. User confirms they're satisfied
-
-        if len(messages) < 2:
-            return False
-
-        # Check if last assistant message included recommendations
+        if len(messages) < 2: return False
+        
+        # If recommendations given, we consider it a complete loop
         for i in range(len(messages) - 1, -1, -1):
             if messages[i]["role"] == "assistant":
-                # Parse if recommendations included
-                # This is a simple heuristic
                 content = messages[i]["content"].lower()
-                if (
-                    "recommendation" in content
-                    or "here are" in content
-                    or "assessment" in content
-                ):
+                if "recommendation" in content or "assessment" in content:
                     return True
                 break
-
-        # Check if user is satisfied
-        if len(messages) >= 2:
-            last_user = messages[-1]["content"].lower()
-            if any(
-                phrase in last_user
-                for phrase in [
-                    "that's great",
-                    "perfect",
-                    "thanks",
-                    "thank you",
-                    "looks good",
-                    "that works",
-                    "excellent",
-                    "exactly",
-                    "that's it",
-                ]
-            ):
-                return True
-
         return False
-
-    def should_refetch_recommendations(self, messages: List[dict]) -> bool:
-        """Check if we should fetch new recommendations (for REFINE action)."""
-        # Simple heuristic: if last user message says "also" or "add"
-        if not messages:
-            return False
-
-        last_user_msg = None
-        for msg in reversed(messages):
-            if msg["role"] == "user":
-                last_user_msg = msg["content"]
-                break
-
-        if not last_user_msg:
-            return False
-
-        return any(
-            word in last_user_msg.lower()
-            for word in ["also", "add", "additionally", "plus", "change", "update"]
-        )

@@ -106,6 +106,8 @@ class AssessmentWithMetadata(Assessment):
     engineering_domains: List[str] = Field(default_factory=list)
     suitable_stages: List[str] = Field(default_factory=list)
     category: str = Field(default="general")
+    primary_domain: str = Field(default="GENERAL")
+    secondary_domains: List[str] = Field(default_factory=list)
 
     class Config:
         json_schema_extra = {

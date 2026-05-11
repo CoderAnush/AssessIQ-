@@ -134,7 +134,6 @@ class SkillGraph:
         self._add_relationship("Customer Support", "Problem Solving")
         
         # 9. Modern Technical Adjacency (Phase 2 Expansion)
-        # Python Modern
         self._add_node("FastAPI", "framework", weight=1.1)
         self._add_relationship("FastAPI", "Python")
         self._add_relationship("FastAPI", "Backend Engineering")
@@ -145,49 +144,23 @@ class SkillGraph:
         self._add_relationship("Django", "Python")
         self._add_related("Django", "Web Development")
         
-        # Cloud Native & Infra
         self._add_node("Kubernetes", "tool", weight=1.2)
         self._add_node("Terraform", "tool", weight=1.1)
         self._add_node("Docker", "tool")
         self._add_relationship("Cloud Engineering", "Kubernetes")
         self._add_relationship("Cloud Engineering", "Terraform")
-        self._add_related("Kubernetes", "Infrastructure")
-        self._add_related("Terraform", "Infrastructure as Code")
-        self._add_related("Platform Engineering", "Kubernetes")
-        self._add_related("Platform Engineering", "Terraform")
-        self._add_related("SRE", "Kubernetes")
         
-        # AI & Data Modern
         self._add_node("PyTorch", "framework", weight=1.1)
         self._add_node("TensorFlow", "framework")
         self._add_node("Spark", "tool")
-        self._add_relationship("ML Engineering", "PyTorch")
-        self._add_relationship("ML Engineering", "TensorFlow")
-        self._add_relationship("Data Engineering", "Spark")
-        self._add_related("AI Research", "PyTorch")
         
-        # Emerging Languages
         self._add_node("Go", "language", weight=1.1)
         self._add_node("Rust", "language", weight=1.1)
-        self._add_relationship("Backend Engineering", "Go")
-        self._add_relationship("Systems Engineering", "Rust")
-        
-        # Modern QA
         self._add_node("Playwright", "tool")
         self._add_node("Cypress", "tool")
-        self._add_relationship("QA Automation", "Playwright")
-        self._add_relationship("QA Automation", "Cypress")
-        
-        # 10. Intent Mapping (Phase 3)
-        self._add_related("Backend Architect", "Distributed Systems")
-        self._add_related("Backend Architect", "Scalability")
-        self._add_related("Platform Engineer", "Kubernetes")
-        self._add_related("Platform Engineer", "Cloud Engineering")
 
     def expand_skills(self, skills: Set[str], depth: int = 1) -> Set[str]:
-        """Expand a set of skills using the graph."""
         expanded = set(s.lower() for s in skills)
-        
         for _ in range(depth):
             current_batch = list(expanded)
             for skill in current_batch:
@@ -196,43 +169,30 @@ class SkillGraph:
                     expanded.update(node.parents)
                     expanded.update(node.children)
                     expanded.update(node.related)
-                    
         return expanded
 
+    def get_related_skills(self, skill: str) -> Set[str]:
+        node = self.nodes.get(skill.lower())
+        if not node: return set()
+        return node.parents | node.children | node.related
+
     def get_related_weight(self, skill_a: str, skill_b: str) -> float:
-        """Calculate weighted similarity between two skills."""
         s_a = skill_a.lower()
         s_b = skill_b.lower()
-
-        # Explicit adjacency weights for FastAPI pipeline stability.
-        if s_a == "fastapi" and s_b == "python":
-            return 0.95
-        if s_a == "fastapi" and s_b in {"backend engineering", "backend"}:
-            return 0.92
-        if s_a == "fastapi" and s_b in {"apis", "api"}:
-            return 0.88
-        
         if s_a == s_b: return 1.0
-        
         node_a = self.nodes.get(s_a)
         if not node_a: return 0.0
-        
         if s_b in node_a.children: return 0.9
         if s_b in node_a.parents: return 0.8
         if s_b in node_a.related: return 0.7
-        
         return 0.0
 
     def infer_intent(self, query: str) -> Dict[str, float]:
-        """Infer recruiter intent based on keyword presence and graph."""
         query_low = query.lower()
         intents = {}
-        
         for name, node in self.nodes.items():
             if name in query_low:
                 intents[name] = 1.0 * node.weight
-                # Propagate to parents with decay
                 for parent in node.parents:
                     intents[parent] = max(intents.get(parent, 0), 0.6 * node.weight)
-                    
         return intents
