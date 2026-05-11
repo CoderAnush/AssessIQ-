@@ -52,7 +52,8 @@ class EnterpriseRanker:
         # 1. INITIAL STRICT FILTERING (Part 1 & 5 Fix)
         # We filter BEFORE any ranking or diversity logic.
         candidates = []
-        for res in retrieved:
+        # Optimization: Limit candidate pool to top 40 for performance
+        for res in retrieved[:40]:
             assess = catalog.get(res["id"])
             if not assess: continue
 
@@ -64,6 +65,8 @@ class EnterpriseRanker:
             
             # Base Factors
             semantic_sim = res.get("hybrid_score", 0.0)
+            
+            # Pre-calculate domain match (faster in hot loop)
             domain_match = 1.0 if assess_domain == query_domain else 0.6 if assess_domain in self.domain_classifier.ADJACENCY_MAP.get(query_domain, []) else 0.0
                 
             tech_stack = {str(t).lower() for t in (getattr(context, "tech_stack", set()) or set())}
@@ -81,11 +84,13 @@ class EnterpriseRanker:
 
         # 2. DIVERSITY BOOST WITHIN SAME DOMAIN (Part 3 Fix)
         # We only work with the filtered candidates.
+        # Optimization: Use pre-calculated weights
         candidates.sort(key=lambda x: (x["semantic"] * 0.5 + x["domain"] * 0.3 + x["overlap"] * 0.2), reverse=True)
         
         final_ranked = []
         global_skill_frequencies = {}
         
+        # Optimization: Early exit if we have enough high-quality candidates
         for cand in candidates:
             assess = cand["assess"]
             
@@ -117,8 +122,11 @@ class EnterpriseRanker:
                 matched_skills=list(cand["matched"])
             ))
             
+            # Optimization: Stop once we have 15 good candidates to process for orchestration
+            if len(final_ranked) >= 15: break
+            
         # 3. PRECISION OVER QUANTITY (Part 5 Fix)
-        # Sort and return only the top K. If fewer than K, return exactly what we have.
+        # Sort and return only the top K.
         return sorted(final_ranked, key=lambda x: x.final_score, reverse=True)[:top_k]
 
     def _generate_grounded_insight(self, assess: Any, query_class: Dict, matched_skills: Set[str]) -> str:

@@ -165,12 +165,32 @@ def main():
         st.rerun()
     if st.session_state["messages"] and st.session_state["messages"][-1]["role"] == "user":
         with st.chat_message("assistant", avatar="🤖"):
-            ph = st.empty(); ph.markdown("✨ *Analyzing...*")
+            status_placeholder = st.empty()
+            status_placeholder.markdown("✨ *Optimizing hiring pipeline...*")
             try:
                 payload = {"messages": [{"role": m["role"], "content": m["content"]} for m in st.session_state["messages"]]}
-                resp = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=30)
-                if resp.status_code != 200: ph.error(f"Error {resp.status_code}"); return
-                data = normalize_api_response(resp.json()); ph.empty()
+                
+                # Production-grade timeout and error handling
+                try:
+                    resp = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=30)
+                except requests.exceptions.Timeout:
+                    status_placeholder.empty()
+                    st.error("⏳ **Optimization taking longer than expected.** This is usually due to backend cold start on Render. Please click retry or wait a moment.")
+                    if st.button("🔄 Retry Request"): st.rerun()
+                    return
+                except requests.exceptions.ConnectionError:
+                    status_placeholder.empty()
+                    st.error("🔌 **Backend Connection Error.** Ensure the Render service is awake.")
+                    return
+
+                if resp.status_code != 200:
+                    status_placeholder.empty()
+                    st.error(f"⚠️ Platform synchronization error (HTTP {resp.status_code}).")
+                    return
+                
+                data = normalize_api_response(resp.json())
+                status_placeholder.empty()
+                
                 st.markdown(data["reply"])
                 if data["pipeline"]: render_pipeline_section(data["pipeline"])
                 if data["recommendations"]:
@@ -179,10 +199,17 @@ def main():
                         cols = st.columns(4)
                         for j, rec in enumerate(r[i:i+4]):
                             with cols[j]: render_recommendation_card(rec, i + j + 1)
-                st.session_state["messages"].append({"role": "assistant", "content": data["reply"], "recommendations": data["recommendations"], "pipeline": data["pipeline"]})
+                
+                st.session_state["messages"].append({
+                    "role": "assistant", 
+                    "content": data["reply"], 
+                    "recommendations": data["recommendations"], 
+                    "pipeline": data["pipeline"]
+                })
                 st.rerun()
             except Exception as e:
-                ph.empty(); st.error(f"Sync error: {str(e)}")
+                status_placeholder.empty()
+                st.error(f"🧩 **Synchronization Issue**: {str(e)[:100]}. Please check backend logs.")
 
 if __name__ == "__main__":
     main()

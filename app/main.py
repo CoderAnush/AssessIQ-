@@ -85,6 +85,11 @@ async def lifespan(app: FastAPI):
         from app.agents.decision_engine import DecisionEngine
         app.state.decision_engine = DecisionEngine()
 
+        # 5b. Initialize Domain Classifier (Singleton for performance)
+        logger.info("STARTUP: Initializing Domain Classifier...")
+        from app.services.domain_classifier import DomainClassifier
+        app.state.domain_classifier = DomainClassifier()
+
         # 6. Initialize Hallucination Checker
         logger.info("STARTUP: Initializing Hallucination Checker...")
         from app.utils.hallucination_checker import HallucinationChecker
@@ -126,16 +131,20 @@ def create_app() -> FastAPI:
     )
 
     # Health endpoint
-    @app.get("/health", response_model=HealthResponse)
+    @app.get("/health")
     async def health_check():
-        """Health check endpoint for readiness probes."""
+        """Health check endpoint for production monitoring."""
         uptime_seconds = time.time() - getattr(app.state, "start_time", time.time())
-        memory_mb = psutil.virtual_memory().used / (1024 * 1024)
+        catalog_size = len(app.state.catalog_loader.get_all()) if hasattr(app.state, "catalog_loader") else 0
+        
         return {
-            "status": "ok",
-            "version": "1.0.0",
-            "uptime_seconds": uptime_seconds,
-            "memory_usage_mb": memory_mb,
+            "status": "healthy",
+            "version": "1.2.0-production",
+            "catalog_loaded": catalog_size > 0,
+            "catalog_size": catalog_size,
+            "uptime_seconds": round(uptime_seconds, 2),
+            "memory_usage_mb": round(psutil.virtual_memory().used / (1024 * 1024), 2),
+            "timestamp": time.time()
         }
 
     # Middleware for request/response logging
