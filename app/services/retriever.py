@@ -40,6 +40,27 @@ class HybridRetriever:
         explicit_fastapi = "fastapi" in query_low
         explicit_devops = any(w in query_low for w in ["devops", "kubernetes", "terraform", "sre"])
         explicit_frontend = any(w in query_low for w in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web"])
+
+        # BACKEND SPECIALIZATION CLUSTERS — detect what technology family the query belongs to
+        BACKEND_TECH_FAMILIES = {
+            "node":        ["node", "node.js", "nodejs", "express", "nestjs", "javascript backend"],
+            "python":      ["python", "fastapi", "django", "flask", "sqlalchemy"],
+            "java":        ["java", "spring", "springboot", "spring boot", "java ee", "hibernate", "j2ee"],
+            "go":          ["golang", "go ", "gorilla", "grpc"],
+            "distributed": ["distributed", "kafka", "microservices", "microservice", "event-driven", "message queue"],
+            "api":         ["graphql", "api gateway", "rest api", "grpc", "openapi"],
+            "database":    ["postgresql", "mysql", "redis", "mongodb", "cassandra", "nosql", "sql"],
+            "devops_adj":  ["docker", "kubernetes", "terraform", "ci/cd", "helm"],
+        }
+        query_family = set()
+        for family, signals in BACKEND_TECH_FAMILIES.items():
+            if any(s in query_low for s in signals):
+                query_family.add(family)
+
+        # Java assessments to suppress when query is for a DIFFERENT backend stack
+        JAVA_ASSESSMENT_TOKENS = {"java", "spring", "j2ee", "hibernate", "java ee", "servlet", "ejb", "java beans"}
+        suppress_java = bool(query_family) and "java" not in query_family
+        suppress_node_js = bool(query_family) and "node" not in query_family and explicit_java
         
         scored_results = []
         for assessment in all_assessments:
@@ -67,6 +88,19 @@ class HybridRetriever:
             # Penalise JavaScript assessments when query is Java-only (not JavaScript)
             if explicit_java and "javascript" in metadata_tokens and "javascript" not in query_low:
                 score -= 3.0
+
+            # HARD CROSS-STACK PENALTIES: suppress Java for non-Java backend queries
+            if suppress_java:
+                java_hit = any(t in metadata_tokens for t in JAVA_ASSESSMENT_TOKENS)
+                if java_hit:
+                    # Allow if assessment also has strong distributed/arch signals
+                    arch_signals = {"distributed", "microservices", "architecture", "systems", "backend"}
+                    arch_overlap = arch_signals.intersection(metadata_tokens)
+                    if not arch_overlap:
+                        score -= 4.0
+                    else:
+                        score -= 2.0  # partial penalty — has some architecture value
+
             if explicit_devops and any(w in metadata_tokens for w in ["devops", "kubernetes", "terraform", "cloud", "infrastructure"]):
                 score += 0.5
                 
@@ -148,6 +182,43 @@ class HybridRetriever:
 
         # Sort by score
         scored_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
+
+        # DIVERSITY ENGINE: max 2 per technology family, deduplicate near-identical titles
+        import re as _re
+        def _tech_family_of(name: str) -> str:
+            n = name.lower()
+            if any(t in n for t in ["java", "spring", "j2ee", "java ee", "hibernate", "enterprise java", "java beans"]):
+                return "java"
+            if any(t in n for t in ["python", "fastapi", "django", "flask"]):
+                return "python"
+            if any(t in n for t in ["node", "express", "nestjs"]):
+                return "node"
+            if any(t in n for t in ["angular", "react", "vue", "css", "html"]):
+                return "frontend"
+            if any(t in n for t in ["machine learning", "tensorflow", "pytorch", "nlp", "data science"]):
+                return "ml"
+            if any(t in n for t in ["aws", "azure", "gcp", "cloud", "kubernetes", "docker", "terraform"]):
+                return "cloud"
+            return "other"
+
+        family_counts: Dict[str, int] = {}
+        dedup_seen: set = set()
+        diverse_results = []
+        for r in scored_results:
+            fam = _tech_family_of(r["name"])
+            # Max 3 per family (2 for Java when non-Java query)
+            max_per_family = 2 if (fam == "java" and suppress_java) else 3
+            if family_counts.get(fam, 0) >= max_per_family:
+                continue
+            # Near-duplicate title check: strip version/level suffixes
+            base_title = _re.sub(r'\s*(\(new\)|entry level|advanced level|level [0-9]|v[0-9]+|[0-9]+\.[0-9]+)', '', r["name"].lower()).strip()
+            if base_title in dedup_seen:
+                continue
+            dedup_seen.add(base_title)
+            family_counts[fam] = family_counts.get(fam, 0) + 1
+            diverse_results.append(r)
+
+        scored_results = diverse_results
         
         # Phase 2: DOMAIN-SAFE FALLBACK EXPANSION (SMART + constrained)
         # Goal: when exact matches are sparse, expand ONLY within detected domain competency chains.

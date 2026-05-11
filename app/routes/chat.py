@@ -107,13 +107,34 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                 coverage_found = True
 
             sparse_catalog_msg = ""
-            if requested_specs and not coverage_found:
+            # Detect backend specialization family from user query
+            BACKEND_FAMILY_MSGS = {
+                "node":     ("Node.js", "No exact Node.js/Express assessments exist. Showing closest distributed backend architecture validations."),
+                "python":   ("Python", "No exact Python backend assessments exist. Showing closest backend API and systems validations."),
+                "fastapi":  ("FastAPI", "No exact FastAPI assessments exist. Showing closest Python backend validations."),
+                "django":   ("Django", "No exact Django assessments exist. Showing closest Python backend validations."),
+                "go":       ("Go/Golang", "No exact Go/Golang assessments exist. Showing adjacent backend systems validations."),
+                "graphql":  ("GraphQL", "No exact GraphQL assessments exist. Showing closest API architecture validations."),
+                "kafka":    ("Kafka", "No exact Kafka/event-driven assessments exist. Showing adjacent distributed systems validations."),
+                "microservices": ("Microservices", "No exact Microservices assessments exist. Showing distributed backend architecture validations."),
+            }
+            user_query_lower = user_query.lower()
+            backend_sparse_label = ""
+            for signal, (label, msg) in BACKEND_FAMILY_MSGS.items():
+                if signal in user_query_lower and not coverage_found:
+                    sparse_catalog_msg = msg
+                    backend_sparse_label = label
+                    break
+
+            if not sparse_catalog_msg and requested_specs and not coverage_found:
                 if "react" in requested_specs or "redux" in requested_specs:
                     sparse_catalog_msg = "Specialized assessments for React/Redux are limited in the current catalog. Showing closest validated frontend engineering competencies."
                 elif "tensorflow" in requested_specs or "nlp" in requested_specs:
                     sparse_catalog_msg = "No exact TensorFlow/NLP assessments currently exist. Showing adjacent ML competency validations."
+                elif "angular" in requested_specs:
+                    sparse_catalog_msg = "Specialized assessments for Angular/RxJS are limited. Showing closest frontend engineering competencies."
                 else:
-                    spec_str = "/".join(list(requested_specs)[:2])
+                    spec_str = "/".join(s.title() for s in list(requested_specs)[:2])
                     sparse_catalog_msg = f"Specialized assessments for {spec_str} are limited in the current catalog. Showing closest validated competencies."
 
             PHYS_ENG_BLOCK = [
@@ -121,6 +142,20 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                 "fire engineering", "petroleum", "mining", "naval", "agricultural",
                 "biomedical engineering", "metallurgy", "textile"
             ]
+
+            # Generic non-technical assessments that should not appear for specific tech stack queries
+            GENERIC_BLOCK_NAMES = {
+                "global skills development report", "agile software development",
+                "general aptitude", "verbal reasoning", "numerical reasoning",
+                "inductive reasoning", "diagrammatic reasoning",
+                "informatica (developer)", "android development"
+            }
+            # Only apply generic block when query has a specific technology stack signal
+            has_specific_stack = bool(user_query_tokens.intersection(
+                {"node", "python", "java", "fastapi", "django", "flask", "golang", "go",
+                 "kafka", "graphql", "react", "angular", "vue", "tensorflow", "kubernetes",
+                 "terraform", "spring", "typescript", "nextjs", "redux", "pytorch", "nlp"}
+            ))
 
             recommendations = []
             for idx, res in enumerate(ranked_results):
@@ -136,6 +171,12 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     if any(eng in assess_text for eng in PHYS_ENG_BLOCK):
                         continue
                 
+                # BLOCK GENERIC ASSESSMENTS for specific stack queries
+                if has_specific_stack:
+                    assess_name_low = res.assessment.name.lower()
+                    if any(g in assess_name_low for g in GENERIC_BLOCK_NAMES):
+                        continue
+
                 # STRICT SUPPRESSION RULE
                 mismatch_triggered = False
                 if "react" in requested_specs or "angular" in requested_specs:
@@ -200,9 +241,24 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                 ))
             
             if not recommendations:
-                domain_label = query_domain.lower().replace("_", " ")
-                msg = f"I've optimized an enterprise {domain_label} hiring pipeline. While my current technical catalog is specialized, broadening the search for related core skills might provide better matches."
-                return ChatResponse(reply=msg, recommendations=[], end_of_conversation=False)
+                # Emit technology-aware sparse catalog guidance
+                if sparse_catalog_msg:
+                    guidance = sparse_catalog_msg
+                elif backend_sparse_label:
+                    guidance = f"No exact {backend_sparse_label} assessments exist in the current catalog. Showing the closest validated backend architecture competencies."
+                else:
+                    # Generate from query tech family  
+                    tech_signals = user_query_tokens.intersection({
+                        "kafka", "graphql", "grpc", "nestjs", "express", "golang",
+                        "fastapi", "django", "flask", "node", "redis", "mongodb"
+                    })
+                    if tech_signals:
+                        tech_label = ", ".join(t.title() for t in list(tech_signals)[:2])
+                        guidance = f"No exact {tech_label} assessments exist in the current catalog. Showing closest validated backend architecture competencies."
+                    else:
+                        domain_label = str(query_domain).split(".")[-1].lower().replace("_", " ")
+                        guidance = f"I've analyzed this {domain_label} hiring requirement. The catalog has limited coverage for this specific stack. Broadening to adjacent core competencies."
+                return ChatResponse(reply=guidance, recommendations=[], end_of_conversation=False)
 
             # Minimum pipeline guarantee (domain-compatible):
             # If we have ranked results but fewer than 3 recommendations, keep them visible.

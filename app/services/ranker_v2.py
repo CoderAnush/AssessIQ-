@@ -187,9 +187,24 @@ class EnterpriseRanker:
     def _generate_grounded_insight(self, assess: Any, query_class: Dict, matched_skills: Set[str], is_expansion: bool) -> str:
         primary_domain = getattr(assess, "primary_domain", Domain.GENERAL)
         query_domain = query_class.get("primaryDomain", Domain.GENERAL)
-        
+        assess_text = (assess.name + " " + assess.description).lower()
+
         if query_domain == Domain.BACKEND:
-            base = "Evaluates API architecture, distributed systems reliability, and backend service design."
+            # Technology-specific backend insights
+            if any(t in assess_text for t in ["distributed", "microservice", "systems design", "architecture"]):
+                base = "Evaluates distributed systems architecture, microservices reliability, and scalable backend design."
+            elif any(t in assess_text for t in ["api", "rest", "graphql", "endpoint"]):
+                base = "Measures API design, REST architecture, and backend service contract competency."
+            elif any(t in assess_text for t in ["java", "spring", "j2ee", "hibernate"]):
+                base = "Evaluates Java enterprise architecture, Spring framework, and backend service design."
+            elif any(t in assess_text for t in ["python", "fastapi", "django", "flask"]):
+                base = "Validates Python backend development, API frameworks, and service engineering."
+            elif any(t in assess_text for t in ["database", "sql", "postgresql", "nosql", "redis"]):
+                base = "Assesses database design, query optimization, and data persistence architecture."
+            elif any(t in assess_text for t in ["cloud", "aws", "azure", "infrastructure"]):
+                base = "Measures cloud infrastructure design and backend deployment competency."
+            else:
+                base = "Evaluates API architecture, distributed systems reliability, and backend service design."
         elif query_domain == Domain.FRONTEND:
             base = "Validates component architecture, frontend scalability, and modern UI engineering workflows."
         elif query_domain == Domain.DATA_AI:
