@@ -144,6 +144,10 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                 if "spring" in requested_specs or "springboot" in requested_specs:
                     if "javascript" in assess_tokens or "react" in assess_tokens or "angular" in assess_tokens:
                         mismatch_triggered = True
+                # Java-only queries: suppress JavaScript assessments
+                if "java" in user_query_tokens and "javascript" not in user_query_tokens:
+                    if "javascript" in assess_tokens and "java" not in assess_tokens:
+                        mismatch_triggered = True
                 if "tensorflow" in requested_specs or "nlp" in requested_specs:
                     if ("analytics" in assess_tokens and "deep" not in assess_tokens) or "frontend" in assess_tokens:
                         mismatch_triggered = True

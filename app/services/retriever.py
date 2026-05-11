@@ -64,6 +64,9 @@ class HybridRetriever:
             # Explicit tech boosts
             if explicit_python and "python" in metadata_tokens: score += 0.5
             if explicit_java and "java" in metadata_tokens: score += 0.5
+            # Penalise JavaScript assessments when query is Java-only (not JavaScript)
+            if explicit_java and "javascript" in metadata_tokens and "javascript" not in query_low:
+                score -= 3.0
             if explicit_devops and any(w in metadata_tokens for w in ["devops", "kubernetes", "terraform", "cloud", "infrastructure"]):
                 score += 0.5
                 

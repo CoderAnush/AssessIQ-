@@ -47,7 +47,9 @@ class DomainClassifier:
 
     DEVOPS_INDICATORS = {
         "devops", "cloud", "aws", "docker", "terraform", "kubernetes", "sre",
-        "infrastructure", "azure", "gcp", "ci/cd", "observability", "jenkins", "ansible"
+        "site reliability", "infrastructure", "azure", "gcp", "ci/cd", "observability",
+        "jenkins", "ansible", "helm", "argocd", "linux", "monitoring", "prometheus",
+        "grafana", "deployment", "platform engineer", "container", "orchestration"
     }
 
     ADJACENCY_MAP = {
@@ -90,6 +92,12 @@ class DomainClassifier:
         if any(kw in query_low for kw in ["backend", "api", "fastapi", "django", "flask", "server"]):
             if not any(kw in query_low for kw in ["machine learning", "deep learning", "nlp", "llm"]):
                  return {"primaryDomain": Domain.BACKEND, "confidence": 1.0, "reason": "Explicit Backend Keywords"}
+
+        if any(kw in query_low for kw in ["devops", "kubernetes", "terraform", "docker", "ci/cd",
+                                           "sre", "site reliability", "helm", "argocd",
+                                           "linux", "monitoring", "infrastructure", "platform engineer"]):
+            if not any(kw in query_low for kw in ["machine learning", "deep learning", "nlp", "react", "frontend"]):
+                return {"primaryDomain": Domain.DEVOPS, "confidence": 1.0, "reason": "Explicit DevOps Keywords"}
 
         if any(kw in query_low for kw in ["frontend", "react", "angular", "ui ", "ux ", "css"]):
             return {"primaryDomain": Domain.FRONTEND, "confidence": 1.0, "reason": "Explicit Frontend Keywords"}
