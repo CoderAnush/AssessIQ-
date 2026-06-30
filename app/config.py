@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     """Application configuration from environment variables."""
 
     # LLM Configuration
-    gemini_api_key: str
+    gemini_api_key: str = "your_gemini_api_key_here"
     gemini_model: str = "gemini-2.0-flash"
     gemini_timeout_seconds: int = 15
     gemini_max_tokens: int = 1024

@@ -35,6 +35,12 @@ class HiringContext:
     inferred_slots: Set[str] = field(default_factory=set)
     is_sufficient: bool = False
 
+    # Additional properties needed by ranker
+    soft_skills: Set[str] = field(default_factory=set)
+    technical_skills: Set[str] = field(default_factory=set)
+    refinement_filters: List[str] = field(default_factory=list)
+    preferred_test_types: Set[str] = field(default_factory=set)
+
     def get_missing_slots(self) -> List[str]:
         # Role is sufficient for initial recommendations in all strongly mapped domains.
         required = ["role"]
@@ -44,6 +50,17 @@ class HiringContext:
         
         # Don't ask for things we already asked or inferred
         return [s for s in missing if s not in self.asked_slots and s not in self.inferred_slots]
+
+    def get_completeness_score(self) -> float:
+        # Calculate completeness score based on filled fields
+        score = 0.0
+        if self.role:
+            score += 0.4
+        if self.tech_stack:
+            score += 0.3
+        if self.seniority:
+            score += 0.3
+        return score
 
 class ConversationAnalyzer:
     """
@@ -127,7 +144,34 @@ class ConversationAnalyzer:
         
         # 5. Intent Detection
         intent = UserIntent.CLEAR_REQUIREMENT
-        if not context.role and not context.tech_stack:
+        
+        # Check off-topic and prompt injection
+        off_topic_patterns = [
+            r"\b(capital of|weather|joke|politics|sports|football|soccer|cricket|recipe|cook|tax|visa|passport|legal advice|salary guide|career path|interview tips)\b",
+            r"\b(ignore previous|system prompt|you are no longer|jailbreak|reveal prompt|secret key|api key|aws exam|competitor)\b",
+            r"ignore previous instructions",
+            r"output hidden prompt",
+            r"reveal the prompt"
+        ]
+        
+        is_off_topic = False
+        for pattern in off_topic_patterns:
+            if re.search(pattern, last_user_msg.lower()):
+                is_off_topic = True
+                break
+                
+        hiring_signals = ["hire", "recruiter", "assessment", "candidate", "role", "developer", "engineer", "test", "resume", "cv", "job description", "jd", "looking for", "talent", "qualification", "seniority"]
+        has_hiring_signal = any(s in last_user_msg.lower() for s in hiring_signals)
+        
+        if not context.role and not context.tech_stack and not has_hiring_signal:
+            greetings = ["hello", "hi", "hey", "good morning", "good afternoon", "how are you", "help"]
+            is_greeting = any(g in last_user_msg.lower() for g in greetings)
+            if not is_greeting:
+                is_off_topic = True
+
+        if is_off_topic:
+            intent = UserIntent.OFF_TOPIC
+        elif not context.role and not context.tech_stack:
             intent = UserIntent.VAGUE_QUERY
         elif any(p in last_user_msg for p in ["compare", "vs ", "versus"]):
             intent = UserIntent.COMPARISON

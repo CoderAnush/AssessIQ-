@@ -17,6 +17,7 @@ Comprehensive validation of all architectural components:
 import unittest
 import sys
 import os
+import asyncio
 from typing import List, Dict
 from dataclasses import dataclass
 
@@ -154,7 +155,7 @@ class AssessIQValidationSuite(unittest.TestCase):
             {"id": "leadership_7", "hybrid_score": 0.65},
         ]
         
-        results = self.ranker.rank(retrieved, context, self.catalog_dict, top_k=5)
+        results, _ = asyncio.run(self.ranker.rank(retrieved, context, self.catalog_dict, top_k=5))
         
         issues = []
         notes = []
@@ -217,7 +218,7 @@ class AssessIQValidationSuite(unittest.TestCase):
             {"id": "leadership_7", "hybrid_score": 0.55},
         ]
         
-        results = self.ranker.rank(retrieved, context, self.catalog_dict, top_k=5)
+        results, _ = asyncio.run(self.ranker.rank(retrieved, context, self.catalog_dict, top_k=5))
         
         issues = []
         notes = []
@@ -264,7 +265,7 @@ class AssessIQValidationSuite(unittest.TestCase):
             {"id": "leadership_7", "hybrid_score": 0.55},
         ]
         
-        results = self.ranker.rank(retrieved, context, self.catalog_dict, top_k=5)
+        results, _ = asyncio.run(self.ranker.rank(retrieved, context, self.catalog_dict, top_k=5))
         
         issues = []
         notes = []
@@ -310,7 +311,7 @@ class AssessIQValidationSuite(unittest.TestCase):
             {"id": "leadership_7", "hybrid_score": 0.8},
         ]
         
-        results = self.ranker.rank(retrieved, context, self.catalog_dict, top_k=5)
+        results, _ = asyncio.run(self.ranker.rank(retrieved, context, self.catalog_dict, top_k=5))
         
         issues = []
         notes = []
@@ -349,7 +350,8 @@ class AssessIQValidationSuite(unittest.TestCase):
         
         explanations = []
         for assessment in self.catalog[:4]:
-            exp = self.explanation_engine.generate_explanation(assessment, context)
+            exp_dict = asyncio.run(self.explanation_engine.generate_explanation(assessment, context))
+            exp = " ".join(exp_dict.values())
             explanations.append((assessment.name, exp))
         
         issues = []
@@ -596,7 +598,7 @@ class AssessIQValidationSuite(unittest.TestCase):
         
         retrieved = [{"id": a.id, "hybrid_score": 0.7} for a in diverse_catalog]
         
-        results = self.ranker.rank(retrieved, context, diverse_dict, top_k=5)
+        results, _ = asyncio.run(self.ranker.rank(retrieved, context, diverse_dict, top_k=5))
         
         issues = []
         notes = []

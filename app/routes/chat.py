@@ -74,6 +74,82 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         if decision.action == AgentAction.CLARIFY:
             return ChatResponse(reply=decision.next_question, recommendations=[], end_of_conversation=False)
 
+        # Generate session_id from request payload or hash of first user message
+        first_user_msg = next((m["content"] for m in messages if m["role"] == "user"), "")
+        import hashlib
+        session_id = payload.get("session_id") or payload.get("sessionId")
+        if not session_id:
+            session_id = f"session_{hashlib.md5(first_user_msg.encode('utf-8')).hexdigest()}" if first_user_msg else "default_session"
+
+        from app.services.conversation_memory import get_memory_store
+        memory_store = get_memory_store()
+
+        if decision.action == AgentAction.COMPARE:
+            items = services.decision_engine._extract_comparison_items(messages)
+            catalog = {a.id: a for a in services.catalog_loader.get_all()}
+            
+            a1, a2 = None, None
+            if not items:
+                resolved = memory_store.resolve_relative_reference(session_id, user_query)
+                if resolved and len(resolved) >= 2:
+                    a1 = catalog.get(resolved[0].assessment_id)
+                    a2 = catalog.get(resolved[1].assessment_id)
+            else:
+                for assessment in catalog.values():
+                    if len(items) > 0 and (assessment.name.lower() == items[0].lower() or items[0].lower() in assessment.name.lower()):
+                        a1 = assessment
+                    if len(items) > 1 and (assessment.name.lower() == items[1].lower() or items[1].lower() in assessment.name.lower()):
+                        a2 = assessment
+
+            if not a1 or not a2:
+                resolved = memory_store.get_top_n_recommendations(session_id, 2)
+                if resolved and len(resolved) >= 2:
+                    a1 = catalog.get(resolved[0].assessment_id)
+                    a2 = catalog.get(resolved[1].assessment_id)
+
+            if a1 and a2:
+                result = services.comparison_engine.compare(a1, a2, context)
+                
+                reply = (
+                    f"### Comparison: {a1.name} vs {a2.name}\n\n"
+                    f"| Dimension | {a1.name} | {a2.name} |\n"
+                    f"| :--- | :--- | :--- |\n"
+                    f"| **Best For** | {result.best_for[0]} | {result.best_for[1]} |\n"
+                    f"| **Seniority** | {result.seniority[0]} | {result.seniority[1]} |\n"
+                    f"| **Measures** | {result.measures[0]} | {result.measures[1]} |\n"
+                    f"| **Strengths** | {result.strengths[0]} | {result.strengths[1]} |\n"
+                    f"| **Weaknesses** | {result.weaknesses[0]} | {result.weaknesses[1]} |\n"
+                    f"| **Use Case** | {result.recommended_use_case[0]} | {result.recommended_use_case[1]} |\n\n"
+                    f"#### Recruiter Summary\n{result.recruiter_summary}\n\n"
+                    f"#### Strategic Recommendation\n{result.recruiter_recommendation}"
+                )
+                
+                recs = []
+                for idx, a in enumerate([a1, a2], 1):
+                    recs.append(Recommendation(
+                        name=str(a.name),
+                        url=str(a.url),
+                        test_type=str(a.test_type.value),
+                        subtitle=f"{a.category.title()} Assessment",
+                        confidence=95 if idx == 1 else 90,
+                        category=str(a.category),
+                        stage="Screening",
+                        duration=f"{getattr(a, 'duration_minutes', 30)} min",
+                        recruiter_insight=a.description,
+                        ideal_use_case=a.description[:120] + "...",
+                        domain=str(a.primary_domain if hasattr(a, "primary_domain") else "general"),
+                        matched_skills=list(getattr(a, "skills", [])[:5]),
+                        recruiter_signal="Comparison Subject"
+                    ))
+                
+                return ChatResponse(reply=reply, recommendations=recs, end_of_conversation=False)
+            
+            return ChatResponse(
+                reply="I couldn't resolve the assessments you wanted to compare. Could you please specify their names? (e.g., OPQ32r vs GSA)",
+                recommendations=[],
+                end_of_conversation=False
+            )
+
         if decision.action in {AgentAction.RECOMMEND, AgentAction.REFINE}:
             # 2. RETRIEVAL & RANKING PHASE
             retrieval_start = time.time()
@@ -430,6 +506,23 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             total_time = time.time() - overall_start
             logger.info(f"PERF_REPORT: Total={total_time:.3f}s | Analysis={analysis_time:.3f}s | Domain={domain_time:.3f}s | Retrieval={retrieval_time:.3f}s | Ranking={ranking_time:.3f}s | Orch={orch_time:.3f}s")
             
+            # Store recommendations in memory for follow-up turns
+            memory_recs = []
+            for r in recommendations:
+                memory_recs.append({
+                    "id": r.name.lower().replace(" ", "_"),
+                    "name": r.name,
+                    "score": r.confidence / 100.0,
+                    "category": r.category,
+                    "domain": r.domain,
+                    "explanation": r.recruiter_insight
+                })
+            cat_map = {a.name.lower(): a.id for a in services.catalog_loader.get_all()}
+            for mr in memory_recs:
+                mr["id"] = cat_map.get(mr["name"].lower(), mr["name"].lower().replace(" ", "_"))
+            
+            memory_store.store_recommendations(session_id, memory_recs, context)
+
             return ChatResponse(
                 reply=reply,
                 recommendations=recommendations,

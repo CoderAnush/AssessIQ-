@@ -68,6 +68,7 @@ class ComparisonResult:
     overall_winner: str
     recruiter_recommendation: str  # Strategic advice
     recruiter_summary: str
+    comparison_matrix: List[ComparisonScore] = field(default_factory=list)
 
 
 class ComparisonEngine:
@@ -131,11 +132,14 @@ class ComparisonEngine:
             f"Screening for {class_2.primary_domain.value}"
         )
         
+        # Build comparison matrix
+        matrix = self._build_comparison_matrix(assessment_1, assessment_2, class_1, class_2, context)
+        
         # Determine Winner & Strategic Recommendation
-        winner, rec = self._calculate_strategic_recommendation(assessment_1, assessment_2, class_1, class_2, context)
+        winner, rec = self._determine_overall_winner(assessment_1, assessment_2, matrix, class_1, class_2, context)
         
         # Summary
-        summary = self._generate_recruiter_summary_v2(assessment_1, assessment_2, class_1, class_2, winner)
+        summary = self._generate_recruiter_summary(assessment_1, assessment_2, matrix, winner, context)
         
         return ComparisonResult(
             assessment_1=assessment_1,
@@ -148,7 +152,8 @@ class ComparisonEngine:
             recommended_use_case=use_case,
             overall_winner=winner,
             recruiter_recommendation=rec,
-            recruiter_summary=summary
+            recruiter_summary=summary,
+            comparison_matrix=matrix
         )
 
     def _get_strength(self, assessment, classification) -> str:
@@ -542,7 +547,7 @@ class ComparisonEngine:
         
         # Apply context weighting
         if context:
-            role_domain = self.taxonomy.classify_role(context.role or "", list(context.tech_stack))
+            role_domain = self.taxonomy.classify_role(context.role or "", list(context.tech_stack or []))
             priorities = self.taxonomy.get_domain_priorities(role_domain)
             
             # Boost scores based on domain alignment

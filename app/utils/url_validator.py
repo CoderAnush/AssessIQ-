@@ -65,7 +65,10 @@ class URLValidator:
             return False, "URL path is missing assessment identifier"
 
         # Check for suspicious patterns
-        if any(x in path for x in ["admin", "login", "api", "internal", ".php", ".asp"]):
+        segments = [s for s in path.split("/") if s]
+        if any(seg == "admin" or seg == "login" or seg == "api" for seg in segments):
+            return False, "URL contains suspicious path"
+        if any(x in path for x in ["internal", ".php", ".asp"]):
             return False, "URL contains suspicious path"
 
         # Check against known assessment patterns

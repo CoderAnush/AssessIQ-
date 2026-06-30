@@ -166,13 +166,6 @@ class RecruiterRanker:
             # Sort by raw score
             scored_assessments.sort(key=lambda x: x[2], reverse=True)
 
-            # FIX 5: Apply minimum quality filter to scored assessments
-            scored_assessments = [
-                (a, f, s) for a, f, s in scored_assessments
-                if s >= self.MINIMUM_RECOMMENDATION_SCORE
-            ]
-            logger.info(f"After quality filter: {len(scored_assessments)} assessments remain")
-
             # Part 11: Structured Logs
             logger.info(f"RANKING_DIAGNOSTIC: role={context.role} domain={role_domain.value} completeness={context.get_completeness_score():.2f}")
             
@@ -283,6 +276,58 @@ class RecruiterRanker:
             if any(kw in candidate_text for kw in TECH_DOMAINS["java"]):
                 role_tier = "tier_1_exact"
                 role_boost = DOMAIN_TIERS["tier_1_exact"]
+            else:
+                role_tier = "tier_3_generic"
+                role_boost = DOMAIN_TIERS["tier_3_generic"]
+
+        # Frontend specialization
+        elif any(term in normalized_role for term in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web"]):
+            detected_domain = "frontend"
+            if any(kw in candidate_text for kw in TECH_DOMAINS["frontend"]):
+                role_tier = "tier_1_exact"
+                role_boost = DOMAIN_TIERS["tier_1_exact"]
+            elif any(kw in candidate_text for kw in ["web", "interface", "design"]):
+                role_tier = "tier_2_partial"
+                role_boost = DOMAIN_TIERS["tier_2_partial"]
+            else:
+                role_tier = "tier_3_generic"
+                role_boost = DOMAIN_TIERS["tier_3_generic"]
+
+        # Data Science specialization
+        elif any(term in normalized_role for term in ["data science", "data scientist", "machine learning", "ml", "ai", "analytical", "analytics"]):
+            detected_domain = "data_science"
+            if any(kw in candidate_text for kw in TECH_DOMAINS["data_science"]):
+                role_tier = "tier_1_exact"
+                role_boost = DOMAIN_TIERS["tier_1_exact"]
+            elif any(kw in candidate_text for kw in ["statistics", "data", "modeling"]):
+                role_tier = "tier_2_partial"
+                role_boost = DOMAIN_TIERS["tier_2_partial"]
+            else:
+                role_tier = "tier_3_generic"
+                role_boost = DOMAIN_TIERS["tier_3_generic"]
+
+        # DevOps/Cloud specialization
+        elif any(term in normalized_role for term in ["devops", "cloud", "sre", "infrastructure", "platform", "system"]):
+            detected_domain = "devops"
+            if any(kw in candidate_text for kw in TECH_DOMAINS["devops"]):
+                role_tier = "tier_1_exact"
+                role_boost = DOMAIN_TIERS["tier_1_exact"]
+            elif any(kw in candidate_text for kw in ["linux", "deployment", "monitoring"]):
+                role_tier = "tier_2_partial"
+                role_boost = DOMAIN_TIERS["tier_2_partial"]
+            else:
+                role_tier = "tier_3_generic"
+                role_boost = DOMAIN_TIERS["tier_3_generic"]
+
+        # Leadership/Management specialization
+        elif any(term in normalized_role for term in ["manager", "leadership", "lead", "director", "vp", "executive", "product manager"]):
+            detected_domain = "leadership"
+            if any(kw in candidate_text for kw in TECH_DOMAINS["leadership"]):
+                role_tier = "tier_1_exact"
+                role_boost = DOMAIN_TIERS["tier_1_exact"]
+            elif any(kw in candidate_text for kw in ["strategy", "people", "management"]):
+                role_tier = "tier_2_partial"
+                role_boost = DOMAIN_TIERS["tier_2_partial"]
             else:
                 role_tier = "tier_3_generic"
                 role_boost = DOMAIN_TIERS["tier_3_generic"]
@@ -421,9 +466,9 @@ class RecruiterRanker:
                 factors.skill_overlap = min(1.0, 0.4 + (tech_hits * 0.3))
                 factors.semantic_relevance = min(1.0, factors.semantic_relevance + 0.2)
 
-        # Set reasonable defaults for technical roles to boost overall score
-        if role_tier in ["tier_1_exact", "tier_2_partial"]:
-            # For exact or partial role matches, set strong defaults on all factors
+        # Set reasonable defaults for all roles to boost overall score
+        if True:
+            # Set strong defaults on all factors if they are not set
             if factors.seniority_fit == 0:
                 factors.seniority_fit = 0.75  # Default for technical screening
             if factors.type_alignment == 0:

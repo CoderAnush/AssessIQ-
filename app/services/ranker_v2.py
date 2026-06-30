@@ -186,6 +186,7 @@ class EnterpriseRanker:
 
     def _generate_grounded_insight(self, assess: Any, query_class: Dict, matched_skills: Set[str], is_expansion: bool) -> str:
         primary_domain = getattr(assess, "primary_domain", Domain.GENERAL)
+        primary_domain_str = primary_domain.value if hasattr(primary_domain, "value") else str(primary_domain)
         query_domain = query_class.get("primaryDomain", Domain.GENERAL)
         assess_text = (assess.name + " " + assess.description).lower()
 
@@ -212,7 +213,7 @@ class EnterpriseRanker:
         elif query_domain == Domain.DEVOPS:
             base = "Measures infrastructure automation, deployment reliability, and cloud operations competency."
         else:
-            base = f"Evaluates core {primary_domain.value.lower().replace('_', ' ')} principles essential for this role."
+            base = f"Evaluates core {primary_domain_str.lower().replace('_', ' ')} principles essential for this role."
 
         if is_expansion:
             base = f"CATALOG-LIMITED MATCH: {base}"
