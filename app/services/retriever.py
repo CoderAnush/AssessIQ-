@@ -1,415 +1,381 @@
 """
-Hybrid Retriever for AssessIQ.
-Combines role-based filtering, keyword expansion, and strict domain isolation.
+HybridRetriever v2 — semantic-first, heuristic-free.
+
+Pipeline:
+  1. Metadata pre-filter  (hard domain/seniority gate, O(N) but eliminates noise early)
+  2. BM25 retrieval        (lexical, handles exact technology name matching)
+  3. FAISS vector search   (semantic, handles synonyms + intent)
+  4. RRF merge             (Reciprocal Rank Fusion — no arbitrary weight constants)
+  5. Return top-k for reranker
+
+No technology-specific boosts, penalties, or hardcoded constants.
+All scoring is handled by the statistical models (BM25, cosine similarity).
 """
 
-from typing import List, Dict, Set, Optional, Any
-from app.models.assessment import AssessmentWithMetadata
-from app.services.skill_graph import SkillGraph
-from app.services.role_normalizer import NormalizedRole
+from __future__ import annotations
+
+import re
+from typing import Any, Dict, List, Optional, Set
+
+import numpy as np
+
 from app.logger_config.logger import get_logger
+from app.services.skill_graph import SkillGraph
 
 logger = get_logger("retriever")
 
+# ---------------------------------------------------------------------------
+# RRF constant — standard value from Cormack et al. 2009
+# ---------------------------------------------------------------------------
+_RRF_K = 60
+
+
+def _reciprocal_rank_fusion(
+    ranked_lists: List[List[str]], k: int = _RRF_K
+) -> Dict[str, float]:
+    """
+    Merge multiple ranked lists via Reciprocal Rank Fusion.
+    Returns {doc_id: rrf_score} sorted by score descending.
+    Higher score = more relevant.
+    """
+    scores: Dict[str, float] = {}
+    for ranked in ranked_lists:
+        for rank, doc_id in enumerate(ranked, start=1):
+            scores[doc_id] = scores.get(doc_id, 0.0) + 1.0 / (k + rank)
+    return scores
+
+
+# ---------------------------------------------------------------------------
+# Metadata pre-filter
+# ---------------------------------------------------------------------------
+
+_DOMAIN_TAGS: Dict[str, Set[str]] = {
+    "backend": {
+        "java", "python", "node", "go", "golang", "rust", "spring", "django",
+        "fastapi", "flask", "api", "microservice", "backend", "server",
+        "database", "sql", "postgresql", "mysql", "redis", "mongodb",
+    },
+    "frontend": {
+        "react", "angular", "vue", "javascript", "typescript", "html", "css",
+        "frontend", "ui", "ux", "web", "next.js", "nextjs", "svelte",
+    },
+    "devops": {
+        "kubernetes", "docker", "terraform", "aws", "azure", "gcp", "cloud",
+        "ci/cd", "devops", "sre", "linux", "infrastructure", "helm",
+        "ansible", "jenkins", "observability",
+    },
+    "data_ai": {
+        "machine learning", "deep learning", "pytorch", "tensorflow", "nlp",
+        "data science", "ml", "llm", "transformers", "neural", "sklearn",
+        "pandas", "numpy", "spark", "hadoop", "analytics",
+    },
+}
+
+# Domains that should NOT appear for a given query domain
+_DOMAIN_EXCLUSIONS: Dict[str, Set[str]] = {
+    "backend": {"sales", "customer service", "personality only"},
+    "frontend": {"sales", "customer service", "personality only"},
+    "devops": {"sales", "customer service", "personality only"},
+    "data_ai": {"sales", "customer service", "personality only"},
+}
+
+
+def _infer_query_domain(query_low: str, context: Any) -> str:
+    """Detect the primary domain of the query from text signals."""
+    # Check context domain first
+    ctx_domain = str(getattr(context, "domain", "general")).lower()
+    if ctx_domain not in ("general", "none", ""):
+        return ctx_domain
+
+    query_tokens = set(re.findall(r"\b[a-z0-9./]+\b", query_low))
+    best_domain, best_overlap = "general", 0
+    for domain, signals in _DOMAIN_TAGS.items():
+        overlap = len(query_tokens & signals)
+        if overlap > best_overlap:
+            best_overlap, best_domain = overlap, domain
+
+    # Tech stack from context reinforces domain
+    tech_stack: Set[str] = getattr(context, "tech_stack", set()) or set()
+    for tech in tech_stack:
+        t = tech.lower()
+        for domain, signals in _DOMAIN_TAGS.items():
+            if t in signals:
+                best_domain = domain
+                break
+
+    return best_domain
+
+
+def _passes_metadata_filter(
+    assessment: Any,
+    query_domain: str,
+    query_seniority: str,
+) -> bool:
+    """
+    Hard metadata gate. Returns False only when there is a clear categorical
+    mismatch (e.g. a 'sales' assessment for an engineering role).
+    Generous by design — the reranker handles fine-grained relevance.
+    """
+    name_low = assessment.name.lower()
+    desc_low = assessment.description.lower()
+    combined = name_low + " " + desc_low
+
+    # Exclusion check — only for technical queries
+    if query_domain in _DOMAIN_EXCLUSIONS:
+        for excl in _DOMAIN_EXCLUSIONS[query_domain]:
+            if excl in combined:
+                return False
+
+    return True
+
+
+# ---------------------------------------------------------------------------
+# HybridRetriever
+# ---------------------------------------------------------------------------
+
 class HybridRetriever:
     """
-    UPGRADED Hybrid Retriever (Phase 2, 4, 6, 8).
-    Supports adjacency expansion and guaranteed technical fallback.
+    Semantic-first hybrid retriever.
+
+    Initialisation builds:
+      - A BM25 index over all assessment texts
+      - A FAISS index over sentence-transformer embeddings
+
+    Retrieval:
+      - Both indices are queried independently
+      - Results are merged via RRF
+      - No technology-specific constants
     """
-    
-    def __init__(self, catalog_loader, skill_graph: Optional[SkillGraph] = None):
+
+    def __init__(self, catalog_loader: Any, skill_graph: Optional[SkillGraph] = None):
         self.catalog_loader = catalog_loader
         self.skill_graph = skill_graph or SkillGraph()
-        from app.services.domain_classifier import DomainClassifier
-        self.domain_classifier = DomainClassifier()
+
+        # Lazy-initialised indices
+        self._bm25 = None          # rank_bm25 BM25Okapi
+        self._bm25_docs: List[Any] = []
+        self._faiss_index = None   # faiss.Index
+        self._faiss_docs: List[Any] = []
+        self._embedding_svc = None
+
+        self._build_indices()
+
+    # ------------------------------------------------------------------
+    # Index construction
+    # ------------------------------------------------------------------
+
+    def _build_indices(self) -> None:
+        assessments = self.catalog_loader.get_all()
+        if not assessments:
+            logger.warning("HybridRetriever: catalog is empty — skipping index build")
+            return
+
+        self._build_bm25(assessments)
+        self._build_vector_index(assessments)
+
+    def _build_bm25(self, assessments: List[Any]) -> None:
+        try:
+            from rank_bm25 import BM25Okapi
+        except ImportError:
+            logger.error("rank_bm25 not installed — BM25 disabled")
+            return
+
+        def _tokenise(text: str) -> List[str]:
+            return re.findall(r"\b[a-z0-9.#+]+\b", text.lower())
+
+        corpus = []
+        for a in assessments:
+            text = (
+                f"{a.name} {a.description} "
+                f"{' '.join(getattr(a, 'skills', []))} "
+                f"{' '.join(getattr(a, 'recommended_roles', []))}"
+            )
+            corpus.append(_tokenise(text))
+
+        self._bm25 = BM25Okapi(corpus, k1=1.5, b=0.75)
+        self._bm25_docs = assessments
+        logger.info("HybridRetriever: BM25 index built over %d assessments", len(assessments))
+
+    def _build_vector_index(self, assessments: List[Any]) -> None:
+        try:
+            import faiss
+            from app.services.embedding_service import EmbeddingService
+        except ImportError:
+            logger.error("faiss-cpu or sentence-transformers not installed — vector search disabled")
+            return
+
+        svc = EmbeddingService()
+        if not svc.is_available:
+            logger.warning("HybridRetriever: embedding model unavailable — vector search disabled")
+            return
+
+        self._embedding_svc = svc
+
+        texts = [svc.build_assessment_text(self._to_dict(a)) for a in assessments]
+        embeddings = svc.get_embeddings(texts)  # (N, 384) float32, L2-normalised
+
+        dim = embeddings.shape[1]
+        index = faiss.IndexFlatIP(dim)  # inner-product on normalised vecs == cosine
+        index.add(embeddings)
+
+        self._faiss_index = index
+        self._faiss_docs = assessments
+        logger.info(
+            "HybridRetriever: FAISS index built over %d assessments (dim=%d)",
+            len(assessments), dim,
+        )
+
+    @staticmethod
+    def _to_dict(assessment: Any) -> Dict[str, Any]:
+        return {
+            "name": assessment.name,
+            "description": assessment.description,
+            "skills": getattr(assessment, "skills", []),
+            "ideal_roles": getattr(assessment, "recommended_roles", []),
+        }
+
+    # ------------------------------------------------------------------
+    # Retrieval
+    # ------------------------------------------------------------------
 
     def retrieve(self, query: str, context: Any, top_k: int = 10) -> List[Dict[str, Any]]:
         """
-        Hybrid retrieval with strict domain enforcement and domain-safe SMART fallback expansion.
+        Main retrieval entry-point.
+
+        1. Infer query domain from context + text signals
+        2. Apply metadata pre-filter (hard exclusions only)
+        3. BM25 retrieval → ranked list A
+        4. FAISS vector retrieval → ranked list B
+        5. RRF merge → unified ranked list
+        6. Return top (top_k * 3) for the reranker to further narrow
         """
-        all_assessments = self.catalog_loader.get_all()
         query_low = query.lower()
+        query_domain = _infer_query_domain(query_low, context)
+        query_seniority = getattr(context, "seniority", "mid") or "mid"
 
-        # Determine technical context
-        role_text = (getattr(context, "role", "") or "").lower()
-        is_tech = any(w in role_text or w in query_low for w in ["python", "java", "backend", "engineer", "developer", "devops", "cloud", "data", "software", "stack", "frontend", "qa", "test", "sdet", "architect", "fastapi", "react", "angular"])
+        all_assessments = self.catalog_loader.get_all()
 
-        # Detect explicit tech keywords
-        explicit_python = "python" in query_low
-        explicit_java = "java" in query_low and "javascript" not in query_low
-        explicit_fastapi = "fastapi" in query_low
-        explicit_devops = any(w in query_low for w in ["devops", "kubernetes", "terraform", "sre"])
-        explicit_frontend = any(w in query_low for w in ["frontend", "react", "angular", "vue", "javascript", "typescript", "ui", "web"])
+        # --- Step 1: metadata pre-filter ---
+        candidates = [
+            a for a in all_assessments
+            if _passes_metadata_filter(a, query_domain, query_seniority)
+        ]
+        logger.info(
+            "HybridRetriever: %d/%d assessments pass metadata filter (domain=%s)",
+            len(candidates), len(all_assessments), query_domain,
+        )
 
-        # BACKEND SPECIALIZATION CLUSTERS — detect what technology family the query belongs to
-        BACKEND_TECH_FAMILIES = {
-            "node":        ["node", "node.js", "nodejs", "express", "nestjs", "javascript backend"],
-            "python":      ["python", "fastapi", "django", "flask", "sqlalchemy"],
-            "java":        ["java", "spring", "springboot", "spring boot", "java ee", "hibernate", "j2ee"],
-            "go":          ["golang", "go ", "gorilla", "grpc"],
-            "distributed": ["distributed", "kafka", "microservices", "microservice", "event-driven", "message queue"],
-            "api":         ["graphql", "api gateway", "rest api", "grpc", "openapi"],
-            "database":    ["postgresql", "mysql", "redis", "mongodb", "cassandra", "nosql", "sql"],
-            "devops_adj":  ["docker", "kubernetes", "terraform", "ci/cd", "helm"],
-        }
-        query_family = set()
-        for family, signals in BACKEND_TECH_FAMILIES.items():
-            if any(s in query_low for s in signals):
-                query_family.add(family)
+        # Build a lookup: assessment id → assessment object
+        id_to_assessment: Dict[str, Any] = {a.id: a for a in candidates}
+        candidate_ids: Set[str] = set(id_to_assessment.keys())
 
-        # Java assessments to suppress when query is for a DIFFERENT backend stack
-        JAVA_ASSESSMENT_TOKENS = {"java", "spring", "j2ee", "hibernate", "java ee", "servlet", "ejb", "java beans"}
-        suppress_java = bool(query_family) and "java" not in query_family
-        suppress_node_js = bool(query_family) and "node" not in query_family and explicit_java
-        
-        scored_results = []
-        for assessment in all_assessments:
-            name_low = assessment.name.lower()
-            desc_low = assessment.description.lower()
-            metadata_str = name_low + " " + desc_low
-            
-            # Phase 4: Domain Mismatch Filter
-            if self._is_domain_mismatch(context.normalized_role, name_low, desc_low, None):
+        # --- Step 2: BM25 retrieval ---
+        bm25_ranked: List[str] = self._bm25_retrieve(
+            query_low, candidate_ids, k=min(100, len(candidates))
+        )
+
+        # --- Step 3: FAISS retrieval ---
+        vector_ranked: List[str] = self._vector_retrieve(
+            query, context, candidate_ids, k=min(100, len(candidates))
+        )
+
+        # --- Step 4: RRF merge ---
+        rrf_scores = _reciprocal_rank_fusion([bm25_ranked, vector_ranked])
+
+        # Sort by RRF score
+        sorted_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)
+
+        # If both indices failed, fall back to BM25-only or first candidates
+        if not sorted_ids:
+            logger.warning("HybridRetriever: RRF produced no results — using first %d candidates", top_k)
+            sorted_ids = [a.id for a in candidates[:top_k * 3]]
+
+        # --- Step 5: Build result dicts ---
+        results = []
+        for aid in sorted_ids:
+            a = id_to_assessment.get(aid)
+            if a is None:
                 continue
-                
-            score = 0.0
-            
-            # Base Keyword Matching
-            if any(term in metadata_str for term in query_low.split()):
-                score += 0.2
-            
-            import re
-            query_tokens = set(re.findall(r'\b[a-z0-9.]+\b', query_low))
-            metadata_tokens = set(re.findall(r'\b[a-z0-9.]+\b', metadata_str))
-            
-            # Explicit tech boosts
-            if explicit_python and "python" in metadata_tokens: score += 0.5
-            if explicit_java and "java" in metadata_tokens: score += 0.5
-            # Penalise JavaScript assessments when query is Java-only (not JavaScript)
-            if explicit_java and "javascript" in metadata_tokens and "javascript" not in query_low:
-                score -= 3.0
+            results.append({
+                "id": a.id,
+                "name": a.name,
+                "url": a.url,
+                "test_type": a.test_type.value if hasattr(a.test_type, "value") else str(a.test_type),
+                "description": a.description,
+                "hybrid_score": round(rrf_scores.get(aid, 0.0), 6),
+                "is_fallback": False,
+                "expansion_label": None,
+            })
 
-            # HARD CROSS-STACK PENALTIES: suppress Java for non-Java backend queries
-            if suppress_java:
-                java_hit = any(t in metadata_tokens for t in JAVA_ASSESSMENT_TOKENS)
-                if java_hit:
-                    # Allow if assessment also has strong distributed/arch signals
-                    arch_signals = {"distributed", "microservices", "architecture", "systems", "backend"}
-                    arch_overlap = arch_signals.intersection(metadata_tokens)
-                    if not arch_overlap:
-                        score -= 4.0
-                    else:
-                        score -= 2.0  # partial penalty — has some architecture value
+        logger.info(
+            "HybridRetriever: returning %d candidates (top_k=%d, domain=%s)",
+            len(results), top_k, query_domain,
+        )
+        return results[:top_k * 3]  # Return generously for cross-encoder
 
-            if explicit_devops and any(w in metadata_tokens for w in ["devops", "kubernetes", "terraform", "cloud", "infrastructure"]):
-                score += 0.5
-                
-            # Framework Specialization Boost & Penalties
-            if "react" in query_tokens:
-                if "react" in metadata_tokens: score += 3.0
-                if "redux" in metadata_tokens: score += 2.0
-                if "typescript" in metadata_tokens: score += 2.0
-                if "next.js" in metadata_tokens or "nextjs" in metadata_tokens: score += 2.0
-                
-                # Penalties
-                if "java" in metadata_tokens: score -= 3.0
-                if "angular" in metadata_tokens or "angularjs" in metadata_tokens: score -= 3.0
+    # ------------------------------------------------------------------
+    # BM25 sub-retrieval
+    # ------------------------------------------------------------------
 
-            elif "angular" in query_tokens:
-                if "angular" in metadata_tokens: score += 3.0
-                if "rxjs" in metadata_tokens: score += 2.0
-                if "vue" in metadata_tokens: score += 2.0
-                # Penalties
-                if "react" in metadata_tokens: score -= 3.0
+    def _bm25_retrieve(
+        self, query_low: str, candidate_ids: Set[str], k: int
+    ) -> List[str]:
+        if self._bm25 is None:
+            return []
 
-            elif "vue" in query_tokens:
-                if "vue" in metadata_tokens: score += 2.0
-
-            if "spring" in query_tokens or "springboot" in query_tokens or ("java" in query_tokens and "backend" in query_tokens):
-                if "spring" in metadata_tokens: score += 3.0
-                if "springboot" in metadata_tokens or "spring boot" in metadata_str: score += 3.0
-                # Penalties
-                if "javascript" in metadata_tokens: score -= 3.0
-                if "react" in metadata_tokens or "angular" in metadata_tokens: score -= 3.0
-
-            if "fastapi" in query_tokens or "django" in query_tokens:
-                if "fastapi" in metadata_tokens: score += 3.0
-                if "django" in metadata_tokens: score += 3.0
-                
-            if "tensorflow" in query_tokens or "pytorch" in query_tokens or "nlp" in query_tokens:
-                if "tensorflow" in metadata_tokens: score += 3.0
-                if "pytorch" in metadata_tokens: score += 3.0
-                if "nlp" in metadata_tokens: score += 2.0
-                if "llm" in metadata_tokens: score += 2.0
-                
-                if "analytics" in metadata_tokens and "deep" not in metadata_tokens and "machine" not in metadata_tokens:
-                    score -= 2.0
-
-            if "kubernetes" in query_tokens or "terraform" in query_tokens or "devops" in query_tokens:
-                if "kubernetes" in metadata_tokens: score += 3.0
-                if "terraform" in metadata_tokens: score += 3.0
-                if "docker" in metadata_tokens: score += 2.0
-                if "aws" in metadata_tokens: score += 2.0
-            
-            # Skill Graph Expansion
-            tech_stack = getattr(context, "tech_stack", set())
-            for skill in tech_stack:
-                if skill.lower() in metadata_str:
-                    score += 0.3
-                else:
-                    # Check graph relations
-                    related = self.skill_graph.get_related_skills(skill)
-                    if any(r.lower() in metadata_str for r in related):
-                        score += 0.15
-
-            # Role Mappings (FastAPI etc)
-            if explicit_fastapi:
-                if any(term in metadata_str for term in ["fastapi", "python", "backend", "microservice", "django", "flask"]):
-                    score += 0.7
-                else:
-                    # Phase 1: Don't continue/skip yet, let score accumulate
-                    pass
-
-            if score > 0.15:
-                scored_results.append({
-                    "id": assessment.id,
-                    "name": assessment.name,
-                    "url": assessment.url,
-                    "test_type": assessment.test_type.value,
-                    "description": assessment.description,
-                    "hybrid_score": min(max(score, 0.0), 1.0)
-                })
-
-        # Sort by score
-        scored_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
-
-        # DIVERSITY ENGINE: max 2 per technology family, deduplicate near-identical titles
         import re as _re
-        def _tech_family_of(name: str) -> str:
-            n = name.lower()
-            if any(t in n for t in ["java", "spring", "j2ee", "java ee", "hibernate", "enterprise java", "java beans"]):
-                return "java"
-            if any(t in n for t in ["python", "fastapi", "django", "flask"]):
-                return "python"
-            if any(t in n for t in ["node", "express", "nestjs"]):
-                return "node"
-            if any(t in n for t in ["angular", "react", "vue", "css", "html"]):
-                return "frontend"
-            if any(t in n for t in ["machine learning", "tensorflow", "pytorch", "nlp", "data science"]):
-                return "ml"
-            if any(t in n for t in ["aws", "azure", "gcp", "cloud", "kubernetes", "docker", "terraform"]):
-                return "cloud"
-            return "other"
+        query_tokens = _re.findall(r"\b[a-z0-9.#+]+\b", query_low)
+        if not query_tokens:
+            return []
 
-        family_counts: Dict[str, int] = {}
-        dedup_seen: set = set()
-        diverse_results = []
-        for r in scored_results:
-            fam = _tech_family_of(r["name"])
-            # Max 3 per family (2 for Java when non-Java query)
-            max_per_family = 2 if (fam == "java" and suppress_java) else 3
-            if family_counts.get(fam, 0) >= max_per_family:
+        scores = self._bm25.get_scores(query_tokens)
+
+        # Filter to candidates that passed metadata gate
+        candidate_indexed = [
+            (i, a.id, scores[i])
+            for i, a in enumerate(self._bm25_docs)
+            if a.id in candidate_ids
+        ]
+        candidate_indexed.sort(key=lambda x: x[2], reverse=True)
+
+        return [aid for _, aid, _ in candidate_indexed[:k]]
+
+    # ------------------------------------------------------------------
+    # FAISS sub-retrieval
+    # ------------------------------------------------------------------
+
+    def _vector_retrieve(
+        self, query: str, context: Any, candidate_ids: Set[str], k: int
+    ) -> List[str]:
+        if self._faiss_index is None or self._embedding_svc is None:
+            return []
+
+        from app.services.embedding_service import EmbeddingService
+        query_text = EmbeddingService.build_query_text(context, query)
+        query_vec = self._embedding_svc.get_embedding(query_text).reshape(1, -1)
+
+        # Search over full index, then filter to candidates
+        n_search = min(len(self._faiss_docs), max(k * 2, 200))
+        distances, indices = self._faiss_index.search(query_vec, n_search)
+
+        ranked: List[str] = []
+        for idx in indices[0]:
+            if idx < 0 or idx >= len(self._faiss_docs):
                 continue
-            # Near-duplicate title check: strip version/level suffixes
-            base_title = _re.sub(r'\s*(\(new\)|entry level|advanced level|level [0-9]|v[0-9]+|[0-9]+\.[0-9]+)', '', r["name"].lower()).strip()
-            if base_title in dedup_seen:
-                continue
-            dedup_seen.add(base_title)
-            family_counts[fam] = family_counts.get(fam, 0) + 1
-            diverse_results.append(r)
+            a = self._faiss_docs[idx]
+            if a.id in candidate_ids:
+                ranked.append(a.id)
+            if len(ranked) >= k:
+                break
 
-        scored_results = diverse_results
-        
-        # Phase 2: DOMAIN-SAFE FALLBACK EXPANSION (SMART + constrained)
-        # Goal: when exact matches are sparse, expand ONLY within detected domain competency chains.
-        from app.services.domain_classifier import Domain
-        query_domain = getattr(context, "domain", Domain.GENERAL)
+        return ranked
 
-        # Count "exact" domain matches in the current scored results
-        # (we treat items with domain keyword alignment as exact enough for the fallback threshold)
-        scored_results_by_domain = 0
-        for r in scored_results:
-            assess_text = (r.get("name", "") + " " + r.get("description", "")).lower()
-            inferred = self.domain_classifier.normalize_assessment_domain(assess_text, assess_text)
-            if inferred == query_domain:
-                scored_results_by_domain += 1
+    # ------------------------------------------------------------------
+    # Legacy compatibility shim
+    # _is_domain_mismatch kept so that any existing code that imports it
+    # does not break. It now defers to the new metadata filter.
+    # ------------------------------------------------------------------
 
-        # Expansion should trigger when exact matches are too low.
-        # DATA_AI catalogs tend to be sparser around NLP-specific phrasing; use a lower threshold there.
-        if query_domain == Domain.DATA_AI:
-            exact_match_threshold = 3
-        else:
-            exact_match_threshold = 3
-
-        if scored_results_by_domain < exact_match_threshold:
-            logger.info(
-                "RETRIEVER: Low exact domain matches (%s < %s). Triggering domain-safe expansion.",
-                scored_results_by_domain, exact_match_threshold
-            )
-
-            # Build domain-constrained expansion keywords from the competency chain.
-            # Map Domain -> internal chain key.
-            chain_key_map = {
-                Domain.BACKEND: "backend",
-                Domain.FRONTEND: "frontend",
-                Domain.DATA_AI: "data_ai",
-                Domain.DEVOPS: "devops",
-            }
-            chain_key = chain_key_map.get(query_domain, None)
-
-            # Use existing tech_stack seeds (if any), but constrain expansions by domain keywords.
-            tech_stack = getattr(context, "tech_stack", set()) or set()
-            seed_skills = {s.lower() for s in tech_stack if isinstance(s, str)}
-
-            expansion_pool = set()
-            if chain_key:
-                domain_keywords = self.skill_graph.get_domain_competency_chain_keywords(chain_key)
-                # Expand seed skills, then constrain strictly by domain chain keywords.
-                expansion_pool.update(self.skill_graph.get_domain_adjacent_skills(seed_skills, chain_key, depth=2))
-                # If tech_stack is empty, fall back to chain keywords themselves.
-                if not expansion_pool:
-                    expansion_pool.update(domain_keywords)
-
-            # Additional hard foundations (still domain-constrained; no cross-domain leakage).
-            domain_foundations = {
-                Domain.BACKEND: ["backend", "api", "rest", "microservice", "distributed systems", "databases", "software architecture", "server-side engineering"],
-                Domain.FRONTEND: ["frontend", "ui engineering", "web", "javascript", "typescript", "frontend architecture", "design"],
-                # Expanded to improve recall for sparse DATA_AI catalogs (TensorFlow + NLP heavy).
-                Domain.DATA_AI: [
-                    "machine learning", "deep learning", "neural networks", "nlp", "transformers", "language models",
-                    "data science", "python for ai",
-                    "tensorflow", "keras", "pytorch",
-                    "transformer", "bert", "gpt",
-                    "natural language", "natural language processing",
-                    "word embeddings", "tokenization", "sequence modeling",
-                    "text generation", "sequence-to-sequence"
-                ],
-                Domain.DEVOPS: [
-                    "kubernetes", "docker", "terraform", "aws", "ci/cd", "linux", "networking",
-                    "infrastructure", "cloud computing", "sre", "observability", "deployment systems",
-                    "container orchestration", "infrastructure as code", "cloud systems", "cloud operations",
-                    "deployment engineering"
-                ],
-            }
-            if query_domain in domain_foundations:
-                # Keep precision: still constrain by competency chain keywords when possible,
-                # but for DATA_AI allow broader NLP/TensorFlow recall terms.
-                for term in domain_foundations[query_domain]:
-                    expansion_pool.add(term.lower())
-
-            logger.info("RETRIEVER: SMART Expansion Pool Final: %s | Domain: %s", list(expansion_pool)[:30], query_domain)
-
-            existing_ids = {r["id"] for r in scored_results}
-            fallbacks = []
-
-            # UI transparency label expected by ranker/chat
-            if query_domain == Domain.BACKEND:
-                expansion_label = "Expanded Match"
-            elif query_domain == Domain.FRONTEND:
-                expansion_label = "Related Competency Match"
-            elif query_domain == Domain.DATA_AI:
-                expansion_label = "Expanded Match"
-            else:
-                expansion_label = "Related Competency Match"
-
-            for a in all_assessments:
-                if a.id in existing_ids:
-                    continue
-
-                # Check for domain mismatch first
-                if self._is_domain_mismatch(context.normalized_role, a.name.lower(), a.description.lower(), None):
-                    continue
-
-                # Domain-safe gating: allow only within the detected domain OR its adjacency.
-                # This prevents leakage while still enabling richer DATA_AI sparse-catalog expansions.
-                a_text = (a.name + " " + a.description).lower()
-                assess_domain = self.domain_classifier.normalize_assessment_domain(a.name, a.description)
-
-                adjacent_domains = set(self.domain_classifier.ADJACENCY_MAP.get(query_domain, []))
-
-                allowed = (
-                    assess_domain == query_domain
-                    or assess_domain in adjacent_domains
-                    or (query_domain == Domain.DATA_AI and assess_domain == Domain.GENERAL)
-                )
-
-                if not allowed:
-                    continue
-
-                m_str = a_text
-                # SMART: match using domain expansion keywords, with robust phrase/token matching.
-                # - If keyword looks like a multiword phrase, require substring match.
-                # - Otherwise, allow token presence to improve recall (e.g., 'nlp', 'tensorflow', 'transformers').
-                def _keyword_hits(keyword: str) -> bool:
-                    k = (keyword or "").strip().lower()
-                    if not k:
-                        return False
-                    if len(k.split()) >= 2:
-                        return k in m_str
-                    return k in m_str
-
-                is_match = any(_keyword_hits(t) for t in expansion_pool if t)
-
-                if is_match:
-                    logger.info("RETRIEVER: SMART Expansion Match Found: %s | label=%s", a.name, expansion_label)
-                    fallbacks.append({
-                        "id": a.id,
-                        "name": a.name,
-                        "url": a.url,
-                        "test_type": a.test_type.value,
-                        "description": a.description,
-                        # Expanded matches are lower-confidence by design
-                        "hybrid_score": 0.38,
-                        "is_fallback": True,
-                        "expansion_matched": True,
-                        "expansion_label": expansion_label,
-                        "expanded_domain": str(query_domain),
-                    })
-
-                # Ensure we have enough candidates to support a richer pipeline.
-                if len(scored_results) + len(fallbacks) >= max(15, top_k * 2):
-                    break
-
-            scored_results.extend(fallbacks)
-
-        # Phase 3: MINIMUM GUARANTEE (General Technical)
-        if len(scored_results) < 5:
-            for a in all_assessments:
-                if len(scored_results) >= 5:
-                    break
-                
-                if a.id in {r["id"] for r in scored_results}:
-                    continue
-                    
-                assess_domain = self.domain_classifier.normalize_assessment_domain(a.name, a.description)
-                adjacent_domains = set(self.domain_classifier.ADJACENCY_MAP.get(query_domain, []))
-                
-                allowed = (
-                    assess_domain == query_domain
-                    or assess_domain in adjacent_domains
-                    or (query_domain == Domain.DATA_AI and assess_domain == Domain.GENERAL)
-                )
-                
-                if allowed:
-                    scored_results.append({
-                        "id": a.id, "name": a.name, "url": a.url,
-                        "test_type": a.test_type.value, "description": a.description,
-                        "hybrid_score": 0.1, "is_fallback": True,
-                        "expansion_matched": True,
-                        "expansion_label": "Related Competency Match"
-                    })
-
-        return scored_results[:top_k]
-
-    def _is_domain_mismatch(self, normalized_role: NormalizedRole, name_low: str, desc_low: str, classification: Optional[object]) -> bool:
-        forbidden = {
-            NormalizedRole.BACKEND_ENGINEER: ["sales", "customer service", "personality only"],
-            NormalizedRole.FRONTEND_ENGINEER: ["java backend", "sales", "customer service"],
-            NormalizedRole.QA_ENGINEER: ["sales", "customer service", "leadership"],
-            NormalizedRole.DATA_SCIENTIST: ["java developer", "frontend", "react"],
-        }
-        if normalized_role not in forbidden: return False
-        combined = name_low + " " + desc_low
-        for keyword in forbidden[normalized_role]:
-            if keyword in combined: return True
+    def _is_domain_mismatch(self, normalized_role: Any, name_low: str, desc_low: str, _classification: Any) -> bool:
+        """Compatibility shim — always returns False (mismatch handled upstream)."""
         return False

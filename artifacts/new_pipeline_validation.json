@@ -1,0 +1,337 @@
+{
+  "Senior Java Backend Engineer with Spring Boot and microservices": {
+    "role": "java backend",
+    "seniority": "senior",
+    "tech_stack": [
+      "java",
+      "microservices",
+      "spring"
+    ],
+    "domain": "backend engineering",
+    "retrieved_count": 30,
+    "top_10_retrieved": [
+      "Java XML Technologies",
+      "Java Server Pages (JSP 2.1)",
+      "Administrative Assistant (Short Form)",
+      "Senior Sales Professional (Short Form)",
+      "Account Manager (Short Form)",
+      "Scenarios Management 2012 Candidate Report",
+      "Financial Services Representative (Short Form)",
+      "OO Design Patterns",
+      "WebSphere MQ",
+      "Motivation Questionnaire (MQ.M5) Employee Motivation Report"
+    ],
+    "top_10_reranked": [
+      "Java XML Technologies",
+      "Senior Sales Professional (Short Form)",
+      "Java Server Pages (JSP 2.1)",
+      "JavaScript 1.5 Fundamentals",
+      "WebSphere MQ",
+      "JavaScript 1.5",
+      "Web Services Concepts",
+      "Unix Administration (Solaris 10)",
+      "Embedded Systems Concepts",
+      "Financial Services Representative (Short Form)"
+    ],
+    "final_recommendations": [
+      {
+        "name": "Java XML Technologies",
+        "score": -10.8701,
+        "test_type": "K"
+      },
+      {
+        "name": "Senior Sales Professional (Short Form)",
+        "score": -11.2523,
+        "test_type": "K"
+      },
+      {
+        "name": "Java Server Pages (JSP 2.1)",
+        "score": -11.2787,
+        "test_type": "K"
+      },
+      {
+        "name": "JavaScript 1.5 Fundamentals",
+        "score": -11.2931,
+        "test_type": "K"
+      },
+      {
+        "name": "WebSphere MQ",
+        "score": -11.3063,
+        "test_type": "K"
+      },
+      {
+        "name": "Web Services Concepts",
+        "score": -11.3932,
+        "test_type": "K"
+      }
+    ]
+  },
+  "Senior React Frontend Engineer with TypeScript and Redux": {
+    "role": "frontend engineer",
+    "seniority": "senior",
+    "tech_stack": [
+      "react",
+      "redux",
+      "typescript"
+    ],
+    "domain": "frontend engineering",
+    "retrieved_count": 30,
+    "top_10_retrieved": [
+      "JavaScript 1.5",
+      "JavaScript 1.5 Fundamentals",
+      "Senior Sales Professional (Short Form)",
+      "Director (Short Form)",
+      "Financial Services Representative (Short Form)",
+      "OO Design Patterns",
+      "Occupational Personality Questionnaire (OPQ - OPQ32) Team Types and Leadership Styles Report",
+      "Occupational Personality Questionnaire (OPQ - OPQ32) Emotional Intelligence Report",
+      "Occupational Personality Questionnaire (OPQ - OPQ32) Team Types and Leadership Styles Profile",
+      "Occupational Personality Questionnaire (OPQ - OPQ32) Manager Plus Report"
+    ],
+    "top_10_reranked": [
+      "Senior Sales Professional (Short Form)",
+      "Director (Short Form)",
+      "Financial Services Representative (Short Form)",
+      "Verify Inductive Reasoning Junior Managerial (Supervisory)",
+      "Dependability and Safety Instrument (DSI)",
+      "Verify Reading Comprehension Supervisory",
+      "Occupational Personality Questionnaire (OPQ - OPQ32r)",
+      "Network Technical Support",
+      "Computer Technical Support",
+      "Verify Mechanical Comprehension Semi-Skilled Technical"
+    ],
+    "final_recommendations": [
+      {
+        "name": "Senior Sales Professional (Short Form)",
+        "score": -10.4282,
+        "test_type": "K"
+      },
+      {
+        "name": "Director (Short Form)",
+        "score": -11.1781,
+        "test_type": "K"
+      },
+      {
+        "name": "Financial Services Representative (Short Form)",
+        "score": -11.3426,
+        "test_type": "K"
+      },
+      {
+        "name": "JavaScript 1.5",
+        "score": -11.455,
+        "test_type": "K"
+      }
+    ]
+  },
+  "Python Backend Developer with FastAPI and PostgreSQL": {
+    "role": "python backend",
+    "seniority": "mid",
+    "tech_stack": [
+      "fastapi",
+      "python"
+    ],
+    "domain": "backend engineering",
+    "retrieved_count": 30,
+    "top_10_retrieved": [
+      "Python 2.4",
+      "Senior Sales Professional (Short Form)",
+      "Administrative Assistant (Short Form)",
+      "Computer Technical Support",
+      "Account Manager (Short Form)",
+      "Unix Administration (Solaris 10)",
+      "OO Design Patterns",
+      "Informatica PowerMart/PowerCentre 6.2.1",
+      "SOAP",
+      "JavaScript 1.5 Fundamentals"
+    ],
+    "top_10_reranked": [
+      "Python 2.4",
+      "JavaScript 1.5 Fundamentals",
+      "WebSphere MQ",
+      "Unix Programming (General)",
+      "Informatica PowerMart/PowerCentre 6.2.1",
+      "DB2 Programming",
+      "SQL (ANSI) Fundamentals",
+      "OO Concepts",
+      "Dependability and Safety Instrument (DSI)",
+      "Unix Administration (Solaris 10)"
+    ],
+    "final_recommendations": [
+      {
+        "name": "Python 2.4",
+        "score": -8.8808,
+        "test_type": "K"
+      },
+      {
+        "name": "JavaScript 1.5 Fundamentals",
+        "score": -11.0,
+        "test_type": "K"
+      },
+      {
+        "name": "WebSphere MQ",
+        "score": -11.2567,
+        "test_type": "K"
+      },
+      {
+        "name": "Unix Programming (General)",
+        "score": -11.2624,
+        "test_type": "K"
+      },
+      {
+        "name": "Informatica PowerMart/PowerCentre 6.2.1",
+        "score": -11.3189,
+        "test_type": "K"
+      },
+      {
+        "name": "DB2 Programming",
+        "score": -11.3238,
+        "test_type": "K"
+      },
+      {
+        "name": "SQL (ANSI) Fundamentals",
+        "score": -11.3256,
+        "test_type": "K"
+      },
+      {
+        "name": "DB2 Administration (z/OS)",
+        "score": -11.3835,
+        "test_type": "K"
+      }
+    ]
+  },
+  "Machine Learning Engineer with PyTorch and NLP experience": {
+    "role": "machine learning engineer",
+    "seniority": "mid",
+    "tech_stack": [
+      "machine learning",
+      "nlp",
+      "pytorch"
+    ],
+    "domain": "data science",
+    "retrieved_count": 30,
+    "top_10_retrieved": [
+      "Verify Mechanical Comprehension Skilled Technical",
+      "Verify Mechanical Comprehension Skilled Technology",
+      "Verify Mechanical Comprehension Semi-Skilled Technical",
+      "Verify Mechanical Comprehension Graduate/University",
+      "JavaScript 1.5 Fundamentals",
+      "JavaScript 1.5",
+      "Scenarios Graduate",
+      "Business Letter Edit",
+      "Project Manager (Short Form)",
+      "Visual Basic.NET Fundamentals"
+    ],
+    "top_10_reranked": [
+      "Verify Mechanical Comprehension Skilled Technology",
+      "Verify Mechanical Comprehension Skilled Technical",
+      "Verify Mechanical Comprehension Semi-Skilled Technical",
+      "Verify Mechanical Comprehension Graduate/University",
+      "Computer Technical Support",
+      "Network Technical Support",
+      "Programmer/Analyst Aptitude",
+      "Visual Basic.NET",
+      "Business Communication (adaptive)",
+      "Technical Helpdesk"
+    ],
+    "final_recommendations": [
+      {
+        "name": "Verify Mechanical Comprehension Skilled Technology",
+        "score": -10.6316,
+        "test_type": "A"
+      },
+      {
+        "name": "Verify Mechanical Comprehension Skilled Technical",
+        "score": -10.6989,
+        "test_type": "A"
+      },
+      {
+        "name": "Verify Mechanical Comprehension Semi-Skilled Technical",
+        "score": -10.7048,
+        "test_type": "A"
+      },
+      {
+        "name": "Visual Basic.NET",
+        "score": -11.2582,
+        "test_type": "K"
+      },
+      {
+        "name": "JavaScript 1.5",
+        "score": -11.3323,
+        "test_type": "K"
+      },
+      {
+        "name": "Visual Basic.NET Fundamentals",
+        "score": -11.3497,
+        "test_type": "K"
+      },
+      {
+        "name": "JavaScript 1.5 Fundamentals",
+        "score": -11.389,
+        "test_type": "K"
+      }
+    ]
+  },
+  "DevOps Engineer with Kubernetes, Terraform and AWS": {
+    "role": "devops engineer",
+    "seniority": "mid",
+    "tech_stack": [
+      "aws",
+      "devops",
+      "kubernetes",
+      "terraform"
+    ],
+    "domain": "devops",
+    "retrieved_count": 30,
+    "top_10_retrieved": [
+      "Project Manager (Short Form)",
+      "Scenarios Graduate Narrative Report",
+      "Computer Technical Support",
+      "Information Technology Terminology",
+      "Scenarios Management 2012 Candidate Report",
+      "OO Design Patterns",
+      "Scenarios Management 2012 Report",
+      "Administrative Assistant (Short Form)",
+      "Network Technical Support",
+      "WebSphere MQ"
+    ],
+    "top_10_reranked": [
+      "Web Services Application Engineering",
+      "WebSphere MQ",
+      "Network Technical Support",
+      "Embedded Systems Concepts",
+      "Unix Administration (Solaris 10)",
+      "Software Quality Assurance",
+      "Network Monitoring",
+      "Project Manager (Short Form)",
+      "Web Development Concepts",
+      "Technical Helpdesk"
+    ],
+    "final_recommendations": [
+      {
+        "name": "Web Services Application Engineering",
+        "score": -10.2687,
+        "test_type": "K"
+      },
+      {
+        "name": "WebSphere MQ",
+        "score": -11.0214,
+        "test_type": "K"
+      },
+      {
+        "name": "Network Technical Support",
+        "score": -11.274,
+        "test_type": "K"
+      },
+      {
+        "name": "JavaScript 1.5 Fundamentals",
+        "score": -11.3756,
+        "test_type": "K"
+      },
+      {
+        "name": "JavaScript 1.5",
+        "score": -11.3916,
+        "test_type": "K"
+      }
+    ]
+  }
+}

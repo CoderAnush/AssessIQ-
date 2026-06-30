@@ -1,5 +1,8 @@
 import asyncio
 import json
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app.routes.chat import chat
 from app.models.response import ChatRequest, Message
 
