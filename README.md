@@ -36,6 +36,37 @@ python scripts/smoke_frontend_checks.py
 
 This will call your local backend (`http://localhost:8000` by default), create an export file at `scripts/smoke_export.md`, and confirm the catalog enrichment pipeline is functioning.
 
+## Reviewer Quick Test
+
+Five curl checks against the live API ([assessiq-nkp2.onrender.com](https://assessiq-nkp2.onrender.com)) or local backend (`http://localhost:8000`):
+
+```bash
+# 1. Health
+curl -s https://assessiq-nkp2.onrender.com/health
+
+# 2. Java backend — expect technical assessments (not personality-only)
+curl -s -X POST https://assessiq-nkp2.onrender.com/chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Java Spring Boot backend developer"}]}'
+
+# 3. AI Engineer — expect data science / AI skills, not front-end leakage
+curl -s -X POST https://assessiq-nkp2.onrender.com/chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"AI Engineer with Python and machine learning"}]}'
+
+# 4. Vague query — expect clarification, not recommendations
+curl -s -X POST https://assessiq-nkp2.onrender.com/chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"programmer"}]}'
+
+# 5. Off-topic — expect polite refusal
+curl -s -X POST https://assessiq-nkp2.onrender.com/chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"What is the capital of France?"}]}'
+```
+
+Replace the host with `http://localhost:8000` for local testing.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)

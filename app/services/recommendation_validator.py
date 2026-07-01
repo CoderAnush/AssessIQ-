@@ -59,7 +59,7 @@ class RecommendationCompletenessValidator:
                 return -1.0
             score += 10.0
             if "opq" in name_lower:
-                score += 50.0
+                score += 20.0
             if "workplace" in name_lower or "behavioral" in name_lower:
                 score += 20.0
 
@@ -95,6 +95,7 @@ class RecommendationCompletenessValidator:
         catalog: dict,
         user_query: str = "",
         remove_coding: bool = False,
+        context=None,
     ) -> List[Recommendation]:
         """Add missing required assessments based on resolved required categories."""
         
@@ -173,8 +174,10 @@ class RecommendationCompletenessValidator:
                 has_behaviour = True
 
         augmented_recs = list(recommendations)
+        added_personality_fallback = False
 
         def add_best_fallback(target_type: str, reason: str, fallback_type: str):
+            nonlocal added_personality_fallback
             best_a = None
             best_score = -999.0
             for a in catalog.values():
@@ -187,6 +190,8 @@ class RecommendationCompletenessValidator:
             if best_a:
                 augmented_recs.append(make_rec(best_a, reason, fallback_type))
                 existing_ids.add(best_a.id)
+                if target_type == "personality":
+                    added_personality_fallback = True
 
         # 1. Technical Fallback
         if "technical" in required_categories and not remove_coding and not has_tech:
@@ -211,5 +216,21 @@ class RecommendationCompletenessValidator:
         # 6. Behaviour Fallback
         if "behaviour" in required_categories and not has_behaviour:
             add_best_fallback("behaviour", "Graduate scenarios situational judgment assessment", "Completeness")
+
+        role_lower = ""
+        if context is not None:
+            role_lower = str(getattr(context, "role", "") or "").lower()
+        if not role_lower:
+            role_lower = user_query.lower()
+        technical_role = (
+            any(t in role_lower for t in ["engineer", "developer", "backend", "frontend", "devops", "qa", "data", "ml", "ai"])
+            and not any(t in role_lower for t in ["manager", "leader", "executive", "director"])
+        )
+        if added_personality_fallback and technical_role:
+            def _is_personality_fallback(rec: Recommendation) -> bool:
+                test_type = getattr(rec.test_type, "value", rec.test_type)
+                test_type = str(test_type).upper()
+                return rec.is_fallback and (test_type == "P" or "opq" in rec.name.lower())
+            augmented_recs = sorted(augmented_recs, key=_is_personality_fallback)
 
         return augmented_recs

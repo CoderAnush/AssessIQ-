@@ -42,6 +42,13 @@ CODING_NAME_SIGNALS = (
     "kotlin", "golang", "ruby", "php", "scala", "rust",
 )
 
+DOMAIN_DENYLIST = {
+    Domain.BACKEND: {"frontend", "react", "angular", "vue", "xaml", "selenium", "technical support", "contact center"},
+    Domain.FRONTEND: {"spring", "java backend", "microservice backend", "technical support", "contact center"},
+    Domain.DEVOPS: {"contact center", "data entry", "xaml", "technical support"},
+    Domain.DATA_AI: {"contact center", "data entry", "technical support", "xaml", "mechanical", "manufacturing", "safety & dependability", "front end", "selenium"},
+}
+
 
 def _is_coding_assessment(name: str, test_type: str) -> bool:
     name_lower = name.lower()
@@ -50,6 +57,30 @@ def _is_coding_assessment(name: str, test_type: str) -> bool:
     return str(test_type).upper() == "K" and any(
         kw in name_lower for kw in ("developer", "engineer", "programming", "software")
     )
+
+
+def _matches_domain_denylist(query_domain: Domain, assessment_text: str) -> bool:
+    deny_terms = DOMAIN_DENYLIST.get(query_domain, set())
+    return any(term in assessment_text for term in deny_terms)
+
+
+def _sort_technical_first(recs: List[Recommendation], context) -> List[Recommendation]:
+    role_lower = (getattr(context, "role", None) or "").lower()
+    if any(w in role_lower for w in ["manager", "leader", "executive", "director", "sales"]):
+        return recs
+
+    def _priority(rec: Recommendation) -> tuple:
+        name = rec.name.lower()
+        tt = str(rec.test_type).upper()
+        if any(s in name for s in ("ai skills", "data science", "automata data science")):
+            return (0, -int(rec.confidence or 0))
+        if tt in ("K", "A", "S") or "simulation" in name:
+            return (1, -int(rec.confidence or 0))
+        if tt == "P" or "opq" in name:
+            return (3, -int(rec.confidence or 0))
+        return (2, -int(rec.confidence or 0))
+
+    return sorted(recs, key=_priority)
 
 
 def _cap_recommendations(recs: List[Recommendation], max_count: int = MAX_RECOMMENDATIONS) -> List[Recommendation]:
@@ -499,10 +530,20 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                     continue
                 # The ranker already enforced domain safety dynamically.
                 assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
+                if not isinstance(assess_domain, Domain):
+                    assess_domain = domain_classifier.normalize_assessment_domain(
+                        res.assessment.name,
+                        res.assessment.description,
+                    )
+                if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI}:
+                    if not domain_classifier.is_strictly_allowed(query_domain, assess_domain):
+                        continue
                 base_confidence = int((res.final_score or 0.6) * 100)
 
                 assess_text = (res.assessment.name + " " + res.assessment.description).lower()
                 assess_tokens = set(re.findall(r'\b[a-z0-9.]+\b', assess_text))
+                if _matches_domain_denylist(query_domain, assess_text):
+                    continue
 
                 # UNIVERSAL PHYSICAL ENGINEERING BLOCK (safety net beyond ranker)
                 if query_domain in [Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI]:
@@ -594,11 +635,21 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                         continue
 
                     assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
+                    if not isinstance(assess_domain, Domain):
+                        assess_domain = domain_classifier.normalize_assessment_domain(
+                            res.assessment.name,
+                            res.assessment.description,
+                        )
+                    if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI}:
+                        if not domain_classifier.is_strictly_allowed(query_domain, assess_domain):
+                            continue
                     base_confidence = int((res.final_score or 0.6) * 100)
                     # Minimum pipeline guarantee
                     # Suppress mismatches here as well!
                     assess_text = (res.assessment.name + " " + res.assessment.description).lower()
                     assess_tokens = set(re.findall(r'\b[a-z0-9.]+\b', assess_text))
+                    if _matches_domain_denylist(query_domain, assess_text):
+                        continue
 
                     # Universal block applies here too
                     if query_domain in [Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI]:
@@ -738,8 +789,21 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                 required_cats,
                 catalog,
                 user_query=user_query,
-                remove_coding=remove_coding
+                remove_coding=remove_coding,
+                context=context,
             )
+
+            filtered_recommendations = []
+            for rec in recommendations:
+                rec_text = f"{rec.name} {rec.ideal_use_case}".lower()
+                if _matches_domain_denylist(query_domain, rec_text):
+                    continue
+                assessment_domain = domain_classifier.normalize_assessment_domain(rec.name, rec.ideal_use_case)
+                if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI}:
+                    if not domain_classifier.is_strictly_allowed(query_domain, assessment_domain):
+                        continue
+                filtered_recommendations.append(rec)
+            recommendations = filtered_recommendations
 
             if remove_coding:
                 recommendations = [
@@ -747,6 +811,7 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                     if str(r.test_type).upper() != "K"
                 ]
 
+            recommendations = _sort_technical_first(recommendations, context)
             recommendations = _cap_recommendations(recommendations, MAX_RECOMMENDATIONS)
 
             # 3. ORCHESTRATION PHASE

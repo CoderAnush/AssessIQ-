@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional, Set
 import numpy as np
 
 from app.logger_config.logger import get_logger
+from app.services.domain_classifier import Domain, DomainClassifier
 from app.services.skill_graph import SkillGraph
 
 logger = get_logger("retriever")
@@ -32,6 +33,7 @@ _RRF_K = 60
 # Known specific technology tokens that are meaningful in assessment NAMES.
 # Used only to detect when a *different* named tech appears in a result's name.
 _KNOWN_TECH_TOKENS: Set[str] = {
+    "ai", "ml", "data science", "machine learning", "tensorflow", "pytorch", "nlp", "llm", "pandas",
     "java", "python", "ruby", "perl", "php", "cobol", "fortran", "swift",
     "kotlin", "scala", "golang", "rust", "typescript", "javascript",
     "react", "angular", "vue", "svelte", "css", "html",
@@ -226,6 +228,7 @@ class HybridRetriever:
     def __init__(self, catalog_loader: Any, skill_graph: Optional[SkillGraph] = None):
         self.catalog_loader = catalog_loader
         self.skill_graph = skill_graph or SkillGraph()
+        self.domain_classifier = DomainClassifier()
 
         # Lazy-initialised indices
         self._bm25 = None          # rank_bm25 BM25Okapi
@@ -360,6 +363,15 @@ class HybridRetriever:
 
         # --- Step 4b: Name-match precision boost (query-relative) ---
         rrf_scores = _apply_name_match_boost(rrf_scores, id_to_assessment, query_low)
+        if query_domain == "data_ai":
+            ai_name_signals = ("data science", "ai skills", "machine learning", "nlp", "llm")
+            for doc_id, score in list(rrf_scores.items()):
+                assessment = id_to_assessment.get(doc_id)
+                if not assessment:
+                    continue
+                name_low = assessment.name.lower()
+                if any(signal in name_low for signal in ai_name_signals):
+                    rrf_scores[doc_id] = score * 1.25
 
         # Sort by boosted RRF score
         sorted_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)
@@ -370,11 +382,22 @@ class HybridRetriever:
             sorted_ids = [a.id for a in candidates[:top_k * 3]]
 
         # --- Step 5: Build result dicts ---
+        strict_domain_map = {
+            "backend": Domain.BACKEND,
+            "frontend": Domain.FRONTEND,
+            "devops": Domain.DEVOPS,
+            "data_ai": Domain.DATA_AI,
+        }
+        strict_query_domain = strict_domain_map.get(query_domain)
         results = []
         for aid in sorted_ids:
             a = id_to_assessment.get(aid)
             if a is None:
                 continue
+            if strict_query_domain:
+                assessment_domain = self.domain_classifier.normalize_assessment_domain(a.name, a.description)
+                if not self.domain_classifier.is_strictly_allowed(strict_query_domain, assessment_domain):
+                    continue
             results.append({
                 "id": a.id,
                 "name": a.name,

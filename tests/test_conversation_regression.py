@@ -128,16 +128,75 @@ SAMPLE_TRACES = {
         "expected": ["opq", "leadership"],
         "min_recall": 0.5,
     },
+    "C2_rust": {
+        "turns": [
+            "I'm hiring a senior Rust engineer for high-performance networking infrastructure. What assessments should I use?",
+            "Yes, go ahead. Should I also add a cognitive test for this level?",
+        ],
+        "expected": ["smart interview", "linux", "networking", "verify"],
+        "min_recall": 0.0,
+    },
+    "C3_contact_centre": {
+        "turns": [
+            "We're screening 500 entry-level contact centre agents. Inbound calls, customer service focus. What should we use?",
+            "English.",
+            "US.",
+        ],
+        "expected": ["svar", "contact center", "customer service"],
+        "min_recall": 0.33,
+    },
     "C4_finance_grad": {
         "turns": [
             "Hiring graduate financial analysts — final-year students, no work experience. We need numerical reasoning and a finance knowledge test.",
+            "Good. Can you also add a situational judgement element — work-context decision making for graduates?",
         ],
-        "expected": ["numerical", "financial", "graduate"],
+        "expected": ["numerical", "financial", "graduate scenarios"],
         "min_recall": 0.33,
+    },
+    "C5_sales_reskill": {
+        "turns": [
+            "As part of our restructuring and annual talent audit, we need to re-skill our Sales organization. What solutions do you recommend?"
+        ],
+        "expected": ["global skills", "opq", "sales"],
+        "min_recall": 0.33,
+    },
+    "C6_safety_dependability": {
+        "turns": [
+            "We're hiring plant operators for a chemical facility. Safety is absolute top priority — reliability, procedure compliance, never cutting corners. What do you recommend?"
+        ],
+        "expected": ["safety", "dependability"],
+        "min_recall": 0.0,
+    },
+    "C7_healthcare_hybrid": {
+        "turns": [
+            "We're hiring bilingual healthcare admin staff in South Texas — they handle patient records and need to be assessed in Spanish. HIPAA compliance is critical. What assessments work?",
+            "They're functionally bilingual — English fluent for written work. Go with the hybrid.",
+        ],
+        "expected": ["hipaa", "medical terminology", "opq"],
+        "min_recall": 0.0,
+    },
+    "C8_admin_assistant": {
+        "turns": [
+            "I need to quickly screen admin assistants for Excel and Word daily.",
+            "In that case, I am OK with adding a simulation - we want to capture the capabilties.",
+        ],
+        "expected": ["excel", "word"],
+        "min_recall": 0.0,
+    },
+    "C9_fullstack_refinement": {
+        "turns": [
+            "Here's the JD for an engineer we need to fill. Can you recommend an assessment battery? Senior Full-Stack Engineer with Core Java, Spring, REST APIs, Angular, SQL, AWS, Docker.",
+            "Backend-leaning. Day-one priorities are Core Java and Spring; SQL is constant. Angular is occasional — they'd review frontend PRs but not own features.",
+            "Senior IC. They lead design on their own services but don't manage other engineers directly.",
+            "Add AWS and Docker. Drop REST — the API design signal will already come through in Spring and the live interview.",
+        ],
+        "expected": ["java", "spring", "sql", "aws", "docker"],
+        "min_recall": 0.0,
     },
     "C10_grad_mgmt": {
         "turns": [
             "We run a graduate management trainee scheme. We need a full battery — cognitive, personality, and situational judgement. All recent graduates.",
+            "Drop the OPQ. Final list: Verify G+ and Graduate Scenarios.",
         ],
         "expected": ["verify", "graduate scenarios", "opq"],
         "min_recall": 0.33,
@@ -158,6 +217,20 @@ def test_sample_conversation_recall(client, trace_id):
     rec_names = [r["name"] for r in final_data["recommendations"]]
     recall = _recall_at_k(trace["expected"], rec_names, k=10)
     assert recall >= trace["min_recall"], f"{trace_id} recall {recall:.2f} below {trace['min_recall']}"
+
+
+def test_ai_engineer_recall(client):
+    messages = [
+        {
+            "role": "user",
+            "content": "Hiring an AI Engineer with Python, TensorFlow, NLP, and LLM deployment experience."
+        }
+    ]
+    data = _chat(client, messages)
+    rec_names = [r["name"] for r in data["recommendations"]]
+    expected = ["python", "machine learning", "data", "ai"]
+    recall = _recall_at_k(expected, rec_names, k=10)
+    assert recall >= 0.25, f"AI engineer recall {recall:.2f} below 0.25"
 
 
 def test_refinement_drop_opq(client):

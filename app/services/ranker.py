@@ -70,22 +70,59 @@ class RecruiterRanker:
 
         # 1. Role Match (domain_match - 25% weight, max 1.0)
         role_score = 0.1
+        candidate_name_lower = assessment.name.lower()
         if "backend" in role_lower or "java" in role_lower or "python" in role_lower or "node" in role_lower:
             if "backend" in candidate_text or "java" in candidate_text or "python" in candidate_text or "node" in candidate_text:
                 role_score = 1.0
             elif "developer" in candidate_text or "engineer" in candidate_text:
                 role_score = 0.5
+            if "java" in role_lower and ("python" in candidate_name_lower or "react" in candidate_name_lower) and "java" not in candidate_name_lower:
+                role_score = min(role_score, 0.2)
+            if "java" in role_lower and not any(t in role_lower for t in ["frontend", "react", "angular", "vue"]):
+                if "front end" in candidate_text or "front-end" in candidate_name_lower:
+                    role_score = min(role_score, 0.1)
         elif "frontend" in role_lower or "react" in role_lower or "javascript" in role_lower or "angular" in role_lower or "vue" in role_lower:
             if "frontend" in candidate_text or "react" in candidate_text or "javascript" in candidate_text or "angular" in candidate_text or "vue" in candidate_text:
                 role_score = 1.0
             elif "developer" in candidate_text or "engineer" in candidate_text:
                 role_score = 0.5
+            if ("java" in candidate_name_lower or "spring" in candidate_name_lower) and not any(t in role_lower for t in ["java", "spring"]):
+                role_score = min(role_score, 0.2)
         elif "qa" in role_lower or "sdet" in role_lower or "test" in role_lower:
             if "qa" in candidate_text or "sdet" in candidate_text or "test" in candidate_text:
                 role_score = 1.0
         elif "devops" in role_lower or "cloud" in role_lower or "sre" in role_lower:
             if "devops" in candidate_text or "cloud" in candidate_text or "sre" in candidate_text:
                 role_score = 1.0
+            if any(t in candidate_text for t in ["linux", "kubernetes", "docker", "cloud", "terraform", "infrastructure"]):
+                role_score = max(role_score, 1.0)
+        elif any(t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "machine learning", "deep learning", "nlp", "llm"]):
+            if "ai skills" in candidate_name_lower:
+                role_score = 1.0
+            elif any(t in candidate_text for t in ["ai", "ml", "machine learning", "deep learning", "nlp", "llm", "data science", "data engineer", "data scientist"]):
+                role_score = 1.0
+            elif "developer" in candidate_text or "engineer" in candidate_text:
+                role_score = 0.55
+            if any(t in candidate_text for t in [
+                "ai skills", "data science", "automata data science", "machine learning", "python", "sql",
+                "statistics", "nlp", "tensorflow", "pytorch", "llm"
+            ]):
+                role_score = min(1.0, role_score + 0.2)
+        elif "mobile" in role_lower or "android" in role_lower or "ios" in role_lower:
+            if any(t in candidate_text for t in ["mobile", "android", "ios", "swift", "kotlin", "react native", "flutter"]):
+                role_score = 1.0
+            elif "developer" in candidate_text:
+                role_score = 0.5
+        elif "full stack" in role_lower or "fullstack" in role_lower:
+            if any(t in candidate_text for t in ["full stack", "fullstack"]):
+                role_score = 1.0
+            elif any(t in candidate_text for t in ["backend", "frontend"]):
+                role_score = 0.7
+        elif "embedded" in role_lower or "firmware" in role_lower:
+            if any(t in candidate_text for t in ["embedded", "firmware", "c programming", "microcontroller"]):
+                role_score = 1.0
+            elif "engineer" in candidate_text:
+                role_score = 0.5
         elif "manager" in role_lower or "leader" in role_lower or "executive" in role_lower or "director" in role_lower:
             if "leadership" in candidate_text or "manager" in candidate_text or "executive" in candidate_text or "opq" in candidate_text:
                 role_score = 1.0
@@ -103,6 +140,44 @@ class RecruiterRanker:
                 role_score = 1.0
         else:
             role_score = 0.5
+
+        is_frontend_role = any(t in role_lower for t in ["frontend", "react", "angular", "vue", "ui developer", "ui "])
+        if not is_frontend_role and ("front end" in candidate_text or "front-end" in candidate_name_lower):
+            role_score = min(role_score, 0.05)
+
+        is_data_ai_role = any(
+            t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "machine learning", "deep learning", "nlp", "llm"]
+        )
+        is_qa_role = any(t in role_lower for t in ["qa", "sdet", "test automation"])
+        if is_data_ai_role or (
+            "engineer" in role_lower and "data entry clerk" not in role_lower and not is_qa_role
+        ):
+            mismatch_penalties = {
+                "front end": 0.15,
+                "technical support": 0.15,
+                "contact center": 0.15,
+                "xaml": 0.10,
+                "mechanical": 0.15,
+            }
+            if is_data_ai_role:
+                mismatch_penalties["selenium"] = 0.10
+                mismatch_penalties["data entry"] = 0.12
+            elif not any(t in role_lower for t in ["frontend", "react", "angular", "vue", "ui"]):
+                mismatch_penalties["selenium"] = 0.12
+            for token, penalty_floor in mismatch_penalties.items():
+                if token in candidate_text:
+                    role_score = min(role_score, penalty_floor)
+
+        technical_role = not any(w in role_lower for w in ["manager", "leader", "executive", "director"])
+        assessment_test_type = getattr(assessment, "test_type", "K")
+        if hasattr(assessment_test_type, "value"):
+            assessment_test_type = assessment_test_type.value
+        assessment_test_type = str(assessment_test_type).upper()
+        personality_only_for_technical = technical_role and (
+            assessment_test_type == "P" or "opq" in candidate_name_lower
+        ) and role_score < 0.7
+        if personality_only_for_technical:
+            role_score = min(role_score, 0.9)
         factors.domain_match = role_score
 
         # 2. Job Level Match (seniority_fit - 15% weight, max 1.0)
@@ -129,7 +204,9 @@ class RecruiterRanker:
         # 3. Assessment Keys Match (type_alignment - 15% weight, max 1.0)
         assessment_keys = [k.lower() for k in getattr(assessment, "keys", [])]
         keys_score = 0.1
-        if "backend" in role_lower or "frontend" in role_lower or "devops" in role_lower or "qa" in role_lower:
+        if "backend" in role_lower or "frontend" in role_lower or "devops" in role_lower or "qa" in role_lower or any(
+            t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "machine learning", "deep learning", "nlp", "llm"]
+        ):
             if any(k in assessment_keys for k in ["knowledge & skills", "simulations", "ability & aptitude", "personality & behavior"]):
                 keys_score = 1.0
         elif "manager" in role_lower or "leader" in role_lower:
@@ -138,24 +215,49 @@ class RecruiterRanker:
         else:
             if any(k in assessment_keys for k in ["ability & aptitude", "simulations", "personality & behavior"]):
                 keys_score = 1.0
+        if personality_only_for_technical:
+            keys_score = min(keys_score, 0.3)
         factors.type_alignment = keys_score
 
         # 4. Technical Skill Match (skill_overlap - 15% weight, max 1.0)
         tech_stack = {t.lower() for t in (context.tech_stack or [])}
+        inferred_tech_stack: Set[str] = set()
         if not tech_stack:
-            skill_score = 1.0
+            if any(t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "machine learning", "deep learning", "nlp", "llm", "ml ops"]):
+                inferred_tech_stack = {"python", "machine learning", "data science"}
+            elif "java" in role_lower:
+                inferred_tech_stack = {"java"}
+            elif any(t in role_lower for t in ["frontend", "react", "javascript", "angular", "vue"]):
+                inferred_tech_stack = {"javascript", "frontend"}
+            elif any(t in role_lower for t in ["devops", "cloud", "sre"]):
+                inferred_tech_stack = {"linux", "docker", "kubernetes", "cloud"}
+            elif "backend" in role_lower:
+                inferred_tech_stack = {"backend", "api"}
+            elif any(t in role_lower for t in ["mobile", "android", "ios"]):
+                inferred_tech_stack = {"mobile", "android", "ios"}
+
+        effective_tech_stack = tech_stack or inferred_tech_stack
+        candidate_skills = {s.lower() for s in getattr(assessment, "skills", [])}
+        candidate_tags = {s.lower() for s in getattr(assessment, "skill_tags", [])}
+        all_cand_skills = candidate_skills | candidate_tags
+        candidate_blob = f"{assessment.name.lower()} {assessment.description.lower()}"
+
+        if not effective_tech_stack:
+            skill_score = 0.4
         else:
-            candidate_skills = {s.lower() for s in getattr(assessment, "skills", [])}
-            candidate_tags = {s.lower() for s in getattr(assessment, "skill_tags", [])}
-            all_cand_skills = candidate_skills | candidate_tags
-            
-            matches = tech_stack & all_cand_skills
-            for tech in tech_stack:
-                if tech in assessment.name.lower():
+            matches = set()
+            for tech in effective_tech_stack:
+                tech_tokens = [p for p in tech.split() if p]
+                if tech in all_cand_skills:
                     matches.add(tech)
-            
-            skill_score = len(matches) / len(tech_stack)
-            skill_score = min(1.0, skill_score * 2.0)
+                elif re.search(r"\b" + re.escape(tech) + r"\b", candidate_blob):
+                    matches.add(tech)
+                elif tech_tokens and all(re.search(r"\b" + re.escape(tok) + r"\b", candidate_blob) for tok in tech_tokens):
+                    matches.add(tech)
+            skill_score = len(matches) / len(effective_tech_stack)
+            skill_score = min(1.0, skill_score * 1.25)
+        if not is_frontend_role and ("front end" in candidate_text or "front-end" in candidate_name_lower):
+            skill_score = min(skill_score, 0.1)
         factors.skill_overlap = skill_score
 
         # 5. Description Semantic Similarity (semantic_relevance - 10% weight, max 1.0)

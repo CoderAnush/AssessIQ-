@@ -77,7 +77,7 @@ class RAGPipeline:
         logger.info(f"Loading raw catalog from {self.raw_catalog_path}")
 
         try:
-            with open(self.raw_catalog_path, "r") as f:
+            with open(self.raw_catalog_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
             # Handle both direct list and dict with 'assessments' key
@@ -275,8 +275,20 @@ class RAGPipeline:
             import re
             normalized = []
             for i, ass in enumerate(assessments):
+                # Map keys from official catalog
+                if "link" in ass and not ass.get("url"):
+                    ass["url"] = ass["link"]
+                
+                # Normalize duration from string
+                if ass.get("duration") and ass.get("duration_minutes") is None:
+                    m = re.search(r"(\d+)", str(ass["duration"]))
+                    if m:
+                        ass["duration_minutes"] = int(m.group(1))
+                    else:
+                        ass["duration_minutes"] = 30
+                
                 if not ass.get("name") or not ass.get("url"):
-                    logger.warning(f"Skipping assessment {i}: missing name or url")
+                    logger.warning(f"Skipping assessment {i}: missing name or url ({ass.get('name')})")
                     continue
                 
                 # Repair missing ID

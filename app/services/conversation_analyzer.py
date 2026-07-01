@@ -180,8 +180,12 @@ class ConversationAnalyzer:
                 inferred_tech.append("React")
             if "node" in role_lower:
                 inferred_tech.append("Node.js")
-            if "devops" in role_lower or "sre" in role_lower:
+            if "devops" in role_lower or "sre" in role_lower or "infrastructure" in role_lower:
                 inferred_tech.append("DevOps")
+            if any(t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "machine learning"]):
+                inferred_tech.extend(["Python", "Machine Learning", "Data Science"])
+            if "django" in role_lower:
+                inferred_tech.append("Django")
             if inferred_tech:
                 context.tech_stack = set(inferred_tech)
         
@@ -257,7 +261,8 @@ class ConversationAnalyzer:
         if not context.role and not context.tech_stack and not has_hiring_signal and not is_comparison and not has_prior_recommendations:
             greetings = ["hello", "hi", "hey", "good morning", "good afternoon", "how are you", "help"]
             is_greeting = any(g in last_user_msg.lower() for g in greetings)
-            if not is_greeting:
+            generic_role_query = last_user_msg.strip().lower() in self.GENERIC_ROLE_QUERIES
+            if not is_greeting and not generic_role_query:
                 is_off_topic = True
 
         if is_prompt_injection:
@@ -291,6 +296,8 @@ class ConversationAnalyzer:
             "python backend", "java backend", "backend engineer", "backend developer",
             "python backend engineer", "python backend developer", "java backend developer",
             "fastapi developer", "fastapi engineer",
+            "django developer", "django engineer",
+            "mobile developer", "mobile engineer", "android developer", "ios developer",
             "fullstack developer", "full stack developer", "java developer", "python developer",
             # Frontend specific
             "frontend software engineer", "frontend developer", "frontend engineer",
@@ -335,9 +342,11 @@ class ConversationAnalyzer:
             return "frontend"
         if "frontend" in text_lower or "ui" in text_lower or "web" in text_lower:
             return "frontend"
+        if "ai engineer" in text_lower or "ai architect" in text_lower:
+            return "ai engineer"
         if "machine learning" in text_lower or " ml " in text_lower or "data science" in text_lower:
             return "data scientist"
-        if "ai " in text_lower and "artificial intelligence" in text_lower:
+        if re.search(r"\bai\b", text_lower) and "engineer" in text_lower:
             return "ai engineer"
         if "java" in text_lower and "javascript" not in text_lower:
             return "java backend"
@@ -347,7 +356,7 @@ class ConversationAnalyzer:
             return "devops"
         if "cloud" in text_lower:
             return "cloud"
-        if "kubernetes" in text_lower or "docker" in text_lower or "terraform" in text_lower:
+        if "kubernetes" in text_lower or "docker" in text_lower or "terraform" in text_lower or "infrastructure" in text_lower:
             return "devops"
         
         # Skip "test" when user means an SHL assessment, not a QA/test role.
