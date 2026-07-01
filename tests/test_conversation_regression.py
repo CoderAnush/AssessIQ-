@@ -262,3 +262,35 @@ def test_end_of_conversation_closure(client):
     data2 = _chat(client, messages)
     assert data2["end_of_conversation"] is True
     assert len(data2["recommendations"]) >= 1
+
+
+def test_clarify_returns_empty_recommendations(client):
+    data = _chat(client, [{"role": "user", "content": "I need an assessment."}])
+    assert data["recommendations"] == []
+
+
+def test_c2_rust_turn1_clarifies_without_recs(client):
+    data = _chat(
+        client,
+        [{
+            "role": "user",
+            "content": "I'm hiring a senior Rust engineer for high-performance networking infrastructure. What assessments should I use?",
+        }],
+    )
+    assert len(data["recommendations"]) == 0
+    assert "rust" in data["reply"].lower() or "smart interview" in data["reply"].lower()
+
+
+def test_conversation_analyzer_accumulates_tech_stack():
+    from app.services.conversation_analyzer import ConversationAnalyzer
+
+    analyzer = ConversationAnalyzer()
+    messages = [
+        {"role": "user", "content": "Senior Full-Stack Engineer with Core Java, Spring, SQL, AWS, Docker."},
+        {"role": "assistant", "content": "Is this backend-leaning or frontend-heavy?"},
+        {"role": "user", "content": "Backend-leaning. Add AWS and Docker. Drop REST."},
+    ]
+    context, _ = analyzer.analyze(messages)
+    stack_low = {t.lower() for t in context.tech_stack}
+    assert "aws" in stack_low or "docker" in stack_low
+    assert "java" in stack_low or "spring" in stack_low

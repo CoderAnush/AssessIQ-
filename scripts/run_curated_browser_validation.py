@@ -21,12 +21,19 @@ CLARIFY_PATTERNS = [
     "could you clarify",
     "which role",
     "what role",
+    "what type of role",
+    "type of role",
+    "seniority",
     "which language",
     "which fits",
     "before i shape",
     "before i commit",
     "need to know",
     "which one",
+    "should i build",
+    "doesn't include",
+    "does not include",
+    "which fits better",
 ]
 
 

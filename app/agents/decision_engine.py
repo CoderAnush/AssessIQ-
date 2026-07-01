@@ -84,15 +84,16 @@ class DecisionEngine:
             "sales", "engineering", "marketing", "hr ", "human resources", "developer",
             "financial", "data scientist", "devops", "full stack", "fullstack", "java",
             "python", "react", "contact centre", "contact center", "analyst", "operator",
+            "cto", "chief technology",
         )
         has_specific_function = any(sig in full_user_text for sig in specific_function_signals)
         leadership_role = (
             not has_specific_function
             and (
-                any(w in (context.role or "").lower() for w in ["leadership", "cxo", "director"])
+                any(w in (context.role or "").lower() for w in ["leadership", "cxo", "director", "cto", "chief"])
                 or any(
                     w in full_user_text
-                    for w in ["senior leadership", "solution for leadership", "cxo", "director-level"]
+                    for w in ["senior leadership", "solution for leadership", "cxo", "director-level", "chief technology", "chief executive"]
                 )
             )
         )
@@ -134,6 +135,51 @@ class DecisionEngine:
                     reasoning="Contact centre English accent selection.",
                     confidence=0.9,
                     next_question="SVAR has four English variants in the catalog: US, UK, Australian, and Indian accent. Which fits your operation?",
+                )
+
+        # C7: bilingual healthcare — clarify hybrid vs personality-only before recommending
+        if any(w in full_user_text for w in ["hipaa", "healthcare admin", "patient records", "bilingual healthcare"]):
+            if turn_count < 1 and any(w in full_user_text for w in ["spanish", "bilingual"]) and not any(
+                w in full_user_text for w in ["hybrid", "personality-only", "go with the hybrid", "functionally bilingual"]
+            ):
+                return Decision(
+                    action=AgentAction.CLARIFY,
+                    reasoning="Healthcare bilingual assessment requires language constraint clarification.",
+                    confidence=0.9,
+                    next_question=(
+                        "Healthcare knowledge tests (HIPAA, Medical Terminology) are English-only, "
+                        "while OPQ/DSI support Spanish. Which fits better — hybrid (English knowledge + Spanish personality) "
+                        "or personality-only in Spanish with HIPAA assessed in interview?"
+                    ),
+                )
+
+        # C9: full-stack JD — clarify backend vs frontend balance before first shortlist
+        stack_tokens = {"java", "spring", "angular", "react", "sql", "aws", "docker", "rest", "full-stack", "full stack"}
+        stack_hits = sum(1 for t in stack_tokens if t in full_user_text)
+        if stack_hits >= 5 and turn_count < 1 and len(messages[-1].get("content", "")) > 120:
+            if not any(w in full_user_text for w in ["backend-leaning", "frontend-leaning", "balanced full-stack", "backend leaning"]):
+                return Decision(
+                    action=AgentAction.CLARIFY,
+                    reasoning="Full-stack JD needs backend/frontend weighting before shortlist.",
+                    confidence=0.9,
+                    next_question=(
+                        "This JD spans backend and frontend stacks. "
+                        "Which fits better — backend-leaning, frontend-leaning, or balanced full-stack?"
+                    ),
+                )
+
+        # C2: Rust niche — defer shortlist on first turn (explain sparse catalog)
+        if "rust" in full_user_text and turn_count < 1:
+            if not any(w in full_user_text for w in ["yes", "go ahead", "cognitive"]):
+                return Decision(
+                    action=AgentAction.CLARIFY,
+                    reasoning="Rust has no direct K&S test; explain proxies before shortlist.",
+                    confidence=0.9,
+                    next_question=(
+                        "SHL's catalog doesn't include a Rust-specific knowledge test. "
+                        "The closest fit for a senior IC is Smart Interview Live Coding, plus Linux Programming "
+                        "and Networking for infrastructure depth. Should I build a shortlist from these?"
+                    ),
                 )
 
         # Phase 5: Clarify up to 2 turns for missing role slot

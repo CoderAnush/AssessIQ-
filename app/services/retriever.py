@@ -87,10 +87,7 @@ def _apply_name_match_boost(
     # Identify which known tech tokens appear in the query
     query_tokens = set(re.findall(r"\b[a-z0-9.#+]+\b", query_low))
     query_tech = query_tokens & _KNOWN_TECH_TOKENS
-
-    # If the query names no specific technology, skip — avoid false dampening
-    if not query_tech:
-        return rrf_scores
+    has_query_tech = bool(query_tech)
 
     boosted: Dict[str, float] = {}
     for doc_id, score in rrf_scores.items():
@@ -100,6 +97,39 @@ def _apply_name_match_boost(
             continue
 
         name_low = a.name.lower()
+
+        # UiPath is not UI developer
+        if "ui developer" in query_low or "ui engineer" in query_low:
+            if "uipath" in name_low and "rpa" in name_low:
+                boosted[doc_id] = score * 0.2
+                continue
+
+        # Domain keyword boosts
+        if any(k in query_low for k in ["safety", "dependability", "plant operator"]):
+            if any(k in name_low for k in ["safety", "dependability", "dsi"]):
+                boosted[doc_id] = score * 1.8
+                continue
+        if any(k in query_low for k in ["financial", "finance analyst", "finance knowledge"]):
+            if "financial" in name_low or "numerical" in name_low:
+                boosted[doc_id] = score * 1.6
+                continue
+        if any(k in query_low for k in ["marketing", "seo", "sem", "social media"]):
+            if "marketing" in name_low:
+                boosted[doc_id] = score * 1.8
+                continue
+        if "excel" in query_low or "word" in query_low or "admin assistant" in query_low:
+            if "excel" in name_low or "word" in name_low:
+                boosted[doc_id] = score * 1.8
+                continue
+        if any(k in query_low for k in ["platform engineer", "platform engineering", "infrastructure engineer"]):
+            if any(k in name_low for k in ["linux", "kubernetes", "docker", "terraform", "networking", "cloud"]):
+                boosted[doc_id] = score * 1.35
+                continue
+
+        if not has_query_tech:
+            boosted[doc_id] = score
+            continue
+
         name_tokens = set(re.findall(r"\b[a-z0-9.#+]+\b", name_low))
         name_tech = name_tokens & _KNOWN_TECH_TOKENS
 
@@ -396,7 +426,10 @@ class HybridRetriever:
                 continue
             if strict_query_domain:
                 assessment_domain = self.domain_classifier.normalize_assessment_domain(a.name, a.description)
-                if not self.domain_classifier.is_strictly_allowed(strict_query_domain, assessment_domain):
+                assess_text = f"{a.name} {a.description}".lower()
+                if not self.domain_classifier.is_strictly_allowed(
+                    strict_query_domain, assessment_domain, assess_text
+                ):
                     continue
             results.append({
                 "id": a.id,

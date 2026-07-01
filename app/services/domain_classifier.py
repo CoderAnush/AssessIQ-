@@ -51,7 +51,7 @@ class DomainClassifier:
         "jenkins", "ansible", "helm", "argocd", "linux", "monitoring", "prometheus",
         "grafana", "deployment", "platform engineer", "container", "orchestration",
         "bash", "shell", "unix", "network", "networking", "cisco", "firewall", "security",
-        "active directory", "system administration", "admin", "itil", "apache", "iis", "nginx"
+        "active directory", "system administration", "system admin", "sysadmin", "it admin", "itil", "apache", "iis", "nginx"
     }
 
     ADJACENCY_MAP = {
@@ -70,10 +70,13 @@ class DomainClassifier:
         Domain.DATA_AI: list(AI_ML_INDICATORS),
         Domain.MANAGEMENT: [
             "management", "leadership", "behavioral", "stakeholder", 
-            "engineering manager", "people management", "scrum", "agile", "strategic"
+            "engineering manager", "people management", "scrum", "agile", "strategic",
+            "cto", "chief technology officer", "chief technical officer", "vp engineering",
         ],
         Domain.QA: [
-            "testing", "qa", "sdet", "automation testing", "selenium", "cypress", "unit testing", "integration testing"
+            "testing", "qa", "sdet", "software developer in test", "developer in test",
+            "automation testing", "selenium", "cypress", "unit testing", "integration testing",
+            "qa automation", "qa analyst",
         ],
         Domain.ENGINEERING_CORE: [
             "civil", "mechanical", "electrical", "chemical", "aeronautical", 
@@ -91,7 +94,12 @@ class DomainClassifier:
         query_low = query.lower()
 
         if "full stack" in query_low or "fullstack" in query_low:
-            return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Full Stack Override"}
+            return {
+                "primaryDomain": Domain.BACKEND,
+                "confidence": 1.0,
+                "reason": "Full Stack Developer Role",
+                "techStack": ["java", "spring", "sql"],
+            }
 
         if any(kw in query_low for kw in ["contact centre", "contact center", "call center", "call centre", "inbound calls", "contact centre agents"]):
             return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Contact Centre Role", "techStack": ["customer service"]}
@@ -99,13 +107,44 @@ class DomainClassifier:
         if any(kw in query_low for kw in ["financial analyst", "graduate financial", "finance knowledge", "numerical reasoning"]):
             return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Finance Graduate Role", "techStack": ["finance"]}
 
+        if any(kw in query_low for kw in ["plant operator", "chemical facility", "procedure compliance", "safety is absolute", "safety is top priority"]):
+            return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Safety/Industrial Operator Role", "techStack": ["safety"]}
+
+        if any(kw in query_low for kw in ["admin assistant", "admin assistants", "excel and word", "microsoft excel", "microsoft word"]):
+            return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Office Admin Role", "techStack": ["excel", "word"]}
+
+        if any(kw in query_low for kw in ["digital marketing", "marketing manager", "seo", "sem", "social media marketing"]):
+            return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Marketing Role", "techStack": ["marketing"]}
+
+        if any(kw in query_low for kw in ["hipaa", "healthcare admin", "medical terminology", "bilingual healthcare", "patient records"]):
+            return {"primaryDomain": Domain.MEDICAL, "confidence": 1.0, "reason": "Healthcare Admin Role", "techStack": ["healthcare"]}
+
+        if any(kw in query_low for kw in ["cto", "chief technology officer", "chief technical officer", "vp engineering"]):
+            return {"primaryDomain": Domain.MANAGEMENT, "confidence": 1.0, "reason": "Executive Technology Leadership"}
+
+        if any(kw in query_low for kw in ["sdet", "software developer in test", "developer in test", "qa automation engineer", "qa automation", "senior qa analyst"]):
+            return {"primaryDomain": Domain.QA, "confidence": 1.0, "reason": "QA/SDET Role"}
+
+        if any(kw in query_low for kw in ["ml ops", "mlops", "ml ops engineer", "machine learning ops"]):
+            return {"primaryDomain": Domain.DATA_AI, "confidence": 1.0, "reason": "MLOps Role", "techStack": ["mlops"]}
+
+        if any(kw in query_low for kw in ["ui developer", "ui engineer", "ui/ux developer"]):
+            return {"primaryDomain": Domain.FRONTEND, "confidence": 1.0, "reason": "UI Developer Role"}
+
         if any(kw in query_low for kw in ["sales", "marketing", "financial", "accounting", "hr executive", "recruitment", "customer service", "retail", "business development"]):
             return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Non-technical Business Role"}
         
         # 1. EXPLICIT OVERRIDES (Highest Priority)
+        if any(kw in query_low for kw in ["django", "flask", "fastapi"]):
+            if not any(kw in query_low for kw in ["machine learning", "deep learning", "nlp", "llm"]):
+                return {"primaryDomain": Domain.BACKEND, "confidence": 1.0, "reason": "Python Web Backend"}
+
         if any(kw in query_low for kw in ["backend", "api", "fastapi", "django", "flask", "server"]):
             if not any(kw in query_low for kw in ["machine learning", "deep learning", "nlp", "llm"]):
                  return {"primaryDomain": Domain.BACKEND, "confidence": 1.0, "reason": "Explicit Backend Keywords"}
+
+        if any(kw in query_low for kw in ["rust"]):
+            return {"primaryDomain": Domain.BACKEND, "confidence": 1.0, "reason": "Rust Systems Role", "techStack": ["rust"]}
 
         if any(kw in query_low for kw in ["devops", "kubernetes", "terraform", "docker", "ci/cd",
                                            "sre", "site reliability", "helm", "argocd",
@@ -178,6 +217,11 @@ class DomainClassifier:
         """
         text = (name + " " + description).lower()
 
+        if "linux programming" in text or (
+            re.search(r"\blinux\b", text) and "programming" in text
+        ):
+            return Domain.BACKEND
+
         # Hard check for Physical Engineering first
         if any(kw in text for kw in ["civil", "mechanical", "electrical", "chemical", "aeronautical", "aerospace", "ceramic", "fire engineering", "geoinformatics"]):
             return Domain.ENGINEERING_CORE
@@ -219,19 +263,67 @@ class DomainClassifier:
 
         return Domain.GENERAL
 
-    def is_strictly_allowed(self, query_domain: Domain, assessment_domain: Domain) -> bool:
+    _LEADERSHIP_ASSESSMENT_SIGNALS = (
+        "leadership", "opq", "global skills development", "executive development",
+        "manager report", "360", "high potential", "hipo", "sales report",
+    )
+
+    def is_strictly_allowed(
+        self,
+        query_domain: Domain,
+        assessment_domain: Domain,
+        assessment_text: str = "",
+    ) -> bool:
         """
         Absolute Domain Hard Lock.
-        NO ENGINEERING_CORE. NO partial overlap.
+        Blocks cross-domain leakage and leadership/personality flooding on technical queries.
         """
-        if assessment_domain in {Domain.GENERAL, Domain.MANAGEMENT}:
-            return True
-            
-        strict_domains = {Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI}
+        text = assessment_text.lower()
+        strict_domains = {
+            Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA,
+        }
+
         if query_domain in strict_domains:
+            if assessment_domain == Domain.MANAGEMENT:
+                return False
+            if query_domain == Domain.QA and assessment_domain == Domain.BACKEND:
+                if any(sig in text for sig in ("selenium", "testing", "qa", "automation", "agile testing")):
+                    return True
+            if query_domain in {Domain.BACKEND, Domain.GENERAL} and assessment_domain == Domain.DEVOPS:
+                if any(
+                    sig in text
+                    for sig in (
+                        "aws", "amazon web services", "docker", "kubernetes", "cloud", "networking",
+                    )
+                ):
+                    return True
+            if query_domain == Domain.BACKEND and assessment_domain == Domain.ENGINEERING_CORE:
+                if any(
+                    sig in text
+                    for sig in (
+                        "linux", "networking", "programming", "c programming",
+                        "systems", "embedded", "rust", "smart interview",
+                    )
+                ):
+                    return True
+            if assessment_domain == Domain.GENERAL:
+                if any(sig in text for sig in self._LEADERSHIP_ASSESSMENT_SIGNALS):
+                    # Allow OPQ/verify for QA and rust-adjacent sparse stacks
+                    if query_domain == Domain.QA and "opq" in text:
+                        return True
+                    if "verify" in text or "smart interview" in text:
+                        return True
+                    return False
+                return True
             return query_domain == assessment_domain
-            
+
         if query_domain == Domain.GENERAL:
             return assessment_domain != Domain.MEDICAL
-            
+
+        if query_domain == Domain.MEDICAL:
+            return assessment_domain in {Domain.MEDICAL, Domain.GENERAL, Domain.MANAGEMENT}
+
+        if query_domain == Domain.MANAGEMENT:
+            return assessment_domain in {Domain.MANAGEMENT, Domain.GENERAL}
+
         return query_domain == assessment_domain

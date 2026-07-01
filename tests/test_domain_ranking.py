@@ -82,3 +82,47 @@ def test_qa_ranking(catalog):
     ]
     results = _rank_pool(catalog, "qa engineer", set(), pool)
     assert results[0].assessment.id == "automata-selenium"
+
+
+def test_safety_ranking(catalog):
+    pool = [
+        "dependability-and-safety-instrument-dsi",
+        "manufac-indust-safety-dependability-8-0",
+        "core-java-advanced-level-new",
+        "occupational-personality-questionnaire-opq32r",
+    ]
+    results = _rank_pool(catalog, "plant operator", set(), pool)
+    top = results[0].assessment.id
+    assert top in {"dependability-and-safety-instrument-dsi", "manufac-indust-safety-dependability-8-0"}
+
+
+def test_django_backend_ranking(catalog):
+    pool = [
+        "python-new",
+        "automata-front-end",
+        "occupational-personality-questionnaire-opq32r",
+    ]
+    results = _rank_pool(catalog, "django developer", {"python", "django"}, pool)
+    assert results[0].assessment.id == "python-new"
+
+
+def test_spring_boot_ranking(catalog):
+    pool = [
+        "spring-new",
+        "core-java-advanced-level-new",
+        "javascript-new",
+    ]
+    results = _rank_pool(catalog, "spring boot developer", {"java", "spring"}, pool)
+    top_ids = [r.assessment.id for r in results[:2]]
+    assert "spring-new" in top_ids or "core-java-advanced-level-new" in top_ids
+
+
+def test_admin_assistant_ranking(catalog):
+    pool = [
+        "microsoft-excel-365-essentials-new",
+        "microsoft-word-365-essentials-new",
+        "core-java-advanced-level-new",
+    ]
+    results = _rank_pool(catalog, "admin assistant", set(), pool)
+    top_ids = {r.assessment.id for r in results[:2]}
+    assert "microsoft-excel-365-essentials-new" in top_ids or "microsoft-word-365-essentials-new" in top_ids

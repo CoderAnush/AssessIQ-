@@ -1,7 +1,12 @@
-# AssessIQ Smoke Export - 2026-05-10T18:55:24.962445+00:00
+# AssessIQ Smoke Export - 2026-07-01T19:38:02.319378+00:00
 
 ## Query
 
-I do not have enough grounded catalog data to compare these assessments.
+Compare these assessments:
+
+### Comparison: technical verification vs leadership assessment
+| Dimension | technical verification | leadership assessment |
+| :--- | :--- | :--- |
+*One or both assessments could not be resolved. Please provide exact assessment names.*
 
 ## Recommendations

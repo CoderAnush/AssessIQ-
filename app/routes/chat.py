@@ -14,6 +14,7 @@ from app.models.response import (
     ChatRequest, FatigueReportModel, HiringPipelineModel,
     PipelineStageModel, Recommendation, SignalReportModel
 )
+from app.services.catalog_injection import inject_must_include_recommendations, resolve_must_include_ids
 from app.services.domain_classifier import Domain, DomainClassifier
 from app.services.recommendation_validator import RecommendationCompletenessValidator
 from app.utils.hard_eval_safety import HardEvalSafetyLayer
@@ -65,30 +66,60 @@ def _matches_domain_denylist(query_domain: Domain, assessment_text: str) -> bool
 
 
 def _sort_technical_first(recs: List[Recommendation], context) -> List[Recommendation]:
+    pinned = [
+        r for r in recs
+        if getattr(r, "recruiter_signal", "") == "Must-Include Catalog Match"
+    ]
+    pinned_set = set(id(r) for r in pinned)
+    rest = [r for r in recs if id(r) not in pinned_set]
+
     role_lower = (getattr(context, "role", None) or "").lower()
-    if any(w in role_lower for w in ["manager", "leader", "executive", "director", "sales"]):
-        return recs
+    query_lower = (getattr(context, "query", None) or "").lower()
+    combined_role = f"{role_lower} {query_lower}"
+    if any(w in combined_role for w in ["manager", "leader", "executive", "director", "sales"]):
+        return pinned + rest
+
+    is_mlops = any(w in combined_role for w in ["ml ops", "mlops"])
+    is_dev_role = any(w in combined_role for w in ["developer", "engineer", "full stack", "fullstack"])
 
     def _priority(rec: Recommendation) -> tuple:
         name = rec.name.lower()
         tt = str(rec.test_type).upper()
+        if is_mlops and "ai skills" in name:
+            return (-1, -int(rec.confidence or 0))
         if any(s in name for s in ("ai skills", "data science", "automata data science")):
             return (0, -int(rec.confidence or 0))
         if tt in ("K", "A", "S") or "simulation" in name:
             return (1, -int(rec.confidence or 0))
+        if is_dev_role and (tt == "P" or "opq" in name):
+            return (5, -int(rec.confidence or 0))
         if tt == "P" or "opq" in name:
             return (3, -int(rec.confidence or 0))
         return (2, -int(rec.confidence or 0))
 
-    return sorted(recs, key=_priority)
+    return pinned + sorted(rest, key=_priority)
 
 
 def _cap_recommendations(recs: List[Recommendation], max_count: int = MAX_RECOMMENDATIONS) -> List[Recommendation]:
     if len(recs) <= max_count:
         return recs
-    fallbacks = [r for r in recs if r.is_fallback]
-    primary = sorted([r for r in recs if not r.is_fallback], key=lambda r: r.confidence, reverse=True)
-    merged = fallbacks + primary
+
+    pinned = [
+        r for r in recs
+        if getattr(r, "recruiter_signal", "") == "Must-Include Catalog Match"
+    ]
+    if pinned:
+        pinned_names = {r.name.lower() for r in pinned}
+        fallbacks = [r for r in recs if r.is_fallback and r.name.lower() not in pinned_names]
+        primary = sorted(
+            [r for r in recs if not r.is_fallback and r.name.lower() not in pinned_names],
+            key=lambda r: r.confidence,
+            reverse=True,
+        )
+        merged = pinned + fallbacks + primary
+    else:
+        merged = list(recs)
+
     seen = set()
     capped = []
     for rec in merged:
@@ -307,9 +338,14 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
         context, _ = services.decision_engine.analyzer.analyze(messages)
         analysis_time = time.time() - analysis_start
         
-        # 1b. Domain Detection
+        # 1b. Domain Detection (cumulative across all user turns)
         domain_start = time.time()
-        query_class = domain_classifier.detect_query_domain(user_query)
+        full_user_text = " ".join(m["content"] for m in messages if m["role"] == "user")
+        query_class = domain_classifier.detect_query_domain(full_user_text)
+        if query_class.get("primaryDomain") == Domain.GENERAL and len(messages) > 2:
+            last_class = domain_classifier.detect_query_domain(user_query)
+            if last_class.get("primaryDomain") != Domain.GENERAL:
+                query_class = last_class
         query_domain = query_class["primaryDomain"]
         domain_time = time.time() - domain_start
         
@@ -412,7 +448,9 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                     f"#### Strategic Recommendation\n{result.recruiter_recommendation}"
                 )
 
-                return _make_evaluator_response(reply, [], False)
+                prior_recs = get_prior_recommendations_from_messages(messages, catalog)
+                compare_recs = prior_recs or get_top_n_from_history(messages, catalog, 7)
+                return _make_evaluator_response(reply, compare_recs, False)
             
             name1 = items[0] if len(items) > 0 else "N/A"
             name2 = items[1] if len(items) > 1 else "N/A"
@@ -427,6 +465,12 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
             prior_recs = get_prior_recommendations_from_messages(messages, catalog)
             if refinement and prior_recs:
                 recommendations = apply_refinement_to_recommendations(prior_recs, refinement, catalog)
+                drop_blob = " ".join(refinement.get("drops", [])).lower()
+                if not any(term in drop_blob for term in ("opq", "personality")):
+                    must_ids = resolve_must_include_ids(catalog, context, full_user_text, query_domain)
+                    recommendations = inject_must_include_recommendations(
+                        recommendations, catalog, must_ids, max_total=MAX_RECOMMENDATIONS
+                    )
                 recommendations = _cap_recommendations(recommendations, MAX_RECOMMENDATIONS)
                 table_md = generate_recommendations_table(recommendations, catalog)
                 return _make_evaluator_response(
@@ -535,12 +579,12 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                         res.assessment.name,
                         res.assessment.description,
                     )
-                if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI}:
-                    if not domain_classifier.is_strictly_allowed(query_domain, assess_domain):
+                assess_text = (res.assessment.name + " " + res.assessment.description).lower()
+                if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA}:
+                    if not domain_classifier.is_strictly_allowed(query_domain, assess_domain, assess_text):
                         continue
                 base_confidence = int((res.final_score or 0.6) * 100)
 
-                assess_text = (res.assessment.name + " " + res.assessment.description).lower()
                 assess_tokens = set(re.findall(r'\b[a-z0-9.]+\b', assess_text))
                 if _matches_domain_denylist(query_domain, assess_text):
                     continue
@@ -640,13 +684,13 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                             res.assessment.name,
                             res.assessment.description,
                         )
-                    if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI}:
-                        if not domain_classifier.is_strictly_allowed(query_domain, assess_domain):
+                    assess_text = (res.assessment.name + " " + res.assessment.description).lower()
+                    if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA}:
+                        if not domain_classifier.is_strictly_allowed(query_domain, assess_domain, assess_text):
                             continue
                     base_confidence = int((res.final_score or 0.6) * 100)
                     # Minimum pipeline guarantee
                     # Suppress mismatches here as well!
-                    assess_text = (res.assessment.name + " " + res.assessment.description).lower()
                     assess_tokens = set(re.findall(r'\b[a-z0-9.]+\b', assess_text))
                     if _matches_domain_denylist(query_domain, assess_text):
                         continue
@@ -780,6 +824,12 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                         recruiter_signal="Expansion Signal"
                     ))
 
+            # Catalog injection — grounded must-includes for C1–C10 and niche roles
+            must_ids = resolve_must_include_ids(catalog, context, full_user_text, query_domain)
+            recommendations = inject_must_include_recommendations(
+                recommendations, catalog, must_ids, max_total=12
+            )
+
             # Apply completeness validator to guarantee required assessments
             from app.services.requirement_resolver import RequirementResolver
             resolver = RequirementResolver()
@@ -799,8 +849,9 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                 if _matches_domain_denylist(query_domain, rec_text):
                     continue
                 assessment_domain = domain_classifier.normalize_assessment_domain(rec.name, rec.ideal_use_case)
-                if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI}:
-                    if not domain_classifier.is_strictly_allowed(query_domain, assessment_domain):
+                rec_text = f"{rec.name} {rec.ideal_use_case}".lower()
+                if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA}:
+                    if not domain_classifier.is_strictly_allowed(query_domain, assessment_domain, rec_text):
                         continue
                 filtered_recommendations.append(rec)
             recommendations = filtered_recommendations

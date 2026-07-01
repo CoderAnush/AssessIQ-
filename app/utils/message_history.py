@@ -245,6 +245,9 @@ def apply_refinement_to_recommendations(
 
     for drop in drops:
         drop_low = drop.lower()
+        if "opq" in drop_low:
+            result = [r for r in result if "opq" not in r.name.lower()]
+            continue
         result = [
             r for r in result
             if drop_low not in r.name.lower()
@@ -261,12 +264,26 @@ def apply_refinement_to_recommendations(
         ]
 
     for add_term in adds:
-        add_low = add_term.lower()
-        existing_names = {r.name.lower() for r in result}
-        for a in catalog.values():
-            text = (a.name + " " + a.description).lower()
-            if add_low in text or add_low in a.name.lower():
-                if a.name.lower() not in existing_names:
-                    result.append(_recommendation_from_assessment(a))
-                    break
+        parts = re.split(r"\s+and\s+", add_term.lower())
+        for part in parts:
+            add_low = part.strip().strip(".")
+            if not add_low or add_low.startswith("drop"):
+                continue
+            tech_aliases = {
+                "aws": "amazon web services",
+                "docker": "docker",
+                "sql": "sql",
+                "spring": "spring",
+                "java": "java",
+                "rest": "rest",
+            }
+            search_term = tech_aliases.get(add_low.split()[0], add_low)
+            existing_names = {r.name.lower() for r in result}
+            for a in catalog.values():
+                text = (a.name + " " + a.description).lower()
+                if search_term in text or add_low in a.name.lower():
+                    if a.name.lower() not in existing_names:
+                        result.append(_recommendation_from_assessment(a))
+                        existing_names.add(a.name.lower())
+                        break
     return result[:10]

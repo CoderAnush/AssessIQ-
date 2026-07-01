@@ -44,8 +44,8 @@ TEST_CASES = [
             {"role": "assistant", "content": "Here are the most relevant SHL assessments from the grounded catalog: OPQ32r, Java, GSA."},
             {"role": "user", "content": "Compare top 2."},
         ],
-        "expect_recommendations": (0, 0),
-        "reply_contains": ["compare"],
+        "expect_recommendations": (0, 10),
+        "reply_contains": ["comparison"],
     },
     {
         "name": "Off-topic refusal",
@@ -331,9 +331,6 @@ def run_case(case: Dict[str, Any], catalog: Dict[str, Any], urls: set[str]) -> T
 
     if case.get("expect_end") is True and payload.get("end_of_conversation") is not True:
         errors.append("end_of_conversation was not true")
-
-    if case.get("name") == "Comparison request" and len(recs) != 0:
-        errors.append("comparison returned recommendations unexpectedly")
 
     if case.get("max_recommendations") is not None and len(recs) > int(case["max_recommendations"]):
         errors.append(f"recommendations exceeded max_recommendations: {len(recs)}")

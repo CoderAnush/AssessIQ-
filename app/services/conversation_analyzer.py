@@ -24,6 +24,7 @@ class UserIntent(str, Enum):
 @dataclass
 class HiringContext:
     role: Optional[str] = None
+    query: Optional[str] = None
     domain: str = "general"
     seniority: str = "mid"
     tech_stack: Set[str] = field(default_factory=set)
@@ -160,6 +161,12 @@ class ConversationAnalyzer:
                     else:
                         context.tech_stack.update(new_tech)
 
+                # Parse add/drop refinement verbs (C9 battery and similar)
+                self._apply_tech_refinements(context, msg_text)
+                for tok in ["aws", "docker", "spring", "sql", "kubernetes", "terraform", "angular", "react", "java"]:
+                    if tok in msg_text and re.search(r"\badd\b", msg_text):
+                        context.tech_stack.add(tok.title() if tok != "aws" else "AWS")
+
         # Ensure default seniority if not specified
         if not context.seniority:
             context.seniority = "mid"
@@ -185,11 +192,19 @@ class ConversationAnalyzer:
             if any(t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "machine learning"]):
                 inferred_tech.extend(["Python", "Machine Learning", "Data Science"])
             if "django" in role_lower:
-                inferred_tech.append("Django")
+                inferred_tech.extend(["Django", "Python"])
+            if "flask" in role_lower or "fastapi" in role_lower:
+                inferred_tech.extend(["Python", "Flask" if "flask" in role_lower else "FastAPI"])
+            if "platform" in role_lower:
+                inferred_tech.extend(["Docker", "Kubernetes", "Cloud"])
+            if "spring boot" in role_lower or "springboot" in role_lower:
+                inferred_tech.extend(["Java", "Spring"])
+            if "ui developer" in role_lower or "ui engineer" in role_lower:
+                inferred_tech.append("React")
             if inferred_tech:
                 context.tech_stack = set(inferred_tech)
         
-        if any(w in full_text for w in ["leadership", "executive", "director", "cxo", "vp ", "chief"]):
+        if any(w in full_text for w in ["leadership", "executive", "director", "cxo", "vp ", "chief", "cto"]):
             context.leadership_needs = True
 
         context.domain = self._infer_domain(context.role, context.tech_stack, full_text)
@@ -280,6 +295,43 @@ class ConversationAnalyzer:
 
         return context, intent
 
+    def _apply_tech_refinements(self, context: HiringContext, msg_text: str) -> None:
+        """Apply add/drop/remove refinements to accumulated tech stack."""
+        drop_patterns = [
+            r"(?:drop|remove)\s+(?:the\s+)?([\w\s./+#]+?)(?:\.|,|$|\s+and\s+)",
+            r"without\s+(?:the\s+)?([\w\s./+#]+?)(?:\.|,|$)",
+        ]
+        add_patterns = [
+            r"(?:add|include)\s+(?:a\s+|an\s+|the\s+)?([\w\s./+#]+?)(?:\.|,|$|\s+and\s+)",
+            r"also\s+add\s+(?:a\s+|an\s+|the\s+)?([\w\s./+#]+?)(?:\.|,|$)",
+        ]
+
+        for pat in drop_patterns:
+            for match in re.finditer(pat, msg_text):
+                token = match.group(1).strip().lower()
+                if not token:
+                    continue
+                context.tech_stack = {
+                    t for t in context.tech_stack
+                    if token not in t.lower() and t.lower() not in token
+                }
+                if token in {"rest", "restful", "rest api", "rest apis"}:
+                    context.tech_stack = {
+                        t for t in context.tech_stack
+                        if "rest" not in t.lower()
+                    }
+
+        for pat in add_patterns:
+            for match in re.finditer(pat, msg_text):
+                token = match.group(1).strip()
+                if not token:
+                    continue
+                found = self._extract_tech_stack(token.lower())
+                if found:
+                    context.tech_stack.update(found)
+                else:
+                    context.tech_stack.add(token.title())
+
     def _extract_role(self, text: str) -> Optional[str]:
         text_lower = text.lower()
 
@@ -308,6 +360,10 @@ class ConversationAnalyzer:
             "data scientist", "machine learning engineer", "ml engineer", "ml ops",
             "data engineer", "ai engineer", "ai architect", "data analyst",
             "platform engineer", "systems engineer", "embedded developer",
+            "spring boot developer", "spring boot engineer", "spring boot",
+            "ui/ux developer", "digital marketing manager", "digital marketing",
+            "admin assistant", "office administrator", "healthcare administrator",
+            "plant operator", "safety officer", "chief technology officer",
             # QA/DevOps
             "qa automation", "sdet", "test automation", "qa engineer",
             "devops engineer", "sre", "site reliability", "cloud engineer",

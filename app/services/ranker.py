@@ -71,7 +71,7 @@ class RecruiterRanker:
         # 1. Role Match (domain_match - 25% weight, max 1.0)
         role_score = 0.1
         candidate_name_lower = assessment.name.lower()
-        if "backend" in role_lower or "java" in role_lower or "python" in role_lower or "node" in role_lower:
+        if "backend" in role_lower or "java" in role_lower or "python" in role_lower or "node" in role_lower or "django" in role_lower or "flask" in role_lower or "fastapi" in role_lower:
             if "backend" in candidate_text or "java" in candidate_text or "python" in candidate_text or "node" in candidate_text:
                 role_score = 1.0
             elif "developer" in candidate_text or "engineer" in candidate_text:
@@ -81,7 +81,7 @@ class RecruiterRanker:
             if "java" in role_lower and not any(t in role_lower for t in ["frontend", "react", "angular", "vue"]):
                 if "front end" in candidate_text or "front-end" in candidate_name_lower:
                     role_score = min(role_score, 0.1)
-        elif "frontend" in role_lower or "react" in role_lower or "javascript" in role_lower or "angular" in role_lower or "vue" in role_lower:
+        elif "frontend" in role_lower or "react" in role_lower or "javascript" in role_lower or "angular" in role_lower or "vue" in role_lower or "ui developer" in role_lower or "ui engineer" in role_lower:
             if "frontend" in candidate_text or "react" in candidate_text or "javascript" in candidate_text or "angular" in candidate_text or "vue" in candidate_text:
                 role_score = 1.0
             elif "developer" in candidate_text or "engineer" in candidate_text:
@@ -91,12 +91,19 @@ class RecruiterRanker:
         elif "qa" in role_lower or "sdet" in role_lower or "test" in role_lower:
             if "qa" in candidate_text or "sdet" in candidate_text or "test" in candidate_text:
                 role_score = 1.0
-        elif "devops" in role_lower or "cloud" in role_lower or "sre" in role_lower:
+        elif "devops" in role_lower or "cloud" in role_lower or "sre" in role_lower or "platform" in role_lower:
             if "devops" in candidate_text or "cloud" in candidate_text or "sre" in candidate_text:
                 role_score = 1.0
             if any(t in candidate_text for t in ["linux", "kubernetes", "docker", "cloud", "terraform", "infrastructure"]):
                 role_score = max(role_score, 1.0)
-        elif any(t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "machine learning", "deep learning", "nlp", "llm"]):
+        elif any(t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "mlops", "machine learning", "deep learning", "nlp", "llm"]):
+            if "ml ops" in role_lower or "mlops" in role_lower:
+                if "ai skills" in candidate_name_lower:
+                    role_score = 1.0
+                elif any(t in candidate_text for t in ["docker", "kubernetes", "cloud", "devops"]):
+                    role_score = max(role_score, 0.95)
+                elif any(t in candidate_text for t in ["data science", "automata data science"]):
+                    role_score = max(role_score, 0.7)
             if "ai skills" in candidate_name_lower:
                 role_score = 1.0
             elif any(t in candidate_text for t in ["ai", "ml", "machine learning", "deep learning", "nlp", "llm", "data science", "data engineer", "data scientist"]):
@@ -116,6 +123,8 @@ class RecruiterRanker:
         elif "full stack" in role_lower or "fullstack" in role_lower:
             if any(t in candidate_text for t in ["full stack", "fullstack"]):
                 role_score = 1.0
+            elif any(t in candidate_text for t in ["java", "spring", "react", "docker", "sql", "aws", "python", "javascript"]):
+                role_score = max(role_score, 0.95)
             elif any(t in candidate_text for t in ["backend", "frontend"]):
                 role_score = 0.7
         elif "embedded" in role_lower or "firmware" in role_lower:
@@ -123,7 +132,7 @@ class RecruiterRanker:
                 role_score = 1.0
             elif "engineer" in candidate_text:
                 role_score = 0.5
-        elif "manager" in role_lower or "leader" in role_lower or "executive" in role_lower or "director" in role_lower:
+        elif "manager" in role_lower or "leader" in role_lower or "executive" in role_lower or "director" in role_lower or "cto" in role_lower or "chief" in role_lower:
             if "leadership" in candidate_text or "manager" in candidate_text or "executive" in candidate_text or "opq" in candidate_text:
                 role_score = 1.0
         elif any(w in role_lower for w in ["graduate", "trainee", "entry"]) or "graduate" in (context.query or "").lower():
@@ -135,8 +144,28 @@ class RecruiterRanker:
         elif any(w in role_lower for w in ["financial", "finance", "analyst"]) or "financial analyst" in role_lower:
             if any(w in candidate_text for w in ["financial accounting", "basic statistics", "numerical reasoning", "graduate scenarios", "financial"]):
                 role_score = 1.0
+        elif any(t in role_lower for t in ["django", "flask", "fastapi"]):
+            if "python" in candidate_text or any(t in candidate_text for t in ["django", "flask", "fastapi"]):
+                role_score = 1.0
+            elif "backend" in candidate_text:
+                role_score = 0.75
+        elif "ui developer" in role_lower or ("ui " in role_lower and "developer" in role_lower):
+            if any(t in candidate_text for t in ["ui", "frontend", "javascript", "react", "angular", "css", "html"]):
+                role_score = 1.0
         elif "rust" in role_lower or (context.query and "rust" in context.query.lower()):
             if any(w in candidate_text for w in ["linux programming", "networking", "live coding", "smart interview"]):
+                role_score = 1.0
+        elif any(w in role_lower for w in ["plant operator", "safety"]) or "safety is" in (context.query or "").lower():
+            if any(w in candidate_text for w in ["safety", "dependability", "dsi", "workplace health"]):
+                role_score = 1.0
+        elif "admin assistant" in role_lower or ("admin" in role_lower and "assistant" in role_lower):
+            if any(w in candidate_text for w in ["excel", "word", "microsoft"]):
+                role_score = 1.0
+        elif "marketing" in role_lower or "seo" in role_lower or "sem" in role_lower:
+            if "marketing" in candidate_text:
+                role_score = 1.0
+        elif "spring" in role_lower or (context.tech_stack and any("spring" in t.lower() for t in context.tech_stack)):
+            if "spring" in candidate_text or "java framework" in candidate_text:
                 role_score = 1.0
         else:
             role_score = 0.5
