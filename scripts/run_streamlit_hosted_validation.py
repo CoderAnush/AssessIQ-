@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import re
 import time
 from pathlib import Path
 
@@ -28,8 +27,30 @@ QUERIES = [
 ]
 
 
+def app_frame(page):
+    for frame in page.frames:
+        if "~/+/" in (frame.url or ""):
+            return frame
+    return page
+
+
+def chat_input(page):
+    frame = app_frame(page)
+    loc = frame.get_by_placeholder("Describe the role or hiring need...")
+    if loc.count() == 0:
+        loc = frame.locator('[data-testid="stChatInput"] textarea')
+    return loc.first
+
+
 def count_cards(page) -> int:
-    return page.locator("div.rec-card").count()
+    return app_frame(page).locator("div.rec-card").count()
+
+
+def send_chat(page, text: str) -> None:
+    box = chat_input(page)
+    box.wait_for(state="visible", timeout=60000)
+    box.fill(text)
+    box.press("Enter")
 
 
 def main() -> None:
@@ -46,12 +67,9 @@ def main() -> None:
             err = ""
             try:
                 if slug != "01_java_backend":
-                    page.get_by_role("button", name="Clear conversation").click(timeout=15000)
+                    app_frame(page).get_by_role("button", name="Clear conversation").click(timeout=15000)
                     page.wait_for_timeout(1500)
-                chat = page.locator('textarea[aria-label="Describe the role or hiring need..."]')
-                chat.wait_for(state="visible", timeout=60000)
-                chat.fill(query)
-                chat.press("Enter")
+                send_chat(page, query)
                 page.wait_for_timeout(45000)
                 cards = count_cards(page)
                 ok = True

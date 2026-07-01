@@ -1,0 +1,98 @@
+[
+  {
+    "name": "pytest",
+    "exit_code": 0,
+    "passed_gate": true,
+    "elapsed_s": 40.8,
+    "tail": "e `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/\n    warnings.warn('The `dict` method is deprecated; use `model_dump` instead.', DeprecationWarning)\n\ntests/test_conversation_regression.py: 35 warnings\n  C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\app\\utils\\hard_eval_safety.py:93: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/\n    return True, None, model.dict()\n\ntests/test_integration.py::test_pipeline_integration\n  C:\\Users\\anush\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\_pytest\\python.py:198: PytestReturnNotNoneWarning: Expected None, but tests/test_integration.py::test_pipeline_integration returned True, which will be an error in a future version of pytest.  Did you mean to use `assert` instead of `return`?\n    warnings.warn(\n\ntests/test_integration.py::test_simple_chat\n  C:\\Users\\anush\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\_pytest\\python.py:198: PytestReturnNotNoneWarning: Expected None, but tests/test_integration.py::test_simple_chat returned True, which will be an error in a future version of pytest.  Did you mean to use `assert` instead of `return`?\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n50 passed, 244 warnings in 38.34s\n"
+  },
+  {
+    "name": "eval_suite",
+    "exit_code": 0,
+    "passed_gate": true,
+    "elapsed_s": 5.6,
+    "tail": "on\nPASS (0.23s)\n\nSummary: 1 passed, 0 failed out of 15 cases\n\nCASE: Direct recommendation\nPASS (0.59s)\n\nSummary: 2 passed, 0 failed out of 15 cases\n\nCASE: Refinement behavior\nPASS (0.59s)\n\nSummary: 3 passed, 0 failed out of 15 cases\n\nCASE: Comparison request\nPASS (0.03s)\n\nSummary: 4 passed, 0 failed out of 15 cases\n\nCASE: Off-topic refusal\nPASS (0.04s)\n\nSummary: 5 passed, 0 failed out of 15 cases\n\nCASE: Prompt injection refusal\nPASS (0.29s)\n\nSummary: 6 passed, 0 failed out of 15 cases\n\nCASE: Hallucination prevention\nPASS (0.24s)\n\nSummary: 7 passed, 0 failed out of 15 cases\n\nCASE: Invalid catalog prevention\nPASS (0.04s)\n\nSummary: 8 passed, 0 failed out of 15 cases\n\nCASE: Max recommendation count\nPASS (0.37s)\n\nSummary: 9 passed, 0 failed out of 15 cases\n\nCASE: Recruiter correction flow\nPASS (0.08s)\n\nSummary: 10 passed, 0 failed out of 15 cases\n\nCASE: Role change mid conversation\nPASS (0.58s)\n\nSummary: 11 passed, 0 failed out of 15 cases\n\nCASE: Short ambiguous replies\nPASS (0.09s)\n\nSummary: 12 passed, 0 failed out of 15 cases\n\nCASE: Turn cap compliance\nPASS (0.19s)\n\nSummary: 13 passed, 0 failed out of 15 cases\n\nCASE: Stateless replay testing\nPASS (0.23s)\n\nSummary: 14 passed, 0 failed out of 15 cases\n\nCASE: Malformed request handling\nPASS (0.02s)\n\nSummary: 15 passed, 0 failed out of 15 cases\n\n================================================================================\nRESULT: 15 passed, 0 failed\n================================================================================\n"
+  },
+  {
+    "name": "acceptance",
+    "exit_code": 0,
+    "passed_gate": true,
+    "elapsed_s": 13.0,
+    "tail": "PASS (Only behavioral/cognitive remain)\nExecuting Scenario 25...\nScenario 25: PASS (Comparison table rendered)\nExecuting Scenario 26...\nScenario 26: PASS (Comparison table rendered)\nExecuting Scenario 27...\nScenario 27: PASS (Valid chat reply received)\nExecuting Scenario 28...\nScenario 28: PASS (Valid chat reply received)\nExecuting Scenario 29...\nScenario 29: PASS (Valid chat reply received)\nExecuting Scenario 30...\nScenario 30: PASS (Valid chat reply received)\nExecuting Scenario 31...\nScenario 31: PASS (Valid chat reply received)\nExecuting Scenario 32...\nScenario 32: PASS (Refusal handled correctly)\nExecuting Scenario 33...\nScenario 33: PASS (Refusal handled correctly)\nExecuting Scenario 34...\nScenario 34: PASS (Refusal handled correctly)\nExecuting Scenario 35...\nScenario 35: PASS (Off-topic request refused)\nExecuting Scenario 36...\nScenario 36: PASS (Off-topic request refused)\nExecuting Scenario 37...\nScenario 37: PASS (Off-topic request refused)\nExecuting Scenario 38...\nScenario 38: PASS (Off-topic request refused)\nExecuting Scenario 39...\nScenario 39: PASS (Asked clarification)\nExecuting Scenario 40...\nScenario 40: PASS (Correctly recognized Java/Spring boot from typo query)\nExecuting Scenario 41...\nScenario 41: PASS (Recommendations generated)\nExecuting Scenario 42...\nScenario 42: PASS (Recommendations generated)\nExecuting Scenario 43...\nScenario 43: PASS (Asked clarification)\nSummary: 43/43 passed, 0 failed\nTest run completed. Results saved to scratch/test_results.json\n",
+    "passed": 43,
+    "failed": 0,
+    "scenario_41": {
+      "id": 41,
+      "prompt": "Hiring a Full Stack Engineer with Java, Spring Boot, React, Next.js, AWS, Docker, Kubernetes, Leadership, and Communication skills.",
+      "expected": "Recommendations generated",
+      "actual": "Recs count: 7",
+      "reply": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Java Frameworks (New) | K | Knowledge & Skills | 17 minutes | English (USA) | <https://www.shl.com/products/product-catalog/view/java-frameworks-new> |\n| 2 | Spring (New) | K | Knowledge & Skills | 9 minutes | English (USA) | <https://www.shl.com/products/product-catalog/view/spring-new> |\n| 3 | SQL Server Integration Services (SSIS) (New) | K | Knowledge & Skills | 10 minutes | English (USA) | <https://www.shl.com/products/product-catalog/view/sql-server-integration-services-ssis-new> |\n| 4 | Amazon Web Services (AWS) Development (New) | K | Knowledge & Skills | 6 minutes | English (USA) | <https://www.shl.com/products/product-catalog/view/amazon-web-services-aws-development-new> |\n| 5 | Docker (New) | K | Knowledge & Skills | 10 minutes | English (USA) | <https://www.shl.com/products/product-catalog/view/docker-new> |\n| 6 | Core Java (Advanced Level) (New) | K | Knowledge & Skills | 13 minutes | English (USA) | <https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new> |\n| 7 | Occupational Personality Questionnaire OPQ32r | P | Personality & Behavior | 25 minutes | English International (+38 more) | <https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r> |\n\nSpecialized assessments for React/Redux are limited in the current catalog. Showing closest validated frontend engineering competencies. Standardized Success: Pipeline matches enterprise requirements for technical precision.",
+      "recs": [
+        "Java Frameworks (New)",
+        "Spring (New)",
+        "SQL Server Integration Services (SSIS) (New)",
+        "Amazon Web Services (AWS) Development (New)",
+        "Docker (New)",
+        "Core Java (Advanced Level) (New)",
+        "Occupational Personality Questionnaire OPQ32r"
+      ],
+      "urls": [
+        "https://www.shl.com/products/product-catalog/view/java-frameworks-new",
+        "https://www.shl.com/products/product-catalog/view/spring-new",
+        "https://www.shl.com/products/product-catalog/view/sql-server-integration-services-ssis-new",
+        "https://www.shl.com/products/product-catalog/view/amazon-web-services-aws-development-new",
+        "https://www.shl.com/products/product-catalog/view/docker-new",
+        "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
+        "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r"
+      ],
+      "confidence": 0,
+      "latency": 531.7535400390625,
+      "console_errors": "None",
+      "network_errors": "None",
+      "passed": true,
+      "reason": "Recommendations generated"
+    }
+  },
+  {
+    "name": "comprehensive_54",
+    "exit_code": 0,
+    "passed_gate": true,
+    "elapsed_s": 19.9,
+    "tail": "\n  [PASS] | 7 recs | First: Automata Selenium\n\n[43/54] Testing: Engineering Manager...\n  [PASS] | 7 recs | First: OPQ Manager Plus Report\n\n[44/54] Testing: Tech Lead...\n  [PASS] | 7 recs | First: Sales Transformation Report 1.0 - Sales \n\n[45/54] Testing: Product Manager...\n  [PASS] | 7 recs | First: Sales Transformation Report 1.0 - Sales \n\n[46/54] Testing: CTO Chief Technology Officer...\n  [PASS] | 7 recs | First: OPQ Leadership Report\n\n[47/54] Testing: developer...\n  [PASS] | Clarification requested\n\n[48/54] Testing: software engineer...\n  [PASS] | Clarification requested\n\n[49/54] Testing: programmer...\n  [PASS] | Clarification requested\n\n[50/54] Testing: need assessments...\n  [PASS] | Clarification requested\n\n[51/54] Testing: Full Stack Developer...\n  [PASS] | 7 recs | First: SQL Server Integration Services (SSIS) (\n\n[52/54] Testing: Backend Developer...\n  [PASS] | 7 recs | First: Node.js (New)\n\n[53/54] Testing: Mobile Developer...\n  [PASS] | 7 recs | First: Virtual Assessment and Development Cente\n\n[54/54] Testing: Embedded Systems Engineer...\n  [PASS] | 7 recs | First: Automata - Fix (New)\n\n================================================================================\nSUMMARY\n================================================================================\nTotal: 54 | Passed: 54 | Failed: 0\nSuccess Rate: 100.0%\n\nReport saved to C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\scenario_50_report.md\nResults saved to C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\test_results_50.json\n"
+  },
+  {
+    "name": "ui_30",
+    "exit_code": 0,
+    "passed_gate": true,
+    "elapsed_s": 13.3,
+    "tail": "Wrote C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\ui_30_validation_report.md\n[PASS] 01 C1 leadership benchmark (7 cards)\n[PASS] 02 C2 rust shortlist (7 cards)\n[PASS] 03 C3 contact centre clarify (0 cards)\n[PASS] 04 C3 contact centre US shortlist (7 cards)\n[PASS] 05 C4 finance graduate (7 cards)\n[PASS] 06 C5 sales audit stack (7 cards)\n[PASS] 07 C6 safety operators (7 cards)\n[PASS] 08 C7 bilingual healthcare clarify (0 cards)\n[PASS] 09 C7 bilingual healthcare hybrid (7 cards)\n[PASS] 10 C8 admin assistant baseline (7 cards)\n[PASS] 11 C8 admin assistant simulation refinement (7 cards)\n[PASS] 12 C9 full-stack clarify (0 cards)\n[PASS] 13 C9 full-stack final battery (7 cards)\n[PASS] 14 C10 grad mgmt initial (7 cards)\n[PASS] 15 C10 drop OPQ final (5 cards)\n[PASS] 16 Java backend baseline (7 cards)\n[PASS] 17 React frontend baseline (7 cards)\n[PASS] 18 Vague developer clarify (0 cards)\n[PASS] 19 Refinement Java to React (7 cards)\n[PASS] 20 Off-topic refusal joke (0 cards)\n[PASS] 21 Prompt injection refusal (0 cards)\n[PASS] 22 Compare follow-up (7 cards)\n[PASS] 23 Closure with shortlist replay (7 cards)\n[PASS] 24 Data scientist baseline (7 cards)\n[PASS] 25 DevOps baseline (7 cards)\n[PASS] 26 QA automation baseline (4 cards)\n[PASS] 27 HR executive baseline (7 cards)\n[PASS] 28 Sales manager baseline (7 cards)\n[PASS] 29 Marketing manager baseline (7 cards)\n[PASS] 30 AI engineer baseline (7 cards)\n"
+  },
+  {
+    "name": "c1_c10_recall",
+    "exit_code": 0,
+    "passed_gate": true,
+    "elapsed_s": 5.6,
+    "tail": "Wrote C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\c1_c10_recall_report.md\nC1_leadership: Recall@10=1.00\nC2_rust: Recall@10=1.00\nC3_contact_centre: Recall@10=1.00\nC4_finance_grad: Recall@10=1.00\nC5_sales_reskill: Recall@10=1.00\nC6_safety: Recall@10=1.00\nC7_healthcare_hybrid: Recall@10=1.00\nC8_admin_assistant: Recall@10=1.00\nC9_fullstack_refinement: Recall@10=1.00\nC10_grad_mgmt: Recall@10=1.00\n"
+  },
+  {
+    "name": "submission_readiness",
+    "exit_code": 0,
+    "passed_gate": true,
+    "elapsed_s": 100.4,
+    "tail": "Wrote C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\submission_readiness_report.md\nVerdict: READY TO SUBMIT\n"
+  },
+  {
+    "name": "production_readiness",
+    "exit_code": 0,
+    "passed_gate": true,
+    "elapsed_s": 208.2,
+    "tail": "Wrote C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\submission_readiness_report.md\nVerdict: READY TO SUBMIT\n"
+  },
+  {
+    "name": "browser_smoke",
+    "exit_code": 0,
+    "passed_gate": true,
+    "elapsed_s": 0.2,
+    "tail": "Running smoke frontend checks...\nCatalog entries: 377\nSmoke export written to: C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\scripts\\smoke_export.md\nDone.\n"
+  }
+]
