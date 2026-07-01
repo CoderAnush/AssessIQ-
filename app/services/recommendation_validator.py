@@ -203,15 +203,7 @@ class RecommendationCompletenessValidator:
         
         # 3. Personality Fallback
         if "personality" in required_categories and not has_personality:
-            skip_personality = False
-            if context is not None:
-                domain_enum = getattr(context, "domain_enum", None)
-                if domain_enum in {
-                    Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA,
-                }:
-                    skip_personality = True
-            if not skip_personality:
-                add_best_fallback("personality", "OPQ behavioral style assessment for general workplace competencies", "Completeness")
+            add_best_fallback("personality", "OPQ behavioral style assessment for general workplace competencies", "Completeness")
 
         # 4. Leadership Fallback
         if "leadership_report" in required_categories and not has_leadership:

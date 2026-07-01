@@ -5,7 +5,7 @@ import requests
 import json
 import re
 
-BACKEND_URL = "http://localhost:8000"
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
 
 def format_recs(recs):
     if not recs:
@@ -278,7 +278,12 @@ def main():
             test_results.append({"id": s_id, "prompt": prompt, "expected": "Success response", "actual": f"Error: {e}", "reply": "", "recs": [], "urls": [], "confidence": 0, "latency": latency, "console_errors": "None", "network_errors": str(e), "passed": False, "reason": f"Connection error: {e}"})
     with open(os.path.join(os.path.dirname(__file__), "test_results.json"), "w") as f:
         json.dump(test_results, f, indent=2)
+    failed = sum(1 for t in test_results if not t.get("passed"))
+    passed_count = len(test_results) - failed
+    print(f"Summary: {passed_count}/{len(test_results)} passed, {failed} failed")
     print("Test run completed. Results saved to scratch/test_results.json")
+    if failed:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

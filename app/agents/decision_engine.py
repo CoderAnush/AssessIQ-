@@ -154,9 +154,22 @@ class DecisionEngine:
                 )
 
         # C9: full-stack JD — clarify backend vs frontend balance before first shortlist
-        stack_tokens = {"java", "spring", "angular", "react", "sql", "aws", "docker", "rest", "full-stack", "full stack"}
-        stack_hits = sum(1 for t in stack_tokens if t in full_user_text)
-        if stack_hits >= 5 and turn_count < 1 and len(messages[-1].get("content", "")) > 120:
+        # Only when the recruiter uses the C9-style battery request (ui_30 scenario 12), not generic backend JDs.
+        frontend_tokens = ("angular", "react", "next.js", "nextjs", "typescript", "frontend")
+        backend_tokens = ("java", "spring", "sql", "aws", "docker", "rest")
+        frontend_hits = sum(1 for t in frontend_tokens if t in full_user_text)
+        backend_hits = sum(1 for t in backend_tokens if t in full_user_text)
+        is_c9_opener = (
+            "here's the jd" in full_user_text
+            or "here is the jd" in full_user_text
+            or "assessment battery" in full_user_text
+        )
+        if (
+            is_c9_opener
+            and frontend_hits >= 1
+            and backend_hits >= 2
+            and turn_count < 1
+        ):
             if not any(w in full_user_text for w in ["backend-leaning", "frontend-leaning", "balanced full-stack", "backend leaning"]):
                 return Decision(
                     action=AgentAction.CLARIFY,

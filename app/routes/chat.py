@@ -852,7 +852,9 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                 rec_text = f"{rec.name} {rec.ideal_use_case}".lower()
                 if query_domain in {Domain.BACKEND, Domain.FRONTEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA}:
                     if not domain_classifier.is_strictly_allowed(query_domain, assessment_domain, rec_text):
-                        continue
+                        rec_test_type = str(getattr(rec.test_type, "value", rec.test_type)).upper()
+                        if not (rec.is_fallback and rec_test_type == "P"):
+                            continue
                 filtered_recommendations.append(rec)
             recommendations = filtered_recommendations
 

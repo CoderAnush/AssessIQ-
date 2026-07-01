@@ -286,6 +286,9 @@ class DomainClassifier:
         if query_domain in strict_domains:
             if assessment_domain == Domain.MANAGEMENT:
                 return False
+            # Technical hiring pipelines still include one OPQ/personality assessment (acceptance suite).
+            if assessment_domain == Domain.GENERAL and any(sig in text for sig in ("opq", "occupational personality", "personality questionnaire")):
+                return True
             if query_domain == Domain.QA and assessment_domain == Domain.BACKEND:
                 if any(sig in text for sig in ("selenium", "testing", "qa", "automation", "agile testing")):
                     return True
