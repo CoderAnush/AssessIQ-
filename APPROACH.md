@@ -40,6 +40,18 @@ Run `python scripts/run_c1_c10_recall.py` after starting the backend; report at 
 
 `GET /health` → `{"status":"ok"}`. Eight-turn cap; ~30s timeout budget.
 
+## Deployment
+
+- **API:** https://assessiq-nkp2.onrender.com
+- **Streamlit demo:** https://assessiq-ai.streamlit.app (set `BACKEND_URL` secret to the API URL)
+- **Render frontend:** optional `assessiq-frontend` service with the same `BACKEND_URL`
+
+## Example Conversation
+
+1. **Recommend:** "Java Spring Boot backend developer" → ranked Java/Spring K-tests plus Verify cognitive.
+2. **Compare:** "Compare the top two" → grounded comparison table in `reply`; prior shortlist stays in `recommendations`.
+3. **Refine:** "Add AWS" → AWS Development injected; "Drop the OPQ" → personality cards removed from shortlist.
+
 ## What Did Not Work Initially
 
 - Substring Java/JavaScript false positives → word-boundary matching.

@@ -283,7 +283,7 @@ def apply_refinement_to_recommendations(
                 text = (a.name + " " + a.description).lower()
                 if search_term in text or add_low in a.name.lower():
                     if a.name.lower() not in existing_names:
-                        result.append(_recommendation_from_assessment(a))
+                        result.insert(0, _recommendation_from_assessment(a))
                         existing_names.add(a.name.lower())
                         break
     return result[:10]

@@ -76,7 +76,7 @@ Run the full submission gate (local backend must be running ~45s for FAISS cold 
 python scripts/run_submission_readiness.py
 ```
 
-**Latest gate results** (`artifacts/submission_readiness_report.md`): **READY TO SUBMIT**
+**Latest gate results** (`artifacts/submission_readiness_report.md`): **READY TO SUBMIT** (production verified 2026-07-01)
 
 | Gate | Result |
 |------|--------|
@@ -147,6 +147,8 @@ APPROACH.md    Design document (submission)
 | Frontend | Streamlit Cloud | assessiq-ai.streamlit.app |
 
 Streamlit secret: `BACKEND_URL=https://assessiq-nkp2.onrender.com`
+
+**Streamlit Cloud:** In [share.streamlit.io](https://share.streamlit.io) → App settings → Secrets, set `BACKEND_URL = "https://assessiq-nkp2.onrender.com"` and reboot the app after each backend deploy.
 
 ---
 
