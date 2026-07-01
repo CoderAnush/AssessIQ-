@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
         logger.info("STARTUP: Initializing Ranker (Lightweight Mode)...")
         # from app.services.embedding_service import EmbeddingService
         # 4. Initialize Decision & Ranking Engine
-        from app.services.ranker_v2 import EnterpriseRanker
+        from app.services.ranker import EnterpriseRanker
         from app.services.competency_taxonomy_v2 import CompetencyTaxonomyV2
         from app.services.adaptive_orchestrator import AdaptiveOrchestrator
         from app.services.orchestration_analytics import OrchestrationAnalytics
@@ -130,21 +130,25 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Health endpoint
+    # Health endpoint — strict SHL evaluator schema: {"status": "ok"}
     @app.get("/health")
     async def health_check():
-        """Health check endpoint for production monitoring."""
+        """Health check endpoint for SHL automated evaluator."""
+        return {"status": "ok"}
+
+    @app.get("/health/detailed")
+    async def health_check_detailed():
+        """Extended diagnostics (not used by evaluator)."""
         uptime_seconds = time.time() - getattr(app.state, "start_time", time.time())
         catalog_size = len(app.state.catalog_loader.get_all()) if hasattr(app.state, "catalog_loader") else 0
-        
         return {
-            "status": "healthy",
+            "status": "ok",
             "version": "1.2.0-production",
             "catalog_loaded": catalog_size > 0,
             "catalog_size": catalog_size,
             "uptime_seconds": round(uptime_seconds, 2),
             "memory_usage_mb": round(psutil.virtual_memory().used / (1024 * 1024), 2),
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
 
     # Middleware for request/response logging
@@ -198,7 +202,7 @@ async def post_feedback(request: Request):
     if assessment_id and action:
         # In a real app, this would be per session in a DB.
         # Here we update the stateful ranker in app.state.
-        from app.services.ranker_v2 import EnterpriseRanker
+        from app.services.ranker import EnterpriseRanker
         if isinstance(app.state.ranker, EnterpriseRanker):
             app.state.ranker.update_feedback(assessment_id, action)
             return {"status": "success", "message": f"Feedback {action} recorded for {assessment_id}"}

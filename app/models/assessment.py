@@ -108,6 +108,10 @@ class AssessmentWithMetadata(Assessment):
     category: str = Field(default="general")
     primary_domain: str = Field(default="GENERAL")
     secondary_domains: List[str] = Field(default_factory=list)
+    languages: List[str] = Field(default_factory=list)
+    keys: List[str] = Field(default_factory=list)
+    adaptive: str = Field(default="no")
+    remote: str = Field(default="yes")
 
     class Config:
         json_schema_extra = {

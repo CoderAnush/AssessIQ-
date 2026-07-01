@@ -18,6 +18,7 @@ class UserIntent(str, Enum):
     REFINEMENT = "refinement"
     COMPARISON = "comparison"
     OFF_TOPIC = "off_topic"
+    PROMPT_INJECTION = "prompt_injection"
     CLEAR_REQUIREMENT = "clear_requirement"
 
 @dataclass
@@ -42,13 +43,17 @@ class HiringContext:
     preferred_test_types: Set[str] = field(default_factory=set)
 
     def get_missing_slots(self) -> List[str]:
-        # Role is sufficient for initial recommendations in all strongly mapped domains.
-        required = ["role"]
-        
         missing = []
-        if not self.role: missing.append("role")
-        
-        # Don't ask for things we already asked or inferred
+        if not self.role:
+            missing.append("role")
+        elif self.role.lower() in ConversationAnalyzer.GENERIC_ROLE_QUERIES:
+            role_low = self.role.lower()
+            if role_low in {"developer", "engineer", "software engineer", "software developer", "programmer"}:
+                if "seniority" not in self.asked_slots and "seniority" not in self.inferred_slots:
+                    missing.append("seniority")
+                if not self.tech_stack and "role" not in self.asked_slots and role_low in {"developer", "programmer"}:
+                    missing.append("role")
+
         return [s for s in missing if s not in self.asked_slots and s not in self.inferred_slots]
 
     def get_completeness_score(self) -> float:
@@ -83,26 +88,81 @@ class ConversationAnalyzer:
         "data scientist", "machine learning", "ml", "mobile", "android", "ios", "security",
         "java", "python", "react", "angular", "vue", "javascript", "typescript", "nextjs",
         "fastapi", "django", "flask", "kubernetes", "terraform", "docker", "api", "microservice",
+        "software", "programmer", "coder", "civil", "mechanical", "electrical", "chemical", "aeronautical", "aerospace", "design"
     }
 
     def analyze(self, messages: List[Dict[str, str]]) -> Tuple[HiringContext, UserIntent]:
-        full_text = " ".join([m["content"] for m in messages if m["role"] == "user"]).lower()
-        last_user_msg = next((m["content"] for m in reversed(messages) if m["role"] == "user"), "").lower()
+        # Copy and clean typos in messages
+        cleaned_messages = []
+        typos = {
+            "jvaa": "java",
+            "sprng": "spring",
+            "enginer": "engineer",
+            "springboot": "spring boot",
+        }
+        for m in messages:
+            content = m["content"]
+            if m["role"] == "user":
+                for typo, correction in typos.items():
+                    content = re.sub(rf"\b{typo}\b", correction, content, flags=re.IGNORECASE)
+            cleaned_messages.append({"role": m["role"], "content": content})
+
+        full_text = " ".join([m["content"] for m in cleaned_messages if m["role"] == "user"]).lower()
+        last_user_msg = next((m["content"] for m in reversed(cleaned_messages) if m["role"] == "user"), "").lower()
         
         context = HiringContext()
         
         # 1. Track what the assistant already asked (Phase 4)
-        for m in messages:
+        for m in cleaned_messages:
             if m["role"] == "assistant":
                 content = m["content"].lower()
                 if any(w in content for w in ["seniority", "experience level"]): context.asked_slots.add("seniority")
                 if any(w in content for w in ["role", "position", "technical area"]): context.asked_slots.add("role")
                 if any(w in content for w in ["tech stack", "skills", "framework"]): context.asked_slots.add("tech_stack")
 
-        # 2. Robust Skill & Role Extraction (Phase 3)
-        context.role = self._extract_role(full_text)
-        context.seniority = self._extract_seniority(full_text) or "mid"
-        context.tech_stack = self._extract_tech_stack(full_text)
+        # Chronological Context Update (fixes conversational refinement overriding)
+        for m in cleaned_messages:
+            if m["role"] == "user":
+                msg_text = m["content"].lower()
+                
+                # Check what was specified in this turn
+                new_role = self._extract_role(msg_text)
+                new_seniority = self._extract_seniority(msg_text)
+                new_tech = self._extract_tech_stack(msg_text)
+                
+                # Update context role
+                if new_role:
+                    context.role = new_role
+                
+                # Update context seniority
+                if new_seniority:
+                    context.seniority = new_seniority
+                
+                # Detect change/refinement of tech stack
+                turn_tokens = set(re.findall(r'\b[a-z0-9.]+\b', msg_text))
+                
+                # Java -> React / Frontend refinement (Scenario 22/23)
+                if any(tok in turn_tokens for tok in ["react", "frontend", "angular", "vue", "javascript", "typescript", "redux"]):
+                    context.tech_stack = {t for t in context.tech_stack if "java" not in t.lower() and "spring" not in t.lower() and "python" not in t.lower()}
+                    if not new_role or "backend" in new_role.lower():
+                        context.role = "frontend"
+                        
+                # React -> Java / Backend refinement
+                if any(tok in turn_tokens for tok in ["java", "springboot", "spring", "python", "fastapi", "django"]):
+                    context.tech_stack = {t for t in context.tech_stack if "react" not in t.lower() and "angular" not in t.lower() and "vue" not in t.lower() and "javascript" not in t.lower()}
+                    if not new_role or "frontend" in new_role.lower():
+                        context.role = "backend"
+                
+                # Accumulate tech stack
+                if new_tech:
+                    if "actually" in msg_text or "instead" in msg_text:
+                        context.tech_stack = new_tech
+                    else:
+                        context.tech_stack.update(new_tech)
+
+        # Ensure default seniority if not specified
+        if not context.seniority:
+            context.seniority = "mid"
 
         if self._is_generic_without_domain_signal(full_text, context.role, context.tech_stack):
             context.role = None
@@ -125,6 +185,9 @@ class ConversationAnalyzer:
             if inferred_tech:
                 context.tech_stack = set(inferred_tech)
         
+        if any(w in full_text for w in ["leadership", "executive", "director", "cxo", "vp ", "chief"]):
+            context.leadership_needs = True
+
         context.domain = self._infer_domain(context.role, context.tech_stack, full_text)
 
         # 3. Mark inferred slots
@@ -147,34 +210,66 @@ class ConversationAnalyzer:
         
         # Check off-topic and prompt injection
         off_topic_patterns = [
-            r"\b(capital of|weather|joke|politics|sports|football|soccer|cricket|recipe|cook|tax|visa|passport|legal advice|salary guide|career path|interview tips)\b",
-            r"\b(ignore previous|system prompt|you are no longer|jailbreak|reveal prompt|secret key|api key|aws exam|competitor)\b",
-            r"ignore previous instructions",
+            r"\b(capital of|weather|joke|politics|sports|football|soccer|cricket|recipe|cook|tax|visa|passport|legal advice|salary|salary guide|career path|interview tips|hackerrank|codility|leetcode)\b",
+            r"\b(ignore\s+(all\s+)?previous|system prompt|you are no longer|jailbreak|reveal prompt|secret key|api key|aws exam|competitor)\b",
+            r"ignore\s+(all\s+)?previous\s+instructions",
             r"output hidden prompt",
-            r"reveal the prompt"
+            r"reveal the prompt",
+            r"legally required",
+            r"legal obligation",
+            r"regulatory obligation",
+            r"does this.*satisfy.*requirement",
+            r"legal compliance questions",
         ]
         
         is_off_topic = False
+        is_prompt_injection = False
         for pattern in off_topic_patterns:
             if re.search(pattern, last_user_msg.lower()):
-                is_off_topic = True
+                if "ignore" in pattern or "prompt" in pattern or "jailbreak" in pattern:
+                    is_prompt_injection = True
+                else:
+                    is_off_topic = True
                 break
                 
-        hiring_signals = ["hire", "recruiter", "assessment", "candidate", "role", "developer", "engineer", "test", "resume", "cv", "job description", "jd", "looking for", "talent", "qualification", "seniority"]
-        has_hiring_signal = any(s in last_user_msg.lower() for s in hiring_signals)
+        hiring_signals = [
+            "hire", "hiring", "recruiter", "assessment", "assessments", "candidate",
+            "role", "developer", "engineer", "test", "resume", "cv", "job description",
+            "jd", "looking for", "talent", "qualification", "seniority", "screening",
+            "contact centre", "contact center", "customer service", "trainee", "scheme",
+            "battery", "analyst", "operator", "admin", "healthcare", "financial",
+            "graduate", "management trainee", "plant", "facility", "agents", "inbound",
+            "recommend", "shortlist", "we need", "solutions", "solution for",
+            "executive", "leadership", "director", "cxo", "sales", "marketing", "hr",
+            "devops", "security", "cyber", "full stack", "fullstack", "backend",
+            "frontend", "data scientist", "machine learning", "verify", "scenarios", "opq",
+            "drop the", "final list", "remove the", "add a", "trainee", "scheme", "battery",
+            "cognitive", "personality", "situational", "graduate",
+        ]
+        has_hiring_signal = any(s in full_text for s in hiring_signals)
+        has_prior_recommendations = any(
+            m["role"] == "assistant" and "|" in m.get("content", "")
+            for m in messages[:-1]
+        )
         
-        if not context.role and not context.tech_stack and not has_hiring_signal:
+        is_comparison = any(p in last_user_msg for p in ["compare", "vs ", "versus"])
+        
+        if not context.role and not context.tech_stack and not has_hiring_signal and not is_comparison and not has_prior_recommendations:
             greetings = ["hello", "hi", "hey", "good morning", "good afternoon", "how are you", "help"]
             is_greeting = any(g in last_user_msg.lower() for g in greetings)
             if not is_greeting:
                 is_off_topic = True
 
-        if is_off_topic:
+        if is_prompt_injection:
+            intent = UserIntent.PROMPT_INJECTION
+        elif is_off_topic:
             intent = UserIntent.OFF_TOPIC
+        elif any(p in last_user_msg for p in ["legally required", "legal obligation", "legal compliance", "does this test satisfy", "does this satisfy"]):
+            intent = UserIntent.OFF_TOPIC
+        elif is_comparison:
+            intent = UserIntent.COMPARISON
         elif not context.role and not context.tech_stack:
             intent = UserIntent.VAGUE_QUERY
-        elif any(p in last_user_msg for p in ["compare", "vs ", "versus"]):
-            intent = UserIntent.COMPARISON
         elif len(messages) > 2 and intent == UserIntent.CLEAR_REQUIREMENT:
             intent = UserIntent.CLARIFICATION_PROVIDED
 
@@ -189,6 +284,9 @@ class ConversationAnalyzer:
         
         # PRIORITY 1: Most specific compound roles (exact matches first)
         compound_roles = [
+            # Leadership / executive
+            "senior leadership", "leadership", "chief executive", "cxo", "director-level",
+            "engineering manager", "sales manager", "account manager",
             # Backend/Fullstack
             "python backend", "java backend", "backend engineer", "backend developer",
             "python backend engineer", "python backend developer", "java backend developer",
@@ -210,13 +308,29 @@ class ConversationAnalyzer:
             "engineering manager", "product manager", "tech lead", "technical lead",
             "cto", "chief technology", "vp engineering", "head of engineering",
             # Generic compound
-            "sales manager", "account manager", "customer support", "helpdesk"
+            "sales manager", "account manager", "customer support", "helpdesk",
+            "contact centre", "contact center", "call center", "call centre",
+            "customer service agent", "financial analyst", "graduate financial analyst",
+            "hr executive", "marketing manager", "plant operator", "healthcare admin",
+            "graduate management trainee", "management trainee", "trainee scheme",
+            "fresh graduate software engineer", "graduate software engineer",
+            "software engineer", "electrical engineer", "mechanical design engineer",
+            "mechanical engineer", "civil engineer", "chemical engineer",
         ]
         for r in compound_roles:
             if r in text_lower: 
                 return r
         
-        # PRIORITY 2: Technology keywords with context
+        if "graduate" in text_lower and "software" in text_lower and "engineer" in text_lower:
+            return "graduate software engineer"
+        if "electrical" in text_lower and "engineer" in text_lower:
+            return "electrical engineer"
+        if "mechanical" in text_lower and "engineer" in text_lower:
+            return "mechanical design engineer"
+        if "graduate" in text_lower and ("trainee" in text_lower or "management" in text_lower or "scheme" in text_lower):
+            return "graduate management trainee"
+        if "graduate" in text_lower and ("financial" in text_lower or "analyst" in text_lower):
+            return "graduate financial analyst"
         if any(token in text_lower for token in ["react", "angular", "vue", "javascript", "typescript", "nextjs"]):
             return "frontend"
         if "frontend" in text_lower or "ui" in text_lower or "web" in text_lower:
@@ -236,16 +350,25 @@ class ConversationAnalyzer:
         if "kubernetes" in text_lower or "docker" in text_lower or "terraform" in text_lower:
             return "devops"
         
-        # PRIORITY 3: Standalone role keywords (sorted by priority)
+        # Skip "test" when user means an SHL assessment, not a QA/test role.
+        assessment_test_context = bool(
+            re.search(r"\b(?:need|want|looking for|require)\s+(?:a|an|the)?\s*test\b", text_lower)
+            or re.search(r"\btest\s+for\b", text_lower)
+            or re.search(r"\bassessment\b", text_lower)
+        )
+
+        # PRIORITY 3: Standalone role keywords (word-boundary matched)
         standalone_roles = [
-            "fullstack", "backend", "frontend", "qa", "sdet", "test",
+            "fullstack", "backend", "frontend", "qa", "sdet",
             "data scientist", "data engineer", "analyst",
-            "manager", "architect", "lead", "cto",
+            "manager", "architect", "lead", "cto", "leadership", "executive",
             "sales", "support", "executive",
-            "sre", "engineer", "developer"
+            "sre", "engineer", "developer",
         ]
+        if not assessment_test_context:
+            standalone_roles.insert(5, "test")
         for r in standalone_roles:
-            if r in text_lower: 
+            if re.search(rf"\b{re.escape(r)}\b", text_lower):
                 return r
         
         # VAGUE: Too generic - return None to trigger clarification
@@ -300,8 +423,18 @@ class ConversationAnalyzer:
             return "qa automation"
         if any(w in combined for w in ["manager", "tech lead", "technical lead", "leadership", "people", "strategy", "executive", "stakeholder", "cto", "chief technology", "vp", "director", "head of"]):
             return "management"
-        if any(w in combined for w in ["sales", "negotiation", "support", "customer", "business"]):
+        if any(w in combined for w in ["contact centre", "contact center", "call center", "customer service", "call centre"]):
             return "business"
+        if any(w in combined for w in ["financial analyst", "finance", "accounting", "financial"]):
+            return "business"
+        if any(w in combined for w in ["hr ", "human resources", "recruitment"]):
+            return "management"
+        if any(w in combined for w in ["marketing", "seo", "sem", "digital marketing"]):
+            return "business"
+        if any(w in combined for w in ["security", "cyber", "siem", "penetration"]):
+            return "business"
+        if any(w in combined for w in ["electrical", "mechanical", "plant operator", "chemical"]):
+            return "engineering"
         return "software engineering"
 
     def get_clarification_question(self, context: HiringContext) -> Optional[str]:
@@ -311,10 +444,23 @@ class ConversationAnalyzer:
         
         slot = missing[0]
         if slot == "role":
-            return "What type of engineering role are you hiring for? Examples: Backend, Frontend, DevOps, Data Science, QA, or Leadership."
+            if any(w in (context.domain or "") for w in ["business"]) and any(
+                w in (context.role or "").lower() for w in ["contact", "customer service", "call"]
+            ):
+                return "Before I shape the stack — what language are the calls in? That drives which spoken-language screen we use."
+            if any(w in (context.seniority or "") for w in ["senior", "executive"]) or context.leadership_needs:
+                return "Happy to help narrow that down. Who is this meant for — selection, development, or a specific leadership level?"
+            return (
+                "What type of role and seniority are you hiring for? "
+                "Examples: Senior Backend Developer, Junior Frontend Engineer, or Leadership — "
+                "and any technical focus (e.g. Java, React, DevOps)."
+            )
         if slot == "tech_stack":
             return f"Are there specific frameworks or tools required for this {context.role} position (e.g. FastAPI, Kubernetes, or React)?"
         if slot == "seniority":
-            return "What seniority level are you targeting (e.g. Junior, Senior, or Leadership)?"
+            return (
+                "What seniority level and technical focus should I use "
+                "(e.g. Junior, Senior, or Leadership — plus backend, frontend, or other technical area)?"
+            )
             
         return None

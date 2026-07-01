@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "name": "Java backend",
+    "prompts": ["Senior Java Backend Engineer with Spring Boot"],
+    "expect": "Recommendation cards with Java/ability assessments"
+  },
+  {
+    "id": 2,
+    "name": "Vague developer clarify",
+    "prompts": ["I need a test for a developer."],
+    "expect": "Clarification only, no recommendation cards"
+  },
+  {
+    "id": 3,
+    "name": "Finance graduate",
+    "prompts": ["Hiring graduate financial analysts — numerical reasoning and finance knowledge"],
+    "expect": "Financial/numerical/graduate assessments"
+  },
+  {
+    "id": 4,
+    "name": "Contact centre",
+    "prompts": ["Contact centre agents, inbound calls in English"],
+    "expect": "Language clarify or SVAR/contact-centre items"
+  },
+  {
+    "id": 5,
+    "name": "Leadership multi-turn",
+    "prompts": [
+      "We need a solution for senior leadership",
+      "The pool consists of CXOs, director-level positions; people with more than 15 years of experience.",
+      "Selection — comparing candidates against a leadership benchmark."
+    ],
+    "expect": "OPQ/leadership after clarification"
+  },
+  {
+    "id": 6,
+    "name": "React frontend",
+    "prompts": ["Senior React Frontend Engineer"],
+    "expect": "React/frontend assessments"
+  },
+  {
+    "id": 7,
+    "name": "Compare named",
+    "prompts": ["Compare OPQ32r and General Ability Assessment"],
+    "expect": "Comparison table in chat"
+  },
+  {
+    "id": 8,
+    "name": "Refinement React",
+    "prompts": [
+      "Need assessments for hiring a Java Developer",
+      "Actually make it React instead"
+    ],
+    "expect": "Shortlist shifts to frontend"
+  },
+  {
+    "id": 9,
+    "name": "Off-topic refusal",
+    "prompts": ["Tell me a joke"],
+    "expect": "Refusal, no recommendations"
+  },
+  {
+    "id": 10,
+    "name": "Closure",
+    "prompts": [
+      "Senior Java Backend Engineer with Spring Boot",
+      "Perfect, thanks"
+    ],
+    "expect": "end_of_conversation closure with shortlist"
+  }
+]

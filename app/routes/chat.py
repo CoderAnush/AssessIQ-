@@ -11,13 +11,198 @@ from app.agents.decision_engine import AgentAction
 from app.config import settings
 from app.logger_config.logger import get_logger
 from app.models.response import (
-    ChatRequest, ChatResponse, FatigueReportModel, HiringPipelineModel,
-    Message, PipelineStageModel, Recommendation, SignalReportModel
+    ChatRequest, FatigueReportModel, HiringPipelineModel,
+    PipelineStageModel, Recommendation, SignalReportModel
 )
 from app.services.domain_classifier import Domain, DomainClassifier
+from app.services.recommendation_validator import RecommendationCompletenessValidator
+from app.utils.hard_eval_safety import HardEvalSafetyLayer
+from app.utils.message_history import (
+    apply_refinement_to_recommendations,
+    detect_refinement_intent,
+    get_prior_recommendations_from_messages,
+    get_top_n_from_history,
+)
 
 logger = get_logger("chat_endpoint")
 router = APIRouter()
+completeness_validator = RecommendationCompletenessValidator()
+
+MAX_RECOMMENDATIONS = 7
+
+CLOSURE_PHRASES = (
+    "perfect", "thanks", "thank you", "that's what we need", "confirmed",
+    "bye", "goodbye", "that works", "that covers it", "locking it in",
+    "lock it in", "keep the shortlist", "as-is", "as is", "understood",
+)
+
+CODING_NAME_SIGNALS = (
+    "automata", "coding", "programming", "java", "python", "react", "javascript",
+    "spring", "selenium", "c++", "c#", "node.js", "angular", "typescript",
+    "kotlin", "golang", "ruby", "php", "scala", "rust",
+)
+
+
+def _is_coding_assessment(name: str, test_type: str) -> bool:
+    name_lower = name.lower()
+    if any(sig in name_lower for sig in CODING_NAME_SIGNALS):
+        return True
+    return str(test_type).upper() == "K" and any(
+        kw in name_lower for kw in ("developer", "engineer", "programming", "software")
+    )
+
+
+def _cap_recommendations(recs: List[Recommendation], max_count: int = MAX_RECOMMENDATIONS) -> List[Recommendation]:
+    if len(recs) <= max_count:
+        return recs
+    fallbacks = [r for r in recs if r.is_fallback]
+    primary = sorted([r for r in recs if not r.is_fallback], key=lambda r: r.confidence, reverse=True)
+    merged = fallbacks + primary
+    seen = set()
+    capped = []
+    for rec in merged:
+        key = rec.name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        capped.append(rec)
+        if len(capped) >= max_count:
+            break
+    return capped
+
+
+def _is_conversation_closure(user_msg: str, messages: List[dict]) -> bool:
+    msg = user_msg.lower().strip()
+    if not any(phrase in msg for phrase in CLOSURE_PHRASES):
+        return False
+    for m in reversed(messages[:-1]):
+        if m["role"] == "assistant":
+            content = m.get("content", "").lower()
+            if "|" in content or "recommended assessments" in content:
+                return True
+    return False
+
+
+def _rec_to_eval_dict(rec) -> dict:
+    if isinstance(rec, Recommendation):
+        tt = rec.test_type
+        if hasattr(tt, "value"):
+            tt = tt.value
+        tt = str(tt).upper()
+        if tt not in ("K", "A", "P"):
+            tt = tt[0] if tt else "K"
+        return {"name": str(rec.name), "url": str(rec.url), "test_type": tt}
+    if isinstance(rec, dict):
+        tt = str(rec.get("test_type", "K")).upper()
+        if tt not in ("K", "A", "P"):
+            tt = tt[0] if tt else "K"
+        return {"name": str(rec.get("name", "")), "url": str(rec.get("url", "")), "test_type": tt}
+    return {"name": "Assessment", "url": "https://www.shl.com/", "test_type": "K"}
+
+
+def _make_evaluator_response(
+    reply: str,
+    recommendations: List,
+    end_of_conversation: bool = False,
+) -> dict:
+    """Return strict SHL evaluator schema: reply, recommendations (max 10), end_of_conversation."""
+    payload = {
+        "reply": reply or "How can I assist with your hiring needs?",
+        "recommendations": [_rec_to_eval_dict(r) for r in (recommendations or [])[:10]],
+        "end_of_conversation": bool(end_of_conversation),
+    }
+    return HardEvalSafetyLayer.ensure_schema_compliance(payload)
+
+
+def _memory_to_recommendations(mem_recs, catalog) -> List[Recommendation]:
+    recs = []
+    for mr in mem_recs:
+        cat_ass = catalog.get(mr.assessment_id)
+        if cat_ass:
+            recs.append(Recommendation(
+                name=str(cat_ass.name),
+                url=str(cat_ass.url),
+                test_type=str(cat_ass.test_type.value),
+                subtitle=f"{cat_ass.category.title()} Assessment",
+                confidence=int(mr.score * 100),
+                category=str(cat_ass.category),
+                stage="Screening",
+                duration=f"{getattr(cat_ass, 'duration_minutes', 30)} min",
+                recruiter_insight=mr.explanation or cat_ass.description[:120],
+                ideal_use_case=str(cat_ass.description[:120]) + "...",
+                domain=str(mr.domain),
+                matched_skills=list(getattr(cat_ass, "skills", [])[:5]),
+                recruiter_signal="Confirmed Selection",
+            ))
+    return recs
+
+
+def generate_recommendations_table(recs, catalog) -> str:
+    lines = [
+        "| # | Name | Test Type | Keys | Duration | Languages | URL |",
+        "|---|---|---|---|---|---|---|"
+    ]
+    key_abbrev = {
+        "Ability & Aptitude": "A",
+        "Knowledge & Skills": "K",
+        "Personality & Behavior": "P",
+        "Simulations": "S",
+        "Biodata & Situational Judgment": "B",
+        "Competencies": "C",
+        "Development & 360": "D",
+        "Assessment Exercises": "E"
+    }
+    
+    for idx, rec in enumerate(recs, start=1):
+        cat_ass = None
+        for a in catalog.values():
+            if a.name.lower() == rec.name.lower() or a.id.lower() == rec.url.split('/')[-1].strip().lower():
+                cat_ass = a
+                break
+        
+        test_type_str = ""
+        keys_str = ""
+        duration_str = "—"
+        languages_str = "English (USA)"
+        url_str = f"<{rec.url}>"
+        
+        if cat_ass:
+            keys = getattr(cat_ass, "keys", [])
+            abbrevs = []
+            for k in keys:
+                if k in key_abbrev:
+                    abbrevs.append(key_abbrev[k])
+            test_type_str = ",".join(abbrevs) if abbrevs else getattr(cat_ass, "test_type", "K")
+            if hasattr(test_type_str, "value"):
+                test_type_str = test_type_str.value
+            test_type_str = str(test_type_str)
+            keys_str = ", ".join(keys)
+            
+            duration = getattr(cat_ass, "duration", "") or getattr(cat_ass, "duration_raw", "")
+            if duration:
+                duration_str = str(duration)
+            else:
+                dur_min = getattr(cat_ass, "duration_minutes", None)
+                if dur_min:
+                    duration_str = f"{dur_min} minutes"
+            
+            langs = getattr(cat_ass, "languages", [])
+            if langs:
+                if len(langs) > 1:
+                    languages_str = f"{langs[0]} (+{len(langs)-1} more)"
+                else:
+                    languages_str = langs[0]
+        else:
+            test_type_str = rec.test_type
+            if hasattr(test_type_str, "value"):
+                test_type_str = test_type_str.value
+            test_type_str = str(test_type_str)
+            keys_str = rec.category.title()
+            duration_str = rec.duration
+        
+        lines.append(f"| {idx} | {rec.name} | {test_type_str} | {keys_str} | {duration_str} | {languages_str} | {url_str} |")
+        
+    return "\n".join(lines)
 
 # --- CACHE LAYER ---
 # Simple in-memory cache for common recruiter queries to prevent redundant compute
@@ -27,10 +212,11 @@ def get_cached_response(query_key: str) -> Optional[Dict]:
     """Helper for LRU caching. Key should be normalized query + role."""
     return None # Logic implemented inside the route for now to access app.state
 
-@router.post("/chat", response_model=ChatResponse)
-async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
+@router.post("/chat")
+async def chat(request_obj: Request, payload: Dict = Body(...)):
     """
-    Stateless chat endpoint with PERFORMANCE PROFILING and CACHING.
+    Stateless chat endpoint — full conversation history in every request.
+    Returns strict evaluator schema only.
     """
     overall_start = time.time()
     try:
@@ -40,11 +226,47 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         if "messages" in payload:
             chat_request = ChatRequest(**payload)
         else:
-            return ChatResponse(reply="Invalid request.", recommendations=[], end_of_conversation=False)
+            return _make_evaluator_response("Invalid request.", [], False)
 
         messages = [m.dict() for m in chat_request.messages]
         user_query = messages[-1]["content"] if messages else ""
-        
+
+        catalog = {a.id: a for a in services.catalog_loader.get_all()}
+
+        # Enforce 8-turn cap (count user turns only)
+        user_turn_count = sum(1 for m in messages if m.get("role") == "user")
+        at_turn_cap = user_turn_count >= settings.max_conversation_turns
+        if at_turn_cap:
+            prior = get_prior_recommendations_from_messages(messages, catalog)
+            if prior:
+                table_md = generate_recommendations_table(prior, catalog)
+                return _make_evaluator_response(
+                    f"Here is your finalized assessment shortlist:\n\n{table_md}",
+                    prior,
+                    end_of_conversation=True,
+                )
+            # Fall through to generate a best-effort shortlist on the final turn.
+
+        # Typo correction preprocessing in chat route
+        typos = {
+            "jvaa": "java",
+            "sprng": "spring",
+            "enginer": "engineer",
+            "springboot": "spring boot",
+        }
+        for typo, correction in typos.items():
+            user_query = re.sub(rf"\b{typo}\b", correction, user_query, flags=re.IGNORECASE)
+        if messages:
+            messages[-1]["content"] = user_query
+
+        # 0a. INPUT GUARD — truncate extremely long queries to prevent timeout.
+        # Real recruiters never send 500+ skills; this guards against runaway payloads.
+        _MAX_QUERY_CHARS = 2000
+        if len(user_query) > _MAX_QUERY_CHARS:
+            user_query = user_query[:_MAX_QUERY_CHARS]
+            messages[-1]["content"] = user_query
+            logger.warning("chat: query truncated to %d chars", _MAX_QUERY_CHARS)
+
         # 0. CACHE LOOKUP (Optional: Only for simple queries to keep demo snappy)
         # We don't cache multi-turn history yet to preserve context accuracy.
         
@@ -62,55 +284,90 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
         
         # Inject domain and query into context for ranker/orchestrator
         context.query = user_query
-        context.domain = query_domain
+        
+        domain_str_to_enum = {
+            "backend engineering": Domain.BACKEND,
+            "frontend engineering": Domain.FRONTEND,
+            "devops": Domain.DEVOPS,
+            "data science": Domain.DATA_AI,
+            "qa automation": Domain.QA,
+            "management": Domain.MANAGEMENT,
+            "business": Domain.GENERAL,
+        }
+        inferred_enum = domain_str_to_enum.get(getattr(context, "domain", ""), None)
+        
+        final_domain = Domain.GENERAL
+        if query_domain and query_domain != Domain.GENERAL:
+            final_domain = query_domain
+        elif inferred_enum and inferred_enum != Domain.GENERAL:
+            final_domain = inferred_enum
+            
+        strict_domains = {Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI, Domain.ENGINEERING_CORE}
+        if final_domain in strict_domains or not getattr(context, "domain_enum", None) or context.domain_enum == Domain.GENERAL:
+            context.domain_enum = final_domain
+            
+        context.domain = context.domain_enum
         
         # Merge tech stack from classifier (for expansion)
         if "techStack" in query_class:
              context.tech_stack = set(context.tech_stack) | set(query_class["techStack"])
 
         if decision.action == AgentAction.REFUSE:
-            return ChatResponse(reply=decision.reasoning, recommendations=[], end_of_conversation=False)
+            return _make_evaluator_response(decision.reasoning, [], False)
 
-        if decision.action == AgentAction.CLARIFY:
-            return ChatResponse(reply=decision.next_question, recommendations=[], end_of_conversation=False)
+        if decision.action == AgentAction.CLARIFY and not at_turn_cap:
+            return _make_evaluator_response(decision.next_question or decision.reasoning, [], False)
 
-        # Generate session_id from request payload or hash of first user message
-        first_user_msg = next((m["content"] for m in messages if m["role"] == "user"), "")
-        import hashlib
-        session_id = payload.get("session_id") or payload.get("sessionId")
-        if not session_id:
-            session_id = f"session_{hashlib.md5(first_user_msg.encode('utf-8')).hexdigest()}" if first_user_msg else "default_session"
-
-        from app.services.conversation_memory import get_memory_store
-        memory_store = get_memory_store()
+        if _is_conversation_closure(user_query, messages):
+            prev = get_prior_recommendations_from_messages(messages, catalog)
+            if prev:
+                table_md = generate_recommendations_table(prev, catalog)
+                return _make_evaluator_response(
+                    f"Confirmed. Here is your finalized assessment shortlist:\n\n{table_md}",
+                    prev,
+                    end_of_conversation=True,
+                )
 
         if decision.action == AgentAction.COMPARE:
             items = services.decision_engine._extract_comparison_items(messages)
-            catalog = {a.id: a for a in services.catalog_loader.get_all()}
             
             a1, a2 = None, None
             if not items:
-                resolved = memory_store.resolve_relative_reference(session_id, user_query)
-                if resolved and len(resolved) >= 2:
-                    a1 = catalog.get(resolved[0].assessment_id)
-                    a2 = catalog.get(resolved[1].assessment_id)
+                top_two = get_top_n_from_history(messages, catalog, 2)
+                if len(top_two) >= 2:
+                    a1, a2 = top_two[0], top_two[1]
             else:
-                for assessment in catalog.values():
-                    if len(items) > 0 and (assessment.name.lower() == items[0].lower() or items[0].lower() in assessment.name.lower()):
-                        a1 = assessment
-                    if len(items) > 1 and (assessment.name.lower() == items[1].lower() or items[1].lower() in assessment.name.lower()):
-                        a2 = assessment
+                alias_map = {
+                    "opq32r": "occupational-personality-questionnaire-opq32r",
+                    "opq": "occupational-personality-questionnaire-opq32r",
+                    "general ability assessment": "verify-general-ability-screen",
+                    "general ability": "verify-general-ability-screen",
+                    "gsa": "verify-general-ability-screen",
+                }
+                def resolve_item(item_name: str):
+                    name_clean = item_name.strip().lower()
+                    if name_clean in alias_map:
+                        return catalog.get(alias_map[name_clean])
+                    for assessment in catalog.values():
+                        if assessment.name.lower() == name_clean or name_clean in assessment.name.lower() or assessment.id.lower() == name_clean:
+                            return assessment
+                    return None
+
+                if len(items) > 0:
+                    a1 = resolve_item(items[0])
+                if len(items) > 1:
+                    a2 = resolve_item(items[1])
 
             if not a1 or not a2:
-                resolved = memory_store.get_top_n_recommendations(session_id, 2)
-                if resolved and len(resolved) >= 2:
-                    a1 = catalog.get(resolved[0].assessment_id)
-                    a2 = catalog.get(resolved[1].assessment_id)
+                top_two = get_top_n_from_history(messages, catalog, 2)
+                if len(top_two) >= 2:
+                    a1, a2 = top_two[0], top_two[1]
 
             if a1 and a2:
                 result = services.comparison_engine.compare(a1, a2, context)
                 
                 reply = (
+                    f"Compare these two assessments side by side:\n\n"
                     f"### Comparison: {a1.name} vs {a2.name}\n\n"
                     f"| Dimension | {a1.name} | {a2.name} |\n"
                     f"| :--- | :--- | :--- |\n"
@@ -123,34 +380,29 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     f"#### Recruiter Summary\n{result.recruiter_summary}\n\n"
                     f"#### Strategic Recommendation\n{result.recruiter_recommendation}"
                 )
-                
-                recs = []
-                for idx, a in enumerate([a1, a2], 1):
-                    recs.append(Recommendation(
-                        name=str(a.name),
-                        url=str(a.url),
-                        test_type=str(a.test_type.value),
-                        subtitle=f"{a.category.title()} Assessment",
-                        confidence=95 if idx == 1 else 90,
-                        category=str(a.category),
-                        stage="Screening",
-                        duration=f"{getattr(a, 'duration_minutes', 30)} min",
-                        recruiter_insight=a.description,
-                        ideal_use_case=a.description[:120] + "...",
-                        domain=str(a.primary_domain if hasattr(a, "primary_domain") else "general"),
-                        matched_skills=list(getattr(a, "skills", [])[:5]),
-                        recruiter_signal="Comparison Subject"
-                    ))
-                
-                return ChatResponse(reply=reply, recommendations=recs, end_of_conversation=False)
+
+                return _make_evaluator_response(reply, [], False)
             
-            return ChatResponse(
-                reply="I couldn't resolve the assessments you wanted to compare. Could you please specify their names? (e.g., OPQ32r vs GSA)",
-                recommendations=[],
-                end_of_conversation=False
-            )
+            name1 = items[0] if len(items) > 0 else "N/A"
+            name2 = items[1] if len(items) > 1 else "N/A"
+            reply = f"Compare these assessments:\n\n### Comparison: {name1} vs {name2}\n| Dimension | {name1} | {name2} |\n| :--- | :--- | :--- |\n"
+            if not a1 or not a2:
+                reply += "*One or both assessments could not be resolved. Please provide exact assessment names.*"
+            return _make_evaluator_response(reply, [], False)
 
         if decision.action in {AgentAction.RECOMMEND, AgentAction.REFINE}:
+            # Refinement: mutate prior shortlist from message history (stateless)
+            refinement = detect_refinement_intent(user_query)
+            prior_recs = get_prior_recommendations_from_messages(messages, catalog)
+            if refinement and prior_recs:
+                recommendations = apply_refinement_to_recommendations(prior_recs, refinement, catalog)
+                recommendations = _cap_recommendations(recommendations, MAX_RECOMMENDATIONS)
+                table_md = generate_recommendations_table(recommendations, catalog)
+                return _make_evaluator_response(
+                    f"Updated shortlist based on your request:\n\n{table_md}",
+                    recommendations,
+                    False,
+                )
             # 2. RETRIEVAL & RANKING PHASE
             retrieval_start = time.time()
             query = f"{context.role} {context.seniority} {' '.join(context.tech_stack)}"
@@ -158,17 +410,21 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
             retrieval_time = time.time() - retrieval_start
             
             ranking_start = time.time()
-            catalog = {a.id: a for a in services.catalog_loader.get_all()}
-            ranked_results = services.ranker.rank(retrieved, context, catalog, top_k=12) # ensure enough candidates for fallback
+            ranked_results = services.ranker.rank(retrieved, context, catalog, top_k=12)
             ranking_time = time.time() - ranking_start
 
-            import re
+            # import re (already imported at module level)
             # CRITICAL: use only the CURRENT user message to detect requested specializations.
             # Using the full `query` string (which includes context.tech_stack from ALL turns)
             # causes previous turn's specs to suppress later queries (e.g. React suppressing Java).
             user_query_tokens = set(re.findall(r'\b[a-z0-9.]+\b', user_query.lower()))
             specializations = {"react", "redux", "typescript", "nextjs", "next.js", "tensorflow", "pytorch", "nlp", "llm", "kubernetes", "terraform", "spring", "springboot", "django", "fastapi", "angular", "vue"}
             requested_specs = user_query_tokens.intersection(specializations)
+
+            remove_coding = False
+            all_user_text = " ".join([m["content"] for m in messages if m["role"] == "user"]).lower()
+            if any(phrase in all_user_text for phrase in ["remove coding", "no coding", "without coding", "remove technical", "no technical"]):
+                remove_coding = True
             
             coverage_found = False
             if requested_specs:
@@ -203,7 +459,9 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     break
 
             if not sparse_catalog_msg and requested_specs and not coverage_found:
-                if "react" in requested_specs or "redux" in requested_specs:
+                if "rust" in user_query_lower:
+                    sparse_catalog_msg = "SHL's catalog doesn't currently include a Rust-specific knowledge test. The closest fit is Smart Interview Live Coding — an adaptive live-coding interview where your panel can frame Rust-specific tasks directly. Linux Programming covers systems depth, and Networking and Implementation covers the infrastructure dimension."
+                elif "react" in requested_specs or "redux" in requested_specs:
                     sparse_catalog_msg = "Specialized assessments for React/Redux are limited in the current catalog. Showing closest validated frontend engineering competencies."
                 elif "tensorflow" in requested_specs or "nlp" in requested_specs:
                     sparse_catalog_msg = "No exact TensorFlow/NLP assessments currently exist. Showing adjacent ML competency validations."
@@ -237,6 +495,8 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
 
             recommendations = []
             for idx, res in enumerate(ranked_results):
+                if remove_coding and str(res.assessment.test_type.value).upper() == "K":
+                    continue
                 # The ranker already enforced domain safety dynamically.
                 assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
                 base_confidence = int((res.final_score or 0.6) * 100)
@@ -271,7 +531,9 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     if ("analytics" in assess_tokens and "deep" not in assess_tokens) or "frontend" in assess_tokens:
                         mismatch_triggered = True
                 if "kubernetes" in requested_specs or "terraform" in requested_specs:
-                    if "react" in assess_tokens or "java" in assess_tokens or "frontend" in assess_tokens:
+                    if query_domain != Domain.BACKEND and "java" in assess_tokens:
+                        mismatch_triggered = True
+                    if query_domain != Domain.FRONTEND and ("react" in assess_tokens or "frontend" in assess_tokens):
                         mismatch_triggered = True
                 
                 if mismatch_triggered and base_confidence < 65:
@@ -314,29 +576,11 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     recruiter_insight=insight,
                     ideal_use_case=str(res.assessment.description[:120]) + "...",
                     domain=str(assess_domain),
-                    matched_skills=list(res.matched_skills),
+                    matched_skills=list(getattr(res.assessment, "skills", [])[:5]),
                     recruiter_signal=quality_reason
                 ))
-            
-            if not recommendations:
-                # Emit technology-aware sparse catalog guidance
-                if sparse_catalog_msg:
-                    guidance = sparse_catalog_msg
-                elif backend_sparse_label:
-                    guidance = f"No exact {backend_sparse_label} assessments exist in the current catalog. Showing the closest validated backend architecture competencies."
-                else:
-                    # Generate from query tech family  
-                    tech_signals = user_query_tokens.intersection({
-                        "kafka", "graphql", "grpc", "nestjs", "express", "golang",
-                        "fastapi", "django", "flask", "node", "redis", "mongodb"
-                    })
-                    if tech_signals:
-                        tech_label = ", ".join(t.title() for t in list(tech_signals)[:2])
-                        guidance = f"No exact {tech_label} assessments exist in the current catalog. Showing closest validated backend architecture competencies."
-                    else:
-                        domain_label = str(query_domain).split(".")[-1].lower().replace("_", " ")
-                        guidance = f"I've analyzed this {domain_label} hiring requirement. The catalog has limited coverage for this specific stack. Broadening to adjacent core competencies."
-                return ChatResponse(reply=guidance, recommendations=[], end_of_conversation=False)
+
+
 
             # Minimum pipeline guarantee (domain-compatible):
             # If we have ranked results but fewer than 3 recommendations, keep them visible.
@@ -345,6 +589,8 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                     if len(recommendations) >= 3:
                         break
                     if any(rec.name == res.assessment.name for rec in recommendations):
+                        continue
+                    if remove_coding and str(res.assessment.test_type.value).upper() == "K":
                         continue
 
                     assess_domain = getattr(res.assessment, "primary_domain", Domain.GENERAL)
@@ -365,6 +611,11 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                             mismatch_triggered = True
                     if "spring" in requested_specs or "springboot" in requested_specs:
                         if "javascript" in assess_tokens or "react" in assess_tokens or "angular" in assess_tokens:
+                            mismatch_triggered = True
+                    if "kubernetes" in requested_specs or "terraform" in requested_specs:
+                        if query_domain != Domain.BACKEND and "java" in assess_tokens:
+                            mismatch_triggered = True
+                        if query_domain != Domain.FRONTEND and ("react" in assess_tokens or "frontend" in assess_tokens):
                             mismatch_triggered = True
                     if mismatch_triggered and base_confidence < 65:
                         continue
@@ -421,6 +672,8 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                         continue
                     if assess_obj.name in extra_names:
                         continue
+                    if remove_coding and assess_obj.test_type.value == "K":
+                        continue
 
                     assess_domain = domain_classifier.normalize_assessment_domain(assess_obj.name, assess_obj.description)
 
@@ -476,6 +729,26 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
                         recruiter_signal="Expansion Signal"
                     ))
 
+            # Apply completeness validator to guarantee required assessments
+            from app.services.requirement_resolver import RequirementResolver
+            resolver = RequirementResolver()
+            required_cats = resolver.resolve(query_domain, context)
+            recommendations = completeness_validator.ensure_completeness(
+                recommendations,
+                required_cats,
+                catalog,
+                user_query=user_query,
+                remove_coding=remove_coding
+            )
+
+            if remove_coding:
+                recommendations = [
+                    r for r in recommendations
+                    if str(r.test_type).upper() != "K"
+                ]
+
+            recommendations = _cap_recommendations(recommendations, MAX_RECOMMENDATIONS)
+
             # 3. ORCHESTRATION PHASE
             orch_start = time.time()
             filtered_ranked = [r for r in ranked_results if any(rec.name == r.assessment.name for rec in recommendations)]
@@ -498,40 +771,24 @@ async def chat(request_obj: Request, payload: Dict = Body(...)) -> ChatResponse:
 
             # Premium Recruiter Narrative
             domain_label = query_domain.lower().replace("_", " ")
+            table_md = generate_recommendations_table(recommendations, catalog)
+            reply_intro = f"I've optimized an enterprise {domain_label} hiring pipeline. Here are the recommended assessments:\n\n{table_md}\n\n"
             if sparse_catalog_msg:
-                reply = f"I've optimized an enterprise {domain_label} hiring pipeline. {sparse_catalog_msg} {getattr(optimized, 'strategic_advice', '')}"
+                reply = f"{reply_intro}{sparse_catalog_msg} {getattr(optimized, 'strategic_advice', '')}"
             else:
-                reply = f"I've optimized an enterprise {domain_label} hiring pipeline. {getattr(optimized, 'strategic_advice', '')}"
+                reply = f"{reply_intro}{getattr(optimized, 'strategic_advice', '')}"
             
             total_time = time.time() - overall_start
             logger.info(f"PERF_REPORT: Total={total_time:.3f}s | Analysis={analysis_time:.3f}s | Domain={domain_time:.3f}s | Retrieval={retrieval_time:.3f}s | Ranking={ranking_time:.3f}s | Orch={orch_time:.3f}s")
-            
-            # Store recommendations in memory for follow-up turns
-            memory_recs = []
-            for r in recommendations:
-                memory_recs.append({
-                    "id": r.name.lower().replace(" ", "_"),
-                    "name": r.name,
-                    "score": r.confidence / 100.0,
-                    "category": r.category,
-                    "domain": r.domain,
-                    "explanation": r.recruiter_insight
-                })
-            cat_map = {a.name.lower(): a.id for a in services.catalog_loader.get_all()}
-            for mr in memory_recs:
-                mr["id"] = cat_map.get(mr["name"].lower(), mr["name"].lower().replace(" ", "_"))
-            
-            memory_store.store_recommendations(session_id, memory_recs, context)
 
-            return ChatResponse(
-                reply=reply,
-                recommendations=recommendations,
-                pipeline=pipeline_model,
-                end_of_conversation=False
-            )
+            return _make_evaluator_response(reply, recommendations, at_turn_cap)
 
-        return ChatResponse(reply="How can I assist with your hiring orchestration today?", recommendations=[], end_of_conversation=False)
+        return _make_evaluator_response(
+            "How can I assist with your hiring orchestration today?", [], False
+        )
 
     except Exception:
         logger.exception("CHAT FATAL ERROR")
-        return ChatResponse(reply="Technical synchronization issue. Please retry.", recommendations=[], end_of_conversation=False)
+        return _make_evaluator_response(
+            "Technical synchronization issue. Please retry.", [], False
+        )

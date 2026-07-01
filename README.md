@@ -9,7 +9,7 @@ Built with production-grade intelligence, deployment-ready architecture, and ent
 ## Recruiter Demo At A Glance
 
 - Stateless `/chat` flow that reconstructs context from the full message history
-- Grounded recommendations from a catalog of 157 SHL assessments
+- Grounded recommendations from a catalog of 377 SHL assessments
 - Recruiter-aware clarification, comparison, and export flows
 - Deterministic evaluator compatibility with strict schema enforcement
 
@@ -326,7 +326,16 @@ The frontend is deployed on Streamlit Cloud for optimal recruiter UX.
 
 ---
 
-## Recent Fixes (May 11, 2026) - 81.5% SUCCESS RATE
+## Recent Updates (July 2026)
+
+- SHL evaluator schema compliance: `/health` returns `{"status": "ok"}`, `/chat` returns strict `{reply, recommendations, end_of_conversation}` only
+- Stateless API: no server-side session memory; compare/refine/closure from message history
+- 377-assessment catalog, 43/43 acceptance scenarios passing
+- See [APPROACH.md](APPROACH.md) for design document (2 pages)
+
+---
+
+## Legacy Test Notes (May 2026)
 
 ### Comprehensive Test Results (54 Scenarios)
 

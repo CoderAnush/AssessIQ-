@@ -59,7 +59,7 @@ class DecisionEngine:
         logger.debug(f"Detected Intent: {intent}")
 
         # 1. REFUSE if unsafe or off-topic
-        if intent == UserIntent.OFF_TOPIC:
+        if intent in {UserIntent.OFF_TOPIC, UserIntent.PROMPT_INJECTION}:
             return Decision(
                 action=AgentAction.REFUSE,
                 reasoning="I specialize in recommending SHL assessments and cannot assist with unrelated topics.",
@@ -76,10 +76,69 @@ class DecisionEngine:
 
         # 3. CLARIFY if insufficient context (Phase 5: Exactly ONCE)
         turn_count = sum(1 for m in messages if m["role"] == "assistant")
+        full_user_text = " ".join(m["content"].lower() for m in messages if m["role"] == "user")
+
+        # Leadership roles need purpose clarification before first recommendation
+        # Only for executive/CXO-style leadership queries, not functional managers (sales, engineering, etc.)
+        specific_function_signals = (
+            "sales", "engineering", "marketing", "hr ", "human resources", "developer",
+            "financial", "data scientist", "devops", "full stack", "fullstack", "java",
+            "python", "react", "contact centre", "contact center", "analyst", "operator",
+        )
+        has_specific_function = any(sig in full_user_text for sig in specific_function_signals)
+        leadership_role = (
+            not has_specific_function
+            and (
+                any(w in (context.role or "").lower() for w in ["leadership", "cxo", "director"])
+                or any(
+                    w in full_user_text
+                    for w in ["senior leadership", "solution for leadership", "cxo", "director-level"]
+                )
+            )
+        )
+        if (
+            leadership_role
+            and turn_count < 1
+            and not any(w in full_user_text for w in ["selection", "development", "benchmark", "feedback"])
+        ):
+            return Decision(
+                action=AgentAction.CLARIFY,
+                reasoning="Leadership context requires purpose clarification.",
+                confidence=0.9,
+                next_question=self.analyzer.get_clarification_question(context)
+                or "Who is this meant for — selection against a benchmark, or developmental feedback?",
+            )
         
-        # Phase 5: Only clarify if we haven't hit the turn limit AND we haven't already asked the missing slot
+        # Contact centre flows need language clarification before recommendations (C3)
+        cc_role = context.role and any(
+            w in (context.role or "").lower()
+            for w in ["contact centre", "contact center", "call center", "call centre", "customer service"]
+        ) or any(w in full_user_text for w in ["contact centre", "contact center", "call center", "inbound calls"])
+        if cc_role:
+            if turn_count < 1 and not any(
+                w in full_user_text
+                for w in ["english", "spanish", "french", "german", "language"]
+            ):
+                return Decision(
+                    action=AgentAction.CLARIFY,
+                    reasoning="Contact centre screening requires language selection.",
+                    confidence=0.9,
+                    next_question="Before I shape the stack — what language are the calls in? That drives which spoken-language screen we use.",
+                )
+            if turn_count < 3 and "english" in full_user_text and not any(
+                w in full_user_text
+                for w in [" us", " us.", " uk", " uk.", "australian", "indian accent", "us accent", "uk accent"]
+            ):
+                return Decision(
+                    action=AgentAction.CLARIFY,
+                    reasoning="Contact centre English accent selection.",
+                    confidence=0.9,
+                    next_question="SVAR has four English variants in the catalog: US, UK, Australian, and Indian accent. Which fits your operation?",
+                )
+
+        # Phase 5: Clarify up to 2 turns for missing role slot
         missing = context.get_missing_slots()
-        if missing and turn_count < 1: # Strict Phase 5: Clarify ONCE
+        if missing and turn_count < 2:
             next_q = self.analyzer.get_clarification_question(context)
             if next_q:
                 return Decision(
@@ -126,6 +185,13 @@ class DecisionEngine:
 
         # 2. Pattern matching
         import re
+        
+        compare_and_match = re.search(r"compare\s+([^,]+?)\s+and\s+([^?\.!]+)", msg_lower)
+        if compare_and_match:
+            items.append(compare_and_match.group(1).strip())
+            items.append(compare_and_match.group(2).strip())
+            return items
+
         between_match = re.search(r"between\s+([^,]+?)\s+and\s+([^?\.!]+)", msg_lower)
         if between_match:
             items.append(between_match.group(1).strip())

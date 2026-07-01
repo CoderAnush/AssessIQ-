@@ -42,14 +42,16 @@ class DomainClassifier:
     FRONTEND_INDICATORS = {
         "frontend", "javascript", "typescript", "react", "angular", "vue", "nextjs",
         "ui", "ux", "frontend architecture", "html", "css", "sass", "redux",
-        "interface", "styling", "ui design", "user interface"
+        "styling", "ui design", "user interface"
     }
 
     DEVOPS_INDICATORS = {
         "devops", "cloud", "aws", "docker", "terraform", "kubernetes", "sre",
         "site reliability", "infrastructure", "azure", "gcp", "ci/cd", "observability",
         "jenkins", "ansible", "helm", "argocd", "linux", "monitoring", "prometheus",
-        "grafana", "deployment", "platform engineer", "container", "orchestration"
+        "grafana", "deployment", "platform engineer", "container", "orchestration",
+        "bash", "shell", "unix", "network", "networking", "cisco", "firewall", "security",
+        "active directory", "system administration", "admin", "itil", "apache", "iis", "nginx"
     }
 
     ADJACENCY_MAP = {
@@ -87,6 +89,18 @@ class DomainClassifier:
         Detects primary domain using Contextual Python Disambiguation.
         """
         query_low = query.lower()
+
+        if "full stack" in query_low or "fullstack" in query_low:
+            return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Full Stack Override"}
+
+        if any(kw in query_low for kw in ["contact centre", "contact center", "call center", "call centre", "inbound calls", "contact centre agents"]):
+            return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Contact Centre Role", "techStack": ["customer service"]}
+
+        if any(kw in query_low for kw in ["financial analyst", "graduate financial", "finance knowledge", "numerical reasoning"]):
+            return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Finance Graduate Role", "techStack": ["finance"]}
+
+        if any(kw in query_low for kw in ["sales", "marketing", "financial", "accounting", "hr executive", "recruitment", "customer service", "retail", "business development"]):
+            return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Non-technical Business Role"}
         
         # 1. EXPLICIT OVERRIDES (Highest Priority)
         if any(kw in query_low for kw in ["backend", "api", "fastapi", "django", "flask", "server"]):
@@ -163,13 +177,23 @@ class DomainClassifier:
         Normalizes assessment domains into canonical groups.
         """
         text = (name + " " + description).lower()
+
+        # Hard check for Physical Engineering first
+        if any(kw in text for kw in ["civil", "mechanical", "electrical", "chemical", "aeronautical", "aerospace", "ceramic", "fire engineering", "geoinformatics"]):
+            return Domain.ENGINEERING_CORE
+
+        # Hard check for Sales/Marketing/HR/Finance first
+        if any(kw in text for kw in ["sales", "marketing", "financial", "accounting", "recruitment", "customer service", "retail", "business development", "negotiation"]):
+            if any(w in text for w in ["leader", "manage", "executive"]):
+                return Domain.MANAGEMENT
+            return Domain.GENERAL
         
         # Hard Negative Checks for Assessment Tagging
         if any(kw in text for kw in ["aws", "cloud", "kubernetes", "docker", "terraform", "infrastructure", "devops"]):
             return Domain.DEVOPS
         if any(kw in text for kw in ["react", "frontend", "ui ", "ux ", "angular", "javascript", "typescript", "css"]):
              # Re-verify it's not a backend test for frontend developers
-             if "java" in text or "python" in text or "backend" in text:
+             if re.search(r"\bjava\b", text) or "python" in text or "backend" in text:
                  return Domain.BACKEND
              return Domain.FRONTEND
         if any(re.search(rf"\b{re.escape(kw)}\b", text) for kw in ["machine learning", "data science", "nlp", "llm"]):
@@ -200,6 +224,9 @@ class DomainClassifier:
         Absolute Domain Hard Lock.
         NO ENGINEERING_CORE. NO partial overlap.
         """
+        if assessment_domain in {Domain.GENERAL, Domain.MANAGEMENT}:
+            return True
+            
         strict_domains = {Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI}
         if query_domain in strict_domains:
             return query_domain == assessment_domain

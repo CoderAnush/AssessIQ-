@@ -29,6 +29,24 @@ logger = get_logger("retriever")
 # ---------------------------------------------------------------------------
 _RRF_K = 60
 
+# Known specific technology tokens that are meaningful in assessment NAMES.
+# Used only to detect when a *different* named tech appears in a result's name.
+_KNOWN_TECH_TOKENS: Set[str] = {
+    "java", "python", "ruby", "perl", "php", "cobol", "fortran", "swift",
+    "kotlin", "scala", "golang", "rust", "typescript", "javascript",
+    "react", "angular", "vue", "svelte", "css", "html",
+    "spring", "django", "flask", "rails", "laravel",
+    "oracle", "mysql", "postgresql", "mongodb", "redis", "sqlite", "db2",
+    "linux", "unix", "windows", "macos",
+    "aws", "azure", "gcp",
+    "docker", "kubernetes", "terraform", "ansible",
+    "tableau", "powerbi", "excel",
+    "hadoop", "spark", "kafka",
+    "c++", "c#", "asp.net", ".net", "vb.net",
+    "corba", "bea", "weblogic", "websphere", "jboss",
+    "apache", "nginx",
+}
+
 
 def _reciprocal_rank_fusion(
     ranked_lists: List[List[str]], k: int = _RRF_K
@@ -43,6 +61,59 @@ def _reciprocal_rank_fusion(
         for rank, doc_id in enumerate(ranked, start=1):
             scores[doc_id] = scores.get(doc_id, 0.0) + 1.0 / (k + rank)
     return scores
+
+
+def _apply_name_match_boost(
+    rrf_scores: Dict[str, float],
+    id_to_assessment: Dict[str, Any],
+    query_low: str,
+) -> Dict[str, float]:
+    """
+    Post-RRF precision boost based on query↔assessment-name technology match.
+
+    Logic (query-relative, not technology-specific):
+    - Extract explicit technology tokens that appear in the query.
+    - For each candidate:
+        • If the assessment NAME contains a query technology token  →  boost  x1.5
+        • If the assessment NAME contains a *different* technology token
+          (one not present in the query at all)           →  dampen x0.6
+        • Otherwise: no change.
+
+    This is not a hardcoded penalty for any specific language;
+    it is a query-relative lexical precision signal.
+    """
+    # Identify which known tech tokens appear in the query
+    query_tokens = set(re.findall(r"\b[a-z0-9.#+]+\b", query_low))
+    query_tech = query_tokens & _KNOWN_TECH_TOKENS
+
+    # If the query names no specific technology, skip — avoid false dampening
+    if not query_tech:
+        return rrf_scores
+
+    boosted: Dict[str, float] = {}
+    for doc_id, score in rrf_scores.items():
+        a = id_to_assessment.get(doc_id)
+        if a is None:
+            boosted[doc_id] = score
+            continue
+
+        name_low = a.name.lower()
+        name_tokens = set(re.findall(r"\b[a-z0-9.#+]+\b", name_low))
+        name_tech = name_tokens & _KNOWN_TECH_TOKENS
+
+        # Does the assessment name match any query technology?
+        name_matches_query = bool(name_tech & query_tech)
+        # Does the assessment name contain a technology NOT in the query?
+        name_has_different_tech = bool(name_tech - query_tech)
+
+        if name_matches_query:
+            boosted[doc_id] = score * 1.5
+        elif name_has_different_tech:
+            boosted[doc_id] = score * 0.6
+        else:
+            boosted[doc_id] = score
+
+    return boosted
 
 
 # ---------------------------------------------------------------------------
@@ -83,7 +154,12 @@ _DOMAIN_EXCLUSIONS: Dict[str, Set[str]] = {
 def _infer_query_domain(query_low: str, context: Any) -> str:
     """Detect the primary domain of the query from text signals."""
     # Check context domain first
-    ctx_domain = str(getattr(context, "domain", "general")).lower()
+    ctx_domain = getattr(context, "domain", "general")
+    if hasattr(ctx_domain, "value"):
+        ctx_domain = ctx_domain.value
+    ctx_domain = str(ctx_domain).lower()
+    if ctx_domain.startswith("domain."):
+        ctx_domain = ctx_domain[7:]
     if ctx_domain not in ("general", "none", ""):
         return ctx_domain
 
@@ -282,7 +358,10 @@ class HybridRetriever:
         # --- Step 4: RRF merge ---
         rrf_scores = _reciprocal_rank_fusion([bm25_ranked, vector_ranked])
 
-        # Sort by RRF score
+        # --- Step 4b: Name-match precision boost (query-relative) ---
+        rrf_scores = _apply_name_match_boost(rrf_scores, id_to_assessment, query_low)
+
+        # Sort by boosted RRF score
         sorted_ids = sorted(rrf_scores, key=rrf_scores.get, reverse=True)
 
         # If both indices failed, fall back to BM25-only or first candidates

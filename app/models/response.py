@@ -61,6 +61,10 @@ class Recommendation(BaseModel):
     domain: str = Field("", description="Detected engineering domain")
     matched_skills: List[str] = Field(default_factory=list, description="Directly matching skills")
     recruiter_signal: str = Field("", description="Dynamic hiring signal tag")
+    # Explicit fallback metadata fields
+    is_fallback: bool = Field(False, description="Whether this recommendation is a fallback for completeness")
+    fallback_reason: str = Field("", description="Reason for fallback recommendation")
+    fallback_type: str = Field("", description="Type of fallback (e.g., Completeness)")
 
     class Config:
         extra = "ignore"

@@ -288,6 +288,10 @@ class DataCleaner:
             "seniority_levels",
             "metadata",
             "job_relevance",
+            "languages",
+            "keys",
+            "adaptive",
+            "remote",
         ]:
             if key in assessment:
                 cleaned[key] = assessment[key]
