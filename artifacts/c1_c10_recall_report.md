@@ -13,7 +13,7 @@
 
 - **Recall@10:** 1.00
 - **Expected:** smart interview, linux, networking, verify
-- **Top Recommendations:** Smart Interview Live Coding, Linux Programming (General), Networking and Implementation (New), Verify G+ - Ability Test Report, Cloud Computing (New), Docker (New), GIT (New)
+- **Top Recommendations:** Smart Interview Live Coding, Linux Programming (General), Networking and Implementation (New), Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, Cloud Computing (New), Docker (New)
 
 ## C3_contact_centre
 
@@ -55,7 +55,7 @@
 
 - **Recall@10:** 1.00
 - **Expected:** java, spring, sql, aws, docker
-- **Top Recommendations:** Java Frameworks (New), Spring (New), SQL Server Integration Services (SSIS) (New), Amazon Web Services (AWS) Development (New), Docker (New), ReactJS (New), Automata - Fix (New)
+- **Top Recommendations:** Java Frameworks (New), Spring (New), SQL Server Integration Services (SSIS) (New), Amazon Web Services (AWS) Development (New), Docker (New), ReactJS (New), Occupational Personality Questionnaire OPQ32r
 
 ## C10_grad_mgmt
 

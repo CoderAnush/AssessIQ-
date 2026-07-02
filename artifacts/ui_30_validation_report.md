@@ -1,8 +1,8 @@
 # UI Curated Validation Report (30)
 
 **Backend:** `http://127.0.0.1:8000`
-**Passed:** 30/30
-**Failed:** 0/30
+**Passed:** 31/31
+**Failed:** 0/31
 
 ## [PASS] 1. C1 leadership benchmark
 
@@ -23,7 +23,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Smart Interview Live Coding, Linux Programming (General), Networking and Implementation (New), Verify G+ - Ability Test Report, Cloud Computing (New), Docker (New), GIT (New)
+- **Top cards:** Smart Interview Live Coding, Linux Programming (General), Networking and Implementation (New), Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, Cloud Computing (New), Docker (New)
 - **Reply preview:** I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -151,7 +151,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Java Frameworks (New), Spring (New), SQL Server Integration Services (SSIS) (New), Amazon Web Services (AWS) Development (New), Docker (New), ReactJS (New), Automata - Fix (New)
+- **Top cards:** Java Frameworks (New), Spring (New), SQL Server Integration Services (SSIS) (New), Amazon Web Services (AWS) Development (New), Docker (New), ReactJS (New), Occupational Personality Questionnaire OPQ32r
 - **Reply preview:** Updated shortlist based on your request:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -190,7 +190,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Spring (New), Java Platform Enterprise Edition 7 (Java EE 7), Enterprise Java Beans (New), Automata - Fix (New), Core Java (Advanced Level) (New), Java 2 Platform Enterprise Edition 1.4 Fundamental, Java Frameworks (New)
+- **Top cards:** Spring (New), Occupational Personality Questionnaire OPQ32r, Java Platform Enterprise Edition 7 (Java EE 7), Enterprise Java Beans (New), Automata - Fix (New), Java 2 Platform Enterprise Edition 1.4 Fundamental, Core Java (Advanced Level) (New)
 - **Reply preview:** I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -253,14 +253,14 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Spring (New), Java Platform Enterprise Edition 7 (Java EE 7), Enterprise Java Beans (New), Automata - Fix (New), Core Java (Advanced Level) (New), Java 2 Platform Enterprise Edition 1.4 Fundamental, Java Frameworks (New)
+- **Top cards:** Spring (New), Occupational Personality Questionnaire OPQ32r, Java Platform Enterprise Edition 7 (Java EE 7), Enterprise Java Beans (New), Automata - Fix (New), Java 2 Platform Enterprise Edition 1.4 Fundamental, Core Java (Advanced Level) (New)
 - **Reply preview:** Compare these two assessments side by side:
 
-### Comparison: Spring (New) vs Java Platform Enterprise Edition 7 (Java EE 7)
+### Comparison: Spring (New) vs Occupational Personality Questionnaire OPQ32r
 
-| Dimension | Spring (New) | Java Platform Enterprise Edition 7 (Java EE 7) |
+| Dimension | Spring (New) | Occupational Personality Questionnaire OPQ32r |
 | :--- | :--- | :--- |
-| **Best For** | Technical skill v
+| **Best For** | Technical skill ver
 
 ## [PASS] 23. Closure with shortlist replay
 
@@ -268,7 +268,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** True
-- **Top cards:** Spring (New), Java Platform Enterprise Edition 7 (Java EE 7), Enterprise Java Beans (New), Automata - Fix (New), Core Java (Advanced Level) (New), Java 2 Platform Enterprise Edition 1.4 Fundamental, Java Frameworks (New)
+- **Top cards:** Spring (New), Occupational Personality Questionnaire OPQ32r, Java Platform Enterprise Edition 7 (Java EE 7), Enterprise Java Beans (New), Automata - Fix (New), Java 2 Platform Enterprise Edition 1.4 Fundamental, Core Java (Advanced Level) (New)
 - **Reply preview:** Confirmed. Here is your finalized assessment shortlist:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -282,11 +282,11 @@
 - **Clarify Detected:** False
 - **end_of_conversation:** False
 - **Top cards:** Automata Data Science (New), Data Science (New), Automata Data Science Pro (New), AI Skills, Microsoft 365 (New), Smart Interview On Demand, Workplace Administration Skills (New)
-- **Reply preview:** I've optimized an enterprise data ai hiring pipeline. Here are the recommended assessments:
+- **Reply preview:** I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | Automata Data Science (New) | S | Simulations | 60 minutes | English (
+| 1 | Automata Data Science (New) | S | Simulations | 60 minutes | English (US
 
 ## [PASS] 25. DevOps baseline
 
@@ -304,10 +304,10 @@
 ## [PASS] 26. QA automation baseline
 
 - **Expectation:** QA/testing relevant cards
-- **Cards:** 3
+- **Cards:** 4
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Manual Testing (New), Automata Selenium, Selenium (New)
+- **Top cards:** Manual Testing (New), Automata Selenium, Selenium (New), Occupational Personality Questionnaire OPQ32r
 - **Reply preview:** I've optimized an enterprise qa hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -320,12 +320,12 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** WriteX - Email Writing (Managerial) (New), Business Communication (adaptive), Business Communications, Adobe Experience Manager (New), Manufacturing & Industrial - Essential Focus 8.0, Universal Competency Framework Job profiling guide, Smart Interview On Demand
+- **Top cards:** Occupational Personality Questionnaire OPQ32r, OPQ Universal Competency Report 1.0, OPQ Manager Plus Report, WriteX - Email Writing (Managerial) (New), OPQ User and Managers Report, OPQ Manager Plus Report 2.0, OPQ Team Impact Selection Report
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | WriteX - Email Writing (Managerial) (New) | S | Simulations | 15 minut
+| 1 | Occupational Personality Questionnaire OPQ32r | P | Personality & Beha
 
 ## [PASS] 28. Sales manager baseline
 
@@ -359,9 +359,22 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** AI Skills, Automata Data Science Pro (New), Data Science (New), Automata Data Science (New), Smart Interview On Demand, Verify - Verbal Ability - Next Generation, ETL Testing (New)
-- **Reply preview:** I've optimized an enterprise data ai hiring pipeline. Here are the recommended assessments:
+- **Top cards:** AI Skills, Automata Data Science (New), Automata Data Science Pro (New), Data Science (New), Smart Interview On Demand, Verify - Verbal Ability - Next Generation, Universal Competency Framework Interview Guide
+- **Reply preview:** I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | AI Skills | P | Personality & Behavior | 16 minutes | English (USA) | 
+| 1 | AI Skills | P | Personality & Behavior | 16 minutes | English (USA) | <h
+
+## [PASS] 31. AI multi-turn developer junior
+
+- **Expectation:** AI/Data Science cards after seniority follow-up; no Java stack
+- **Cards:** 7
+- **Clarify Detected:** False
+- **end_of_conversation:** False
+- **Top cards:** Automata Data Science (New), AI Skills, Automata Data Science Pro (New), Data Science (New), Verify - General Ability Screen, Smart Interview On Demand, Verify - Numerical Ability
+- **Reply preview:** I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:
+
+| # | Name | Test Type | Keys | Duration | Languages | URL |
+|---|---|---|---|---|---|---|
+| 1 | Automata Data Science (New) | S | Simulations | 60 minutes | English (US

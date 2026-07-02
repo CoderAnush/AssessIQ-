@@ -1,0 +1,32 @@
+[
+  {
+    "check": "health",
+    "pass": true,
+    "detail": "{\"status\":\"ok\"}"
+  },
+  {
+    "check": "recommendations",
+    "pass": true,
+    "detail": "recs=7"
+  },
+  {
+    "check": "clarification",
+    "pass": true,
+    "detail": "What type of role and seniority are you hiring for? Examples: Senior Backend Developer, Junior Front"
+  },
+  {
+    "check": "comparison",
+    "pass": true,
+    "detail": "Compare these assessments:\n\n### Comparison: N/A vs N/A\n| Dimension | N/A | N/A |\n| :--- | :--- | :--"
+  },
+  {
+    "check": "refinement",
+    "pass": false,
+    "detail": "['Java 8 (New)', 'Java Platform Enterprise Edition 7 (Java EE 7)', 'Java Design Patterns (New)']"
+  },
+  {
+    "check": "prompt_injection",
+    "pass": true,
+    "detail": "I specialize in recommending SHL assessments and cannot assist with unrelated topics."
+  }
+]

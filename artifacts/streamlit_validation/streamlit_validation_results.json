@@ -1,0 +1,110 @@
+[
+  {
+    "slug": "01_java_backend",
+    "query": "Hiring a Java Spring Boot backend developer with microservices experience.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 45.3,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\01_java_backend.png",
+    "error": ""
+  },
+  {
+    "slug": "02_react_frontend",
+    "query": "Senior React Frontend Engineer with TypeScript and Next.js.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 46.9,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\02_react_frontend.png",
+    "error": ""
+  },
+  {
+    "slug": "03_ai_engineer",
+    "query": "AI Engineer with machine learning and NLP experience.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 46.8,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\03_ai_engineer.png",
+    "error": ""
+  },
+  {
+    "slug": "04_data_scientist",
+    "query": "Data Scientist with Python, statistics, and machine learning.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 46.8,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\04_data_scientist.png",
+    "error": ""
+  },
+  {
+    "slug": "05_finance_analyst",
+    "query": "Finance Analyst with Excel, modeling, and reporting skills.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 46.8,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\05_finance_analyst.png",
+    "error": ""
+  },
+  {
+    "slug": "06_hr_executive",
+    "query": "HR Executive for talent acquisition and employee relations.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 46.8,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\06_hr_executive.png",
+    "error": ""
+  },
+  {
+    "slug": "07_sales_manager",
+    "query": "Sales Manager for B2B enterprise software sales.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 46.7,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\07_sales_manager.png",
+    "error": ""
+  },
+  {
+    "slug": "08_graduate_swe",
+    "query": "Graduate Software Engineer with aptitude and communication skills.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 46.6,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\08_graduate_swe.png",
+    "error": ""
+  },
+  {
+    "slug": "09_engineering_manager",
+    "query": "Engineering Manager leading backend and platform teams.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 46.7,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\09_engineering_manager.png",
+    "error": ""
+  },
+  {
+    "slug": "10_contact_centre",
+    "query": "Entry-level contact centre agents for US inbound calls.",
+    "cards": 0,
+    "passed": true,
+    "elapsed_s": 46.6,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\10_contact_centre.png",
+    "error": ""
+  },
+  {
+    "slug": "11_scenario41_fullstack",
+    "query": "Hiring a Full Stack Engineer with Java, Spring Boot, React, Next.js, AWS, Docker, Kubernetes, Leadership, and Communication skills.",
+    "cards": 7,
+    "passed": true,
+    "elapsed_s": 46.7,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\11_scenario41_fullstack.png",
+    "error": ""
+  },
+  {
+    "slug": "12_vague_programmer",
+    "query": "programmer",
+    "cards": 0,
+    "passed": true,
+    "elapsed_s": 46.7,
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\12_vague_programmer.png",
+    "error": ""
+  }
+]
