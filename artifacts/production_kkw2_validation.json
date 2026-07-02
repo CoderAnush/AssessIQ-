@@ -1,0 +1,29 @@
+{
+  "api": "https://assessiq-kkw2.onrender.com",
+  "streamlit": "https://assessiq-ai.streamlit.app",
+  "streamlit_connected": true,
+  "gemini_key_configured": true,
+  "validated_at": "2026-07-02",
+  "smoke_tests": {
+    "ai_multi_turn": {
+      "prompts": ["hiring ai developer", "junior"],
+      "pass": true,
+      "top_cards": ["Automata Data Science (New)", "AI Skills", "Data Science (New)"]
+    },
+    "java_backend": {
+      "pass": true,
+      "top_cards": ["Spring (New)", "Java Frameworks (New)"]
+    },
+    "vague_programmer": {
+      "pass": true,
+      "rec_count": 0,
+      "clarify": true
+    }
+  },
+  "gates": {
+    "browser_20": "20/20",
+    "ui_31": "31/31",
+    "acceptance": "43/43"
+  },
+  "notes": "Docker deploy uses BM25-only retrieval (faiss/sentence-transformers commented in requirements.txt)."
+}

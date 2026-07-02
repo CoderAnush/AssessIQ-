@@ -1,6 +1,6 @@
 # UI Curated Validation Report (30)
 
-**Backend:** `http://127.0.0.1:8000`
+**Backend:** `https://assessiq-kkw2.onrender.com`
 **Passed:** 31/31
 **Failed:** 0/31
 
@@ -10,7 +10,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Executive Scenarios, Occupational Personality Questionnaire OPQ32r, Enterprise Leadership Report 1.0, OPQ Leadership Report, Enterprise Leadership Report 2.0, HiPo Assessment Report 2.0, OPQ Team Types and Leadership Styles Report
+- **Top cards:** Executive Scenarios, Occupational Personality Questionnaire OPQ32r, Enterprise Leadership Report 1.0, OPQ Leadership Report, Enterprise Leadership Report 2.0, HiPo Assessment Report 2.0, HiPo Assessment Report 1.0
 - **Reply preview:** I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -23,7 +23,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Smart Interview Live Coding, Linux Programming (General), Networking and Implementation (New), Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, Cloud Computing (New), Docker (New)
+- **Top cards:** Smart Interview Live Coding, Linux Programming (General), Networking and Implementation (New), Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, Cloud Computing (New), Count Out The Money
 - **Reply preview:** I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -57,7 +57,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Financial Accounting (New), SHL Verify Interactive – Numerical Reasoning, Graduate Scenarios, Verify - Numerical Ability, SHL Verify Interactive Numerical Calculation, MFS 360 UCF Performance Potential Dev Tips Report, Verify - General Ability Screen
+- **Top cards:** Financial Accounting (New), SHL Verify Interactive – Numerical Reasoning, Graduate Scenarios, Verify - Numerical Ability, SHL Verify Interactive Numerical Calculation, Customer Service Phone Simulation, Verify - General Ability Screen
 - **Reply preview:** Updated shortlist based on your request:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -83,12 +83,12 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Manufac. & Indust. - Safety & Dependability 8.0, Dependability and Safety Instrument (DSI), Workplace Health and Safety (New), Fire Engineering (New), Automata - Fix (New), Automata (New), Culinary Skills (New)
+- **Top cards:** AI Skills, Dependability and Safety Instrument (DSI), Manufac. & Indust. - Safety & Dependability 8.0, Workplace Health and Safety (New), Fire Engineering (New), Global Skills Development Report, Accounts Payable Simulation (New)
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | Manufac. & Indust. - Safety & Dependability 8.0 | P | Personality & Be
+| 1 | AI Skills | P | Personality & Behavior | 16 minutes | English (USA) | 
 
 ## [PASS] 8. C7 bilingual healthcare clarify
 
@@ -104,7 +104,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Medical Terminology (New), Dependability and Safety Instrument (DSI), Occupational Personality Questionnaire OPQ32r, Entry Level Customer Service (General) Solution, Customer Service Phone Simulation, Entry Level Hotel Front Desk Solution, HIPAA (Security)
+- **Top cards:** Medical Terminology (New), Dependability and Safety Instrument (DSI), Occupational Personality Questionnaire OPQ32r, Smart Interview Live, AI Skills, HIPAA (Security), Accounts Payable Simulation (New)
 - **Reply preview:** I've optimized an enterprise medical hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -117,7 +117,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Microsoft Excel 365 - Essentials (New), Microsoft Word 365 - Essentials (New), Microsoft Word 365 (New), Microsoft 365 (New), Reading Comprehension - Spanish v1, Reading Comprehension v2, Reading Comprehension - English v1
+- **Top cards:** Microsoft Excel 365 - Essentials (New), Microsoft Word 365 (New), Microsoft Word 365 - Essentials (New), Microsoft 365 (New), Reading Comprehension - Spanish v1, Reading Comprehension v2, Reading Comprehension - English v1
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -130,12 +130,12 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Microsoft Excel 365 - Essentials (New), Microsoft Word 365 - Essentials (New), Microsoft Word 365 (New), Reading Comprehension - Spanish v1, Reading Comprehension v2, Reading Comprehension - English v1, Microsoft 365 (New)
+- **Top cards:** Reading Comprehension - Spanish v1, Reading Comprehension v2, Reading Comprehension - English v1, Microsoft Excel 365 - Essentials (New), Microsoft Word 365 (New), Microsoft Word 365 - Essentials (New), Microsoft 365 (New)
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | Microsoft Excel 365 - Essentials (New) | K,S | Knowledge & Skills, Sim
+| 1 | Reading Comprehension - Spanish v1 | A | Ability & Aptitude | 26 minut
 
 ## [PASS] 12. C9 full-stack clarify
 
@@ -164,7 +164,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, Verify - General Ability Screen, OPQ Leadership Report, Graduate Scenarios, Graduate Scenarios Narrative Report, Digital Readiness Development Report - Manager
+- **Top cards:** Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, Verify - General Ability Screen, Graduate Scenarios, Graduate Scenarios Narrative Report, Graduate Scenarios Profile Report, Oracle DBA (Entry Level) (New)
 - **Reply preview:** I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -174,10 +174,10 @@
 ## [PASS] 15. C10 drop OPQ final
 
 - **Expectation:** Final list excludes OPQ
-- **Cards:** 5
+- **Cards:** 6
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Verify G+ - Ability Test Report, Verify - General Ability Screen, Graduate Scenarios, Graduate Scenarios Narrative Report, Digital Readiness Development Report - Manager
+- **Top cards:** Verify G+ - Ability Test Report, Verify - General Ability Screen, Graduate Scenarios, Graduate Scenarios Narrative Report, Graduate Scenarios Profile Report, Oracle DBA (Entry Level) (New)
 - **Reply preview:** Updated shortlist based on your request:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -190,7 +190,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Spring (New), Occupational Personality Questionnaire OPQ32r, Java Platform Enterprise Edition 7 (Java EE 7), Enterprise Java Beans (New), Automata - Fix (New), Java 2 Platform Enterprise Edition 1.4 Fundamental, Core Java (Advanced Level) (New)
+- **Top cards:** Spring (New), Occupational Personality Questionnaire OPQ32r, Automata - Fix (New), Java Platform Enterprise Edition 7 (Java EE 7), Core Java (Advanced Level) (New), Enterprise Java Beans (New), Java 2 Platform Enterprise Edition 1.4 Fundamental
 - **Reply preview:** I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -203,7 +203,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** ReactJS (New), AngularJS (New), Angular 6 (New), Automata Front End, Business Communication (adaptive), Universal Competency Framework Job profiling guide, Business Communications
+- **Top cards:** ReactJS (New), AngularJS (New), Angular 6 (New), Automata Front End, Business Communication (adaptive), Business Communications, Dermatology (New)
 - **Reply preview:** I've optimized an enterprise frontend hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -224,7 +224,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** ReactJS (New), WriteX - Email Writing (Managerial) (New), AngularJS (New), SHL Verify Interactive – Deductive Reasoning, Automata Front End, Angular 6 (New), Adobe Experience Manager (New)
+- **Top cards:** ReactJS (New), AngularJS (New), Automata Front End, Angular 6 (New), Adobe Experience Manager (New), Business Communication (adaptive), Business Communications
 - **Reply preview:** I've optimized an enterprise frontend hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -253,7 +253,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Spring (New), Occupational Personality Questionnaire OPQ32r, Java Platform Enterprise Edition 7 (Java EE 7), Enterprise Java Beans (New), Automata - Fix (New), Java 2 Platform Enterprise Edition 1.4 Fundamental, Core Java (Advanced Level) (New)
+- **Top cards:** Spring (New), Occupational Personality Questionnaire OPQ32r, Automata - Fix (New), Java Platform Enterprise Edition 7 (Java EE 7), Core Java (Advanced Level) (New), Enterprise Java Beans (New), Java 2 Platform Enterprise Edition 1.4 Fundamental
 - **Reply preview:** Compare these two assessments side by side:
 
 ### Comparison: Spring (New) vs Occupational Personality Questionnaire OPQ32r
@@ -268,7 +268,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** True
-- **Top cards:** Spring (New), Occupational Personality Questionnaire OPQ32r, Java Platform Enterprise Edition 7 (Java EE 7), Enterprise Java Beans (New), Automata - Fix (New), Java 2 Platform Enterprise Edition 1.4 Fundamental, Core Java (Advanced Level) (New)
+- **Top cards:** Spring (New), Occupational Personality Questionnaire OPQ32r, Automata - Fix (New), Java Platform Enterprise Edition 7 (Java EE 7), Core Java (Advanced Level) (New), Enterprise Java Beans (New), Java 2 Platform Enterprise Edition 1.4 Fundamental
 - **Reply preview:** Confirmed. Here is your finalized assessment shortlist:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -281,7 +281,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Automata Data Science (New), Data Science (New), Automata Data Science Pro (New), AI Skills, Microsoft 365 (New), Smart Interview On Demand, Workplace Administration Skills (New)
+- **Top cards:** Automata Data Science (New), Data Science (New), Automata Data Science Pro (New), Verify - Numerical Ability, Microsoft 365 (New), ETL Testing (New), Workplace Administration Skills (New)
 - **Reply preview:** I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -294,7 +294,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Docker (New), Kubernetes (New), Cloud Computing (New), ITIL (IT Infrastructure Library) (New), Universal Competency Framework Job profiling guide, Business Communication (adaptive), Business Communications
+- **Top cards:** Docker (New), Kubernetes (New), Cloud Computing (New), Count Out The Money, Business Communication (adaptive), Business Communications, .NET Framework 4.5
 - **Reply preview:** I've optimized an enterprise devops hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -320,7 +320,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Occupational Personality Questionnaire OPQ32r, OPQ Universal Competency Report 1.0, OPQ Manager Plus Report, WriteX - Email Writing (Managerial) (New), OPQ User and Managers Report, OPQ Manager Plus Report 2.0, OPQ Team Impact Selection Report
+- **Top cards:** Occupational Personality Questionnaire OPQ32r, Business Communication (adaptive), Business Communications, Conversational Multichat Simulation, Adobe Experience Manager (New), Dependability and Safety Instrument (DSI), Contact Center Call Simulation (New)
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -333,7 +333,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Global Skills Development Report, Occupational Personality Questionnaire OPQ32r, Sales Transformation Report 1.0 - Sales Manager, Sales Transformation Report 2.0 - Sales Manager, Sales & Service Phone Solution, Entry Level Sales Solution, Sales Transformation 1.0 - Individual Contributor
+- **Top cards:** Global Skills Development Report, Occupational Personality Questionnaire OPQ32r, Sales Transformation Report 1.0 - Sales Manager, Sales & Service Phone Solution, Sales Transformation Report 2.0 - Sales Manager, Entry Level Sales Solution, Sales Profiler Cards
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -346,7 +346,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Social Media (New), Marketing (New), Digital Readiness Development Report - Manager, Smart Interview Live, Sales Transformation Report 2.0 - Sales Manager, 360° Multi-Rater Feedback System (MFS), Digital Readiness Development Report - IC
+- **Top cards:** Social Media (New), Marketing (New), Digital Readiness Development Report - Manager, Smart Interview Live, Sales Transformation Report 1.0 - Sales Manager, Digital Readiness Development Report - IC, Sales Transformation Report 2.0 - Sales Manager
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -359,7 +359,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** AI Skills, Automata Data Science (New), Automata Data Science Pro (New), Data Science (New), Smart Interview On Demand, Verify - Verbal Ability - Next Generation, Universal Competency Framework Interview Guide
+- **Top cards:** AI Skills, Automata Data Science (New), Automata Data Science Pro (New), Data Science (New), Adobe Experience Manager (New), Basic Statistics (New), Business Communication (adaptive)
 - **Reply preview:** I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -372,7 +372,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Automata Data Science (New), AI Skills, Automata Data Science Pro (New), Data Science (New), Verify - General Ability Screen, Smart Interview On Demand, Verify - Numerical Ability
+- **Top cards:** Automata Data Science (New), AI Skills, Automata Data Science Pro (New), Data Science (New), Verify - General Ability Screen, Microsoft 365 (New), SHL Verify Interactive - Inductive Reasoning
 - **Reply preview:** I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |

@@ -29,7 +29,7 @@ services:
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: BACKEND_URL
-        value: "https://assessiq-nkp2.onrender.com"
+        value: "https://assessiq-kkw2.onrender.com"
       - key: STREAMLIT_SERVER_PORT
         value: "8501"
       - key: STREAMLIT_SERVER_ADDRESS

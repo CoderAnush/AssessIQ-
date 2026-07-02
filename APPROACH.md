@@ -42,7 +42,7 @@ Run `python scripts/run_c1_c10_recall.py` after starting the backend; report at 
 
 ## Deployment
 
-- **API:** https://assessiq-nkp2.onrender.com
+- **API:** https://assessiq-kkw2.onrender.com
 - **Streamlit demo:** https://assessiq-ai.streamlit.app (set `BACKEND_URL` secret to the API URL)
 - **Render frontend:** optional `assessiq-frontend` service with the same `BACKEND_URL`
 

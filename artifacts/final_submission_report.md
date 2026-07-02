@@ -1,14 +1,14 @@
 # Final Submission Report
 
-**Generated:** 2026-07-02  
-**Commit:** `facb7ac` (AI multi-turn fix on top of `313f965`)  
+**Generated:** 2026-07-02 (post-deploy re-validation on owner Render `assessiq-kkw2`)  
+**Commit:** `f336265`  
 **Overall Verdict:** **READY TO SUBMIT**
 
 ---
 
 ## Executive Summary
 
-All nine validation suites passed locally after deploying commit `facb7ac`, which fixes multi-turn AI context loss (`hiring ai developer` → `junior` no longer returns Java/backend). Production API spot-check confirms AI/Data Science cards. UI curated validation is **31/31** (including new scenario 31). Browser 20-scenario suite is **20/20** against production.
+All validation gates re-run against **owner Render** `https://assessiq-kkw2.onrender.com` with Streamlit secret wired. Acceptance **43/43**, UI curated **31/31**, browser 20 **20/20**. Streamlit sidebar shows **Connected** to `assessiq-kkw2`.
 
 ---
 
@@ -35,7 +35,7 @@ All nine validation suites passed locally after deploying commit `facb7ac`, whic
 |---|-------|--------|--------|-----------|
 | 1 | pytest | 52 | 0 | — |
 | 2 | Evaluator Suite | 15 | 0 | — |
-| 3 | Acceptance Suite (local) | 43 | 0 | `scratch/test_results.json` |
+| 3 | Acceptance Suite (kkw2) | 43 | 0 | `scratch/test_results.json` |
 | 4 | Comprehensive 54 | 54 | 0 | `artifacts/scenario_50_report.md` |
 | 5 | UI 31 (curated) | 31 | 0 | `artifacts/ui_30_validation_report.md` |
 | 6 | C1–C10 Recall | 10 traces | 0 | `artifacts/c1_c10_recall_report.md` |
@@ -56,7 +56,7 @@ Unchanged from `313f965` — Full Stack Engineer returns 7 recommendations on lo
 
 ## Production Validation
 
-**API:** https://assessiq-nkp2.onrender.com
+**API:** https://assessiq-kkw2.onrender.com
 
 | Check | Result |
 |-------|--------|
@@ -72,7 +72,7 @@ Unchanged from `313f965` — Full Stack Engineer returns 7 recommendations on lo
 ## Browser / Streamlit Validation
 
 **Demo:** https://assessiq-ai.streamlit.app  
-**Backend:** https://assessiq-nkp2.onrender.com
+**Backend:** https://assessiq-kkw2.onrender.com
 
 | Suite | Result |
 |-------|--------|
@@ -104,7 +104,7 @@ Results: `artifacts/browser_20/browser_20_results.json`, `artifacts/browser_20_v
 
 | Service | URL |
 |---------|-----|
-| Production API | https://assessiq-nkp2.onrender.com |
+| Production API | https://assessiq-kkw2.onrender.com |
 | Streamlit Demo | https://assessiq-ai.streamlit.app |
 | Repository | https://github.com/CoderAnush/AssessIQ- |
 
@@ -118,7 +118,10 @@ Results: `artifacts/browser_20/browser_20_results.json`, `artifacts/browser_20_v
 - [x] UI 31/31 (scenario 31 added)
 - [x] Browser 20/20 scenarios pass
 - [x] C1–C10 recall avg 1.00
-- [x] Commit `facb7ac` deployed to Render
+| Streamlit connected to kkw2 | **Verified** (sidebar Connected) |
+| Production acceptance (kkw2) | **43/43** |
+| `GEMINI_API_KEY` on Render | **Confirmed** (chat returns recommendations) |
+| Docs use `assessiq-kkw2` | **Updated** |
 - [x] SHL assignment checklist complete
 
 ---

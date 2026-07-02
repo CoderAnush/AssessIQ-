@@ -7,7 +7,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-Demo-red.svg)](https://streamlit.io/)
 
 **Live demo:** [assessiq-ai.streamlit.app](https://assessiq-ai.streamlit.app)  
-**API:** [assessiq-nkp2.onrender.com](https://assessiq-nkp2.onrender.com) · [Docs](https://assessiq-nkp2.onrender.com/docs)  
+**API:** [assessiq-nkp2.onrender.com](https://assessiq-kkw2.onrender.com) · [Docs](https://assessiq-kkw2.onrender.com/docs)  
 **Design:** [APPROACH.md](APPROACH.md) (≤2 pages)
 
 ---
@@ -47,21 +47,21 @@ Set `BACKEND_URL=http://localhost:8000` for the frontend.
 ## Reviewer quick test (curl)
 
 ```bash
-curl -s https://assessiq-nkp2.onrender.com/health
+curl -s https://assessiq-kkw2.onrender.com/health
 
-curl -s -X POST https://assessiq-nkp2.onrender.com/chat \
+curl -s -X POST https://assessiq-kkw2.onrender.com/chat \
   -H "Content-Type: application/json" \
   -d '{"messages":[{"role":"user","content":"Java Spring Boot backend developer"}]}'
 
-curl -s -X POST https://assessiq-nkp2.onrender.com/chat \
+curl -s -X POST https://assessiq-kkw2.onrender.com/chat \
   -H "Content-Type: application/json" \
   -d '{"messages":[{"role":"user","content":"AI Engineer with Python and machine learning"}]}'
 
-curl -s -X POST https://assessiq-nkp2.onrender.com/chat \
+curl -s -X POST https://assessiq-kkw2.onrender.com/chat \
   -H "Content-Type: application/json" \
   -d '{"messages":[{"role":"user","content":"programmer"}]}'
 
-curl -s -X POST https://assessiq-nkp2.onrender.com/chat \
+curl -s -X POST https://assessiq-kkw2.onrender.com/chat \
   -H "Content-Type: application/json" \
   -d '{"messages":[{"role":"user","content":"What is the capital of France?"}]}'
 ```
@@ -146,9 +146,9 @@ APPROACH.md    Design document (submission)
 | Backend | Render | assessiq-nkp2.onrender.com |
 | Frontend | Streamlit Cloud | assessiq-ai.streamlit.app |
 
-Streamlit secret: `BACKEND_URL=https://assessiq-nkp2.onrender.com`
+Streamlit secret: `BACKEND_URL=https://assessiq-kkw2.onrender.com`
 
-**Streamlit Cloud:** In [share.streamlit.io](https://share.streamlit.io) → App settings → Secrets, set `BACKEND_URL = "https://assessiq-nkp2.onrender.com"` and reboot the app after each backend deploy.
+**Streamlit Cloud:** In [share.streamlit.io](https://share.streamlit.io) → App settings → Secrets, set `BACKEND_URL = "https://assessiq-kkw2.onrender.com"` and reboot the app after each backend deploy.
 
 ---
 

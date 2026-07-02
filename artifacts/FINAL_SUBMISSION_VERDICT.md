@@ -21,7 +21,7 @@ Supersedes all prior verdict documents. Authoritative report: [final_submission_
 
 ## URLs for SHL form
 
-- **API:** https://assessiq-nkp2.onrender.com
+- **API:** https://assessiq-kkw2.onrender.com
 - **Demo:** https://assessiq-ai.streamlit.app
 - **Approach doc:** [APPROACH.md](../APPROACH.md)
 

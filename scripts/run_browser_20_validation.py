@@ -12,7 +12,7 @@ from typing import Dict, List
 
 import requests
 
-BACKEND_URL = os.environ.get("BACKEND_URL", "https://assessiq-nkp2.onrender.com").rstrip("/")
+BACKEND_URL = os.environ.get("BACKEND_URL", "https://assessiq-kkw2.onrender.com").rstrip("/")
 SCENARIOS_PATH = Path(__file__).parent / "browser_20_scenarios.json"
 REPORT_PATH = Path(__file__).resolve().parents[1] / "artifacts" / "browser_20_validation_report.md"
 RESULTS_PATH = Path(__file__).resolve().parents[1] / "artifacts" / "browser_20" / "browser_20_results.json"

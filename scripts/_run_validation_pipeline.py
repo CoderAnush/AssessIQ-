@@ -20,8 +20,8 @@ SUITES = [
     ("c1_c10_recall", [sys.executable, "scripts/run_c1_c10_recall.py"], {"BACKEND_URL": BACKEND}),
     ("submission_readiness", [sys.executable, "scripts/run_submission_readiness.py"], {"BACKEND_URL": BACKEND}),
     ("production_readiness", [sys.executable, "scripts/run_submission_readiness.py"], {
-        "BACKEND_URL": "https://assessiq-nkp2.onrender.com",
-        "PRODUCTION_URL": "https://assessiq-nkp2.onrender.com",
+        "BACKEND_URL": "https://assessiq-kkw2.onrender.com",
+        "PRODUCTION_URL": "https://assessiq-kkw2.onrender.com",
     }),
     ("browser_smoke", [sys.executable, "scripts/smoke_frontend_checks.py"], {"BACKEND_URL": BACKEND}),
 ]
