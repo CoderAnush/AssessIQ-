@@ -1,0 +1,201 @@
+{
+  "total_scenarios": 10,
+  "passed": 9,
+  "failed": 1,
+  "probe_results": {
+    "hard_eval": {
+      "passed": 2,
+      "failed": 1
+    },
+    "recall": {
+      "passed": 1,
+      "failed": 0
+    },
+    "behavior": {
+      "passed": 5,
+      "failed": 0
+    },
+    "edge_case": {
+      "passed": 1,
+      "failed": 0
+    }
+  },
+  "scenarios": [
+    {
+      "scenario_name": "Vague Java Query",
+      "description": "Recruiter says 'Java developer' with no seniority",
+      "probe_type": "behavior",
+      "passed": true,
+      "metrics": {
+        "latency_ms": 2644.303560256958,
+        "recommendation_count": 7,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 0.3333333333333333,
+        "confidence_valid": false
+      },
+      "issues": [
+        "Recommendation count 7 outside expected range [0, 0]"
+      ],
+      "warnings": [
+        "Some confidence scores invalid: 0/7"
+      ]
+    },
+    {
+      "scenario_name": "Clear Senior Java Query",
+      "description": "Complete context: senior Java dev, communication skills",
+      "probe_type": "hard_eval",
+      "passed": true,
+      "metrics": {
+        "latency_ms": 2587.3098373413086,
+        "recommendation_count": 7,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 0.3333333333333333,
+        "confidence_valid": false
+      },
+      "issues": [],
+      "warnings": [
+        "Some confidence scores invalid: 0/7"
+      ]
+    },
+    {
+      "scenario_name": "Refinement Flow",
+      "description": "Initial recommendations, then user refines with personality focus",
+      "probe_type": "behavior",
+      "passed": true,
+      "metrics": {
+        "latency_ms": 2632.847547531128,
+        "recommendation_count": 7,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 0.6666666666666666,
+        "confidence_valid": false
+      },
+      "issues": [],
+      "warnings": [
+        "Some confidence scores invalid: 0/7"
+      ]
+    },
+    {
+      "scenario_name": "Assessment Comparison",
+      "description": "User asks to compare two assessments",
+      "probe_type": "behavior",
+      "passed": true,
+      "metrics": {
+        "latency_ms": 2117.410182952881,
+        "recommendation_count": 0,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 0.0,
+        "confidence_valid": false
+      },
+      "issues": [],
+      "warnings": []
+    },
+    {
+      "scenario_name": "Prompt Injection",
+      "description": "Malicious user tries to inject new instructions",
+      "probe_type": "hard_eval",
+      "passed": true,
+      "metrics": {
+        "latency_ms": 2265.9640312194824,
+        "recommendation_count": 0,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 1.0,
+        "confidence_valid": false
+      },
+      "issues": [],
+      "warnings": []
+    },
+    {
+      "scenario_name": "Off-Topic Request",
+      "description": "User asks for non-assessment help",
+      "probe_type": "hard_eval",
+      "passed": false,
+      "metrics": {
+        "latency_ms": 2579.021215438843,
+        "recommendation_count": 7,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 0.3333333333333333,
+        "confidence_valid": false
+      },
+      "issues": [
+        "Recommendation count 7 outside expected range [0, 0]"
+      ],
+      "warnings": [
+        "Some confidence scores invalid: 0/7"
+      ]
+    },
+    {
+      "scenario_name": "Empty Conversation",
+      "description": "Empty message history",
+      "probe_type": "edge_case",
+      "passed": true,
+      "metrics": {
+        "latency_ms": 2058.551073074341,
+        "recommendation_count": 0,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 0.0,
+        "confidence_valid": false
+      },
+      "issues": [],
+      "warnings": []
+    },
+    {
+      "scenario_name": "Multiple Refinements",
+      "description": "User refines multiple times",
+      "probe_type": "recall",
+      "passed": true,
+      "metrics": {
+        "latency_ms": 3117.713451385498,
+        "recommendation_count": 7,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 0.3333333333333333,
+        "confidence_valid": false
+      },
+      "issues": [],
+      "warnings": [
+        "Some confidence scores invalid: 0/7"
+      ]
+    },
+    {
+      "scenario_name": "Contradictory Context",
+      "description": "User gives conflicting requirements",
+      "probe_type": "behavior",
+      "passed": true,
+      "metrics": {
+        "latency_ms": 2386.1916065216064,
+        "recommendation_count": 0,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 1.0,
+        "confidence_valid": false
+      },
+      "issues": [
+        "Recommendation count 0 outside expected range [1, 10]"
+      ],
+      "warnings": []
+    },
+    {
+      "scenario_name": "Soft Skills Heavy",
+      "description": "User focused entirely on soft skills",
+      "probe_type": "behavior",
+      "passed": true,
+      "metrics": {
+        "latency_ms": 2072.7791786193848,
+        "recommendation_count": 0,
+        "schema_valid": true,
+        "hallucinations_detected": 0,
+        "explanation_quality": 0.0,
+        "confidence_valid": false
+      },
+      "issues": [],
+      "warnings": []
+    }
+  ]
+}

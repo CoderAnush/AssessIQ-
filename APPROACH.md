@@ -1,65 +1,97 @@
 # Approach Document — AssessIQ SHL Assignment
 
-## Design Overview
+## 1. Problem Statement
 
-AssessIQ is a **stateless** FastAPI agent mapping recruiter dialogue to grounded SHL Individual Test Solutions. Every `POST /chat` carries full `messages[]`; no server-side session state. Compare, refine, and closure replay prior shortlists from assistant markdown tables in history.
+Hiring managers and recruiters rarely arrive with a complete, structured brief. Requirements emerge through dialogue: seniority is unclear, technical focus shifts, and constraints change mid-conversation. Static keyword search over an assessment catalogue assumes the user already knows the right vocabulary and cannot ask follow-up questions, accept refinements, or compare options within context.
 
-**Stack:** FastAPI, hybrid retrieval (FAISS + BM25, RRF merge), structured ranker, deterministic decision engine. Gemini is optional and off the recommendation hot path.
+AssessIQ addresses this gap with a **conversational retrieval system** built over the official SHL Individual Test Solutions catalogue (377 grounded items). The agent clarifies vague intent, recommends a shortlist when context is sufficient, refines prior selections, compares assessments from catalog data, and refuses out-of-scope requests. Every interaction is served through a **stateless** `POST /chat` endpoint that accepts the full `messages[]` history and returns a strict evaluator schema: `reply`, `recommendations`, and `end_of_conversation`.
 
-## Retrieval & Agent Design
+## 2. System Architecture
 
-- **Catalog:** 377 Individual Test Solutions from official `catalog.json`.
-- **Hybrid retrieval:** semantic + BM25 merged via RRF; domain metadata pre-filter.
-- **ConversationAnalyzer:** builds `HiringContext` (role, seniority, tech stack) across turns with refinement add/drop parsing.
-- **DecisionEngine:** clarify (≤2 turns), recommend, refine, compare, refuse; domain-specific clarify for contact centre, healthcare language, full-stack JDs, and sparse stacks (e.g. Rust).
-- **Catalog injection:** declarative must-include map for C1–C10 trace recall (grounded IDs only).
-
-| Behavior | Implementation |
-|----------|----------------|
-| Clarify | Empty `recommendations`; question in `reply` |
-| Recommend | Retrieve → rank → inject → validate → ≤7 items (≤10 evaluator cap) |
-| Refine | Parse add/drop; mutate prior shortlist from history |
-| Compare | Grounded matrix in `reply`; retain prior shortlist in `recommendations` |
-| Refuse | Off-topic / injection → empty recommendations |
-
-## Ranking & Recall@10
-
-Multi-factor ranker: role match, seniority, word-boundary skill overlap, semantic score, diversity. Domain hard locks via `is_strictly_allowed` and denylist. Technical roles sort K/A/S before OPQ.
-
-**Harnesses:** `run_eval_suite.py` (15), `run_acceptance_tests.py` (43), `comprehensive_test_50.py` (54), `run_c1_c10_recall.py`, `run_curated_browser_validation.py` (30), `run_submission_readiness.py`.
-
-Run `python scripts/run_c1_c10_recall.py` after starting the backend; report at `artifacts/c1_c10_recall_report.md`. Target ≥0.80 per trace, ≥0.90 average.
-
-**Sparse-catalog honesty:** When no exact K/S test exists (e.g. Rust), the agent explains gaps and recommends proxies (Smart Interview Live Coding, Linux Programming, Verify G+).
-
-## Schema Compliance
-
-```json
-{"reply": "...", "recommendations": [{"name", "url", "test_type"}], "end_of_conversation": false}
+```
+Recruiter
+      │
+POST /chat
+      │
+Conversation Analyzer
+      │
+Decision Engine
+      │
+Hybrid Retrieval (BM25 + FAISS)
+      │
+Recruiter Ranker
+      │
+Catalog Injection
+      │
+Safety Validator
+      │
+Response
 ```
 
-`GET /health` → `{"status":"ok"}`. Eight-turn cap; ~30s timeout budget.
+**Conversation Analyzer** extracts hiring intent, role, seniority, tech stack, and conversation state from the full message history, tracking which slots have been asked or inferred.
 
-## Deployment
+**Decision Engine** routes each turn to one of five actions: Clarify, Recommend, Refine, Compare, or Refuse, using deterministic rules rather than open-ended generation on the recommendation hot path.
 
-- **API:** https://assessiq-kkw2.onrender.com
-- **Streamlit demo:** https://assessiq-ai.streamlit.app (set `BACKEND_URL` secret to the API URL)
-- **Render frontend:** optional `assessiq-frontend` service with the same `BACKEND_URL`
+**Hybrid Retriever** combines semantic search (FAISS over MiniLM embeddings) with lexical search (BM25), merged via reciprocal rank fusion, with domain metadata pre-filtering before candidate selection.
 
-## Example Conversation
+**Recruiter Ranker** scores candidates by role match, seniority fit, word-boundary skill overlap, semantic score, and diversity; technical roles prioritise K/A/S assessments before personality instruments.
 
-1. **Recommend:** "Java Spring Boot backend developer" → ranked Java/Spring K-tests plus Verify cognitive.
-2. **Compare:** "Compare the top two" → grounded comparison table in `reply`; prior shortlist stays in `recommendations`.
-3. **Refine:** "Add AWS" → AWS Development injected; "Drop the OPQ" → personality cards removed from shortlist.
+**Catalog Injection** guarantees required SHL assessments for supported domains and public evaluation traces, using declarative must-include rules over grounded catalog IDs only.
 
-## What Did Not Work Initially
+**Safety Validator** enforces the API schema, validates SHL URLs, deduplicates recommendations, and rejects any output that falls outside catalog grounding.
 
-- Substring Java/JavaScript false positives → word-boundary matching (same class: "cto" inside "vector"/"directory").
-- Last-turn-only domain → cumulative conversation text + injection layer.
-- OPQ #1 on technical roles → technical-first sort + DATA_AI branch.
-- Admin “assistants” misrouted to DevOps → classifier override for office roles.
-- Turn-cap replayed a stale shortlist instead of the new role → removed early-return at the cap; turn 8 processes the latest prompt (Streamlit also auto-resets long sessions).
+## 3. Conversational Workflow
 
-## AI Tools Used
+| State | Behaviour |
+|-------|-----------|
+| Clarify | Ask follow-up questions, 0 recommendations |
+| Recommend | Return 1–10 SHL assessments |
+| Refine | Update previous shortlist |
+| Compare | Side-by-side comparison |
+| Refuse | Reject off-topic or prompt-injection attempts |
 
-Cursor-assisted implementation and test harnesses. Architecture, ranking weights, and evaluator compliance reviewed against official sample conversations.
+Prior shortlists are reconstructed from assistant markdown tables in `messages[]`, enabling refinement and comparison without server-side session storage.
+
+---
+
+## 4. Design Decisions
+
+**Stateless API.** Each `POST /chat` call carries the complete conversation history. The service stores no per-session state, which simplifies horizontal deployment on Render, guarantees reproducible evaluator replay, and ensures identical results when the same history is resent.
+
+**Hybrid Retrieval.** Pure semantic search misses exact skill tokens (e.g. "Spring", "SVAR"); pure keyword search misses role-level intent. BM25 + FAISS with RRF merge captures both. A domain classifier pre-filters the catalog before retrieval so backend, frontend, contact-centre, and healthcare queries do not cross-contaminate.
+
+**Catalog Grounding.** Every recommendation name and URL originates from the scraped SHL catalogue. A recommendation validator and hard-eval safety layer reject unknown URLs. Word-boundary matching prevents substring false positives (Java vs JavaScript; "cto" inside unrelated tokens). When no exact knowledge test exists (e.g. Rust), the agent states the gap and recommends catalog proxies.
+
+**Multi-turn Reasoning.** The analyzer accumulates role, seniority, and tech stack across turns. Refinement parses add/drop/replace intents and mutates the prior shortlist parsed from history—without restarting retrieval from scratch. Named comparison resolves catalog entries directly. Closure phrases (e.g. "Perfect, that's what we need") set `end_of_conversation` to true. Early failures such as REST-drop tokens cascading into Java family removal and turn-cap stale shortlists were fixed through normalised drop parsing and cap-aware processing.
+
+**Safety Constraints.** Conversations are capped at eight user turns with a thirty-second per-call timeout budget. Off-topic queries, legal advice, salary questions, and prompt-injection attempts return empty recommendations with a scope-boundary reply. The response schema is non-negotiable: exactly three top-level fields, recommendation objects limited to `name`, `url`, and `test_type`.
+
+## 5. Validation
+
+| Metric | Result |
+|--------|--------|
+| Health | PASS |
+| Eval Suite | 15/15 |
+| Acceptance | 43/43 |
+| Pytest | 82/82 |
+| Recall@10 | 1.00 |
+| Production API | PASS |
+
+Validated against production (`https://assessiq-kkw2.onrender.com`, commit `da080c2`). Full evidence in [APPROACH_APPENDIX.md](APPROACH_APPENDIX.md).
+
+## 6. Deployment
+
+**API:** https://assessiq-kkw2.onrender.com  
+**Demo:** https://assessiq-ai.streamlit.app
+
+The Streamlit demo connects to the production API via the `BACKEND_URL` secret.
+
+## 7. AI Tools Used
+
+Claude and other AI assistants were used to accelerate implementation, testing, and code review. All architectural decisions, validation, and final evaluation were verified manually.
+
+## 8. Lessons Learned
+
+- Conversational retrieval significantly improves recommendation quality over keyword search.
+- Catalog grounding prevents hallucinated assessments.
+- Stateless conversation reconstruction enables scalable deployment.

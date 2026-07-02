@@ -9,21 +9,21 @@
     "first_rec": "Java Platform Enterprise Edition 7 (Java EE 7)",
     "recommendation_names": [
       "Java Platform Enterprise Edition 7 (Java EE 7)",
-      "Core Java (Advanced Level) (New)",
-      "Automata - Fix (New)",
       "Enterprise Java Beans (New)",
+      "Automata - Fix (New)",
+      "Core Java (Advanced Level) (New)",
       "Java 2 Platform Enterprise Edition 1.4 Fundamental",
       "Java 8 (New)",
-      "Java Design Patterns (New)"
+      "Java Frameworks (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
-      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
+      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
+      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
       "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
       "https://www.shl.com/products/product-catalog/view/java-8-new",
-      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new"
+      "https://www.shl.com/products/product-catalog/view/java-frameworks-new"
     ],
     "test_types": [
       "K",
@@ -47,24 +47,24 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Java 8 (New)",
+    "first_rec": "Java Platform Enterprise Edition 7 (Java EE 7)",
     "recommendation_names": [
-      "Java 8 (New)",
       "Java Platform Enterprise Edition 7 (Java EE 7)",
-      "Java Design Patterns (New)",
       "Java Frameworks (New)",
+      "Java 8 (New)",
+      "Java 2 Platform Enterprise Edition 1.4 Fundamental",
       "Core Java (Advanced Level) (New)",
       "Enterprise Java Beans (New)",
-      "Java Web Services (New)"
+      "Java Design Patterns (New)"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/java-8-new",
       "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
-      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new",
       "https://www.shl.com/products/product-catalog/view/java-frameworks-new",
+      "https://www.shl.com/products/product-catalog/view/java-8-new",
+      "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
       "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
       "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
-      "https://www.shl.com/products/product-catalog/view/java-web-services-new"
+      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new"
     ],
     "test_types": [
       "K",
@@ -75,7 +75,7 @@
       "K",
       "K"
     ],
-    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Java 8 (Ne",
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Java Platf",
     "has_java": true,
     "has_python": false,
     "has_devops": false,
@@ -93,19 +93,19 @@
       "Automata - Fix (New)",
       "Core Java (Entry Level) (New)",
       "Java 8 (New)",
+      "Core Java (Advanced Level) (New)",
       "Java Platform Enterprise Edition 7 (Java EE 7)",
-      "Java Design Patterns (New)",
       "Java Frameworks (New)",
-      "Core Java (Advanced Level) (New)"
+      "Java 2 Platform Enterprise Edition 1.4 Fundamental"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/core-java-entry-level-new",
       "https://www.shl.com/products/product-catalog/view/java-8-new",
+      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
       "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
-      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new",
       "https://www.shl.com/products/product-catalog/view/java-frameworks-new",
-      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new"
+      "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental"
     ],
     "test_types": [
       "A",
@@ -134,18 +134,18 @@
       "Java Frameworks (New)",
       "Spring (New)",
       "Automata - Fix (New)",
-      "Automata - SQL (New)",
-      "Automata (New)",
-      "Automata Pro (New)",
+      "Java Platform Enterprise Edition 7 (Java EE 7)",
+      "Enterprise Java Beans (New)",
+      "Java 2 Platform Enterprise Edition 1.4 Fundamental",
       "Core Java (Advanced Level) (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/java-frameworks-new",
       "https://www.shl.com/products/product-catalog/view/spring-new",
       "https://www.shl.com/products/product-catalog/view/automata-fix-new",
-      "https://www.shl.com/products/product-catalog/view/automata-sql-new",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
-      "https://www.shl.com/products/product-catalog/view/automata-pro-new",
+      "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
+      "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
+      "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
       "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new"
     ],
     "test_types": [
@@ -153,8 +153,8 @@
       "K",
       "A",
       "K",
-      "A",
-      "A",
+      "K",
+      "K",
       "K"
     ],
     "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Java Frame",
@@ -173,21 +173,21 @@
     "first_rec": "Java Platform Enterprise Edition 7 (Java EE 7)",
     "recommendation_names": [
       "Java Platform Enterprise Edition 7 (Java EE 7)",
-      "Core Java (Advanced Level) (New)",
-      "Automata - Fix (New)",
       "Enterprise Java Beans (New)",
+      "Automata - Fix (New)",
+      "Core Java (Advanced Level) (New)",
       "Java 2 Platform Enterprise Edition 1.4 Fundamental",
       "Java 8 (New)",
-      "Java Design Patterns (New)"
+      "Java Frameworks (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
-      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
+      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
+      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
       "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
       "https://www.shl.com/products/product-catalog/view/java-8-new",
-      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new"
+      "https://www.shl.com/products/product-catalog/view/java-frameworks-new"
     ],
     "test_types": [
       "K",
@@ -216,19 +216,19 @@
       "Core Java (Entry Level) (New)",
       "Java 2 Platform Enterprise Edition 1.4 Fundamental",
       "Core Java (Advanced Level) (New)",
-      "Java 8 (New)",
-      "Automata - Fix (New)",
       "Java Platform Enterprise Edition 7 (Java EE 7)",
-      "Java Design Patterns (New)"
+      "Automata - Fix (New)",
+      "Java 8 (New)",
+      "Enterprise Java Beans (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/core-java-entry-level-new",
       "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
       "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
-      "https://www.shl.com/products/product-catalog/view/java-8-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
-      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new"
+      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
+      "https://www.shl.com/products/product-catalog/view/java-8-new",
+      "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new"
     ],
     "test_types": [
       "K",
@@ -252,24 +252,24 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Java 8 (New)",
+    "first_rec": "Java Platform Enterprise Edition 7 (Java EE 7)",
     "recommendation_names": [
-      "Java 8 (New)",
       "Java Platform Enterprise Edition 7 (Java EE 7)",
-      "Java Design Patterns (New)",
+      "Java 2 Platform Enterprise Edition 1.4 Fundamental",
+      "Java Web Services (New)",
       "Java Frameworks (New)",
-      "Core Java (Advanced Level) (New)",
+      "Java 8 (New)",
       "Enterprise Java Beans (New)",
-      "Java Web Services (New)"
+      "Core Java (Advanced Level) (New)"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/java-8-new",
       "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
-      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new",
+      "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
+      "https://www.shl.com/products/product-catalog/view/java-web-services-new",
       "https://www.shl.com/products/product-catalog/view/java-frameworks-new",
-      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
+      "https://www.shl.com/products/product-catalog/view/java-8-new",
       "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
-      "https://www.shl.com/products/product-catalog/view/java-web-services-new"
+      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new"
     ],
     "test_types": [
       "K",
@@ -280,7 +280,7 @@
       "K",
       "K"
     ],
-    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Java 8 (Ne",
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Java Platf",
     "has_java": true,
     "has_python": false,
     "has_devops": false,
@@ -296,21 +296,21 @@
     "first_rec": "Java Platform Enterprise Edition 7 (Java EE 7)",
     "recommendation_names": [
       "Java Platform Enterprise Edition 7 (Java EE 7)",
-      "Core Java (Advanced Level) (New)",
-      "Automata - Fix (New)",
       "Enterprise Java Beans (New)",
+      "Automata - Fix (New)",
       "Java 2 Platform Enterprise Edition 1.4 Fundamental",
+      "Core Java (Advanced Level) (New)",
       "Java 8 (New)",
-      "Java Design Patterns (New)"
+      "Java Frameworks (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
-      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
+      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
+      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
       "https://www.shl.com/products/product-catalog/view/java-8-new",
-      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new"
+      "https://www.shl.com/products/product-catalog/view/java-frameworks-new"
     ],
     "test_types": [
       "K",
@@ -334,24 +334,24 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Java Platform Enterprise Edition 7 (Java EE 7)",
+    "first_rec": "Enterprise Java Beans (New)",
     "recommendation_names": [
-      "Java Platform Enterprise Edition 7 (Java EE 7)",
       "Enterprise Java Beans (New)",
+      "Java Platform Enterprise Edition 7 (Java EE 7)",
       "Java 2 Platform Enterprise Edition 1.4 Fundamental",
       "Java 8 (New)",
-      "Java Design Patterns (New)",
       "Java Frameworks (New)",
-      "Core Java (Advanced Level) (New)"
+      "Core Java (Advanced Level) (New)",
+      "Core Java (Entry Level) (New)"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
       "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
+      "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
       "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
       "https://www.shl.com/products/product-catalog/view/java-8-new",
-      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new",
       "https://www.shl.com/products/product-catalog/view/java-frameworks-new",
-      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new"
+      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
+      "https://www.shl.com/products/product-catalog/view/core-java-entry-level-new"
     ],
     "test_types": [
       "K",
@@ -362,7 +362,7 @@
       "K",
       "K"
     ],
-    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Java Platf",
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Enterprise",
     "has_java": true,
     "has_python": false,
     "has_devops": false,
@@ -378,21 +378,21 @@
     "first_rec": "Java Platform Enterprise Edition 7 (Java EE 7)",
     "recommendation_names": [
       "Java Platform Enterprise Edition 7 (Java EE 7)",
-      "Core Java (Advanced Level) (New)",
-      "Automata - Fix (New)",
       "Enterprise Java Beans (New)",
+      "Automata - Fix (New)",
       "Java 2 Platform Enterprise Edition 1.4 Fundamental",
+      "Core Java (Advanced Level) (New)",
       "Java 8 (New)",
-      "Java Design Patterns (New)"
+      "Java Frameworks (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/java-platform-enterprise-edition-7-java-ee-7",
-      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
+      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental",
+      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
       "https://www.shl.com/products/product-catalog/view/java-8-new",
-      "https://www.shl.com/products/product-catalog/view/java-design-patterns-new"
+      "https://www.shl.com/products/product-catalog/view/java-frameworks-new"
     ],
     "test_types": [
       "K",
@@ -419,32 +419,32 @@
     "first_rec": "Python (New)",
     "recommendation_names": [
       "Python (New)",
-      "Automata - Fix (New)",
       "Software Business Analysis",
-      "HiPo Assessment Report 1.0",
-      "Automata (New)",
       "Automata Pro (New)",
-      "C Programming (New)"
+      "SHL Verify Interactive \u2013 Deductive Reasoning",
+      "Automata (New)",
+      "SAP ABAP (Advanced Level) (New)",
+      "Smart Interview Live Coding"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/python-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/software-business-analysis",
-      "https://www.shl.com/products/product-catalog/view/hipo-assessment-report-1-0",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
       "https://www.shl.com/products/product-catalog/view/automata-pro-new",
-      "https://www.shl.com/products/product-catalog/view/c-programming-new"
+      "https://www.shl.com/products/product-catalog/view/shl-verify-interactive-deductive-reasoning",
+      "https://www.shl.com/products/product-catalog/view/automata-new",
+      "https://www.shl.com/products/product-catalog/view/sap-abap-advanced-level-new",
+      "https://www.shl.com/products/product-catalog/view/smart-interview-live-coding"
     ],
     "test_types": [
       "K",
-      "A",
       "K",
       "A",
       "A",
       "A",
+      "K",
       "K"
     ],
-    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Python (Ne",
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Python (Ne",
     "has_java": false,
     "has_python": true,
     "has_devops": false,
@@ -461,20 +461,20 @@
     "recommendation_names": [
       "Python (New)",
       "Automata - Fix (New)",
-      ".NET WCF (New)",
       "Adobe Experience Manager (New)",
-      "Automata (New)",
+      "Microsoft SQL Server 2014 Programming",
       "Automata Pro (New)",
-      "Automotive Engineering (New)"
+      "Automata (New)",
+      "C++ Programming (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/python-new",
       "https://www.shl.com/products/product-catalog/view/automata-fix-new",
-      "https://www.shl.com/products/product-catalog/view/net-wcf-new",
       "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
+      "https://www.shl.com/products/product-catalog/view/microsoft-sql-server-2014-programming",
       "https://www.shl.com/products/product-catalog/view/automata-pro-new",
-      "https://www.shl.com/products/product-catalog/view/automotive-engineering-new"
+      "https://www.shl.com/products/product-catalog/view/automata-new",
+      "https://www.shl.com/products/product-catalog/view/c-programming-new-4122"
     ],
     "test_types": [
       "K",
@@ -501,28 +501,28 @@
     "first_rec": "Python (New)",
     "recommendation_names": [
       "Python (New)",
-      "Occupational Personality Questionnaire OPQ32r",
-      "Automata - Fix (New)",
-      "Automata (New)",
-      "Automata Pro (New)",
+      "OPQ Manager Plus Report",
       "Microsoft SQL Server 2014 Programming",
-      "Automata - SQL (New)"
+      "PJM Development Report",
+      "Digital Readiness Development Report - Manager",
+      "Adobe Experience Manager (New)",
+      ".NET WCF (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/python-new",
-      "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
-      "https://www.shl.com/products/product-catalog/view/automata-pro-new",
+      "https://www.shl.com/products/product-catalog/view/opq-manager-plus-report",
       "https://www.shl.com/products/product-catalog/view/microsoft-sql-server-2014-programming",
-      "https://www.shl.com/products/product-catalog/view/automata-sql-new"
+      "https://www.shl.com/products/product-catalog/view/pjm-development-report",
+      "https://www.shl.com/products/product-catalog/view/digital-readiness-development-report-manager",
+      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
+      "https://www.shl.com/products/product-catalog/view/net-wcf-new"
     ],
     "test_types": [
       "K",
       "P",
-      "A",
-      "A",
-      "A",
+      "K",
+      "K",
+      "P",
       "K",
       "K"
     ],
@@ -543,29 +543,29 @@
     "recommendation_names": [
       "Python (New)",
       "Occupational Personality Questionnaire OPQ32r",
+      "Node.js (New)",
       "Automata - Fix (New)",
-      ".NET WCF (New)",
       "Adobe Experience Manager (New)",
-      "Automata (New)",
-      "Automata Pro (New)"
+      "Automotive Engineering (New)",
+      ".NET WCF (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/python-new",
       "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r",
+      "https://www.shl.com/products/product-catalog/view/node-js-new",
       "https://www.shl.com/products/product-catalog/view/automata-fix-new",
-      "https://www.shl.com/products/product-catalog/view/net-wcf-new",
       "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
-      "https://www.shl.com/products/product-catalog/view/automata-pro-new"
+      "https://www.shl.com/products/product-catalog/view/automotive-engineering-new",
+      "https://www.shl.com/products/product-catalog/view/net-wcf-new"
     ],
     "test_types": [
       "K",
       "P",
+      "K",
       "A",
       "K",
       "K",
-      "A",
-      "A"
+      "K"
     ],
     "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Python (Ne",
     "has_java": false,
@@ -580,35 +580,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Automata Data Science (New)",
+    "first_rec": "Data Science (New)",
     "recommendation_names": [
-      "Automata Data Science (New)",
       "Data Science (New)",
+      "Automata Data Science (New)",
       "Automata Data Science Pro (New)",
+      "AI Skills",
       "ETL Testing (New)",
-      "Microsoft 365 (New)",
       "Workplace Administration Skills (New)",
-      "Verify - Numerical Ability"
+      "Microsoft 365 (New)"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/automata-data-science-new",
       "https://www.shl.com/products/product-catalog/view/data-science-new",
+      "https://www.shl.com/products/product-catalog/view/automata-data-science-new",
       "https://www.shl.com/products/product-catalog/view/automata-data-science-pro-new",
+      "https://www.shl.com/products/product-catalog/view/ai-skills",
       "https://www.shl.com/products/product-catalog/view/etl-testing-new",
-      "https://www.shl.com/products/product-catalog/view/microsoft-excel-365-new",
       "https://www.shl.com/products/product-catalog/view/workplace-administration-skills-new",
-      "https://www.shl.com/products/product-catalog/view/verify-numerical-ability"
+      "https://www.shl.com/products/product-catalog/view/microsoft-excel-365-new"
     ],
     "test_types": [
-      "A",
       "K",
       "A",
-      "K",
       "A",
+      "K",
+      "K",
       "A",
       "A"
     ],
-    "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Dat",
+    "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Data Science",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
@@ -625,20 +625,20 @@
     "recommendation_names": [
       "Python (New)",
       "Automata - Fix (New)",
-      "Automata (New)",
-      "Count Out The Money",
       "Automata Pro (New)",
+      "Verify - General Ability Screen",
+      "Automata (New)",
       "Core Java (Entry Level) (New)",
-      "Java 2 Platform Enterprise Edition 1.4 Fundamental"
+      "Virtual Assessment and Development Centers"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/python-new",
       "https://www.shl.com/products/product-catalog/view/automata-fix-new",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
-      "https://www.shl.com/products/product-catalog/view/count-out-the-money",
       "https://www.shl.com/products/product-catalog/view/automata-pro-new",
+      "https://www.shl.com/products/product-catalog/view/verify-general-ability-screen",
+      "https://www.shl.com/products/product-catalog/view/automata-new",
       "https://www.shl.com/products/product-catalog/view/core-java-entry-level-new",
-      "https://www.shl.com/products/product-catalog/view/java-2-platform-enterprise-edition-1-4-fundamental"
+      "https://www.shl.com/products/product-catalog/view/virtual-assessment-and-development-centers"
     ],
     "test_types": [
       "K",
@@ -647,7 +647,7 @@
       "A",
       "A",
       "K",
-      "K"
+      "A"
     ],
     "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Python (Ne",
     "has_java": false,
@@ -667,19 +667,19 @@
       "Python (New)",
       "Occupational Personality Questionnaire OPQ32r",
       "Automata - Fix (New)",
-      "Automata (New)",
       "Automata Pro (New)",
-      "Microsoft SQL Server 2014 Programming",
-      "Automata - SQL (New)"
+      "Automata (New)",
+      "Core Java (Advanced Level) (New)",
+      "Core Java (Entry Level) (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/python-new",
       "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r",
       "https://www.shl.com/products/product-catalog/view/automata-fix-new",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
       "https://www.shl.com/products/product-catalog/view/automata-pro-new",
-      "https://www.shl.com/products/product-catalog/view/microsoft-sql-server-2014-programming",
-      "https://www.shl.com/products/product-catalog/view/automata-sql-new"
+      "https://www.shl.com/products/product-catalog/view/automata-new",
+      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new",
+      "https://www.shl.com/products/product-catalog/view/core-java-entry-level-new"
     ],
     "test_types": [
       "K",
@@ -706,28 +706,28 @@
     "first_rec": "Python (New)",
     "recommendation_names": [
       "Python (New)",
-      "Automata - Fix (New)",
       "Software Business Analysis",
-      "Automata (New)",
       "Automata Pro (New)",
-      "C Programming (New)",
-      "Automata - SQL (New)"
+      "Automata (New)",
+      "SAP ABAP (Advanced Level) (New)",
+      "Smart Interview Live Coding",
+      "Adobe Experience Manager (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/python-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/software-business-analysis",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
       "https://www.shl.com/products/product-catalog/view/automata-pro-new",
-      "https://www.shl.com/products/product-catalog/view/c-programming-new",
-      "https://www.shl.com/products/product-catalog/view/automata-sql-new"
+      "https://www.shl.com/products/product-catalog/view/automata-new",
+      "https://www.shl.com/products/product-catalog/view/sap-abap-advanced-level-new",
+      "https://www.shl.com/products/product-catalog/view/smart-interview-live-coding",
+      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new"
     ],
     "test_types": [
       "K",
-      "A",
       "K",
       "A",
       "A",
+      "K",
       "K",
       "K"
     ],
@@ -747,33 +747,33 @@
     "first_rec": "Python (New)",
     "recommendation_names": [
       "Python (New)",
-      "Automata - Fix (New)",
-      "Software Business Analysis",
-      "Automata (New)",
+      "Enterprise Java Beans (New)",
       "Automata Pro (New)",
-      "C Programming (New)",
-      "Automata - SQL (New)"
+      "Software Business Analysis",
+      "SAP ABAP (Advanced Level) (New)",
+      "Smart Interview Live Coding",
+      "ASP.NET 4.5"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/python-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
-      "https://www.shl.com/products/product-catalog/view/software-business-analysis",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
+      "https://www.shl.com/products/product-catalog/view/enterprise-java-beans-new",
       "https://www.shl.com/products/product-catalog/view/automata-pro-new",
-      "https://www.shl.com/products/product-catalog/view/c-programming-new",
-      "https://www.shl.com/products/product-catalog/view/automata-sql-new"
+      "https://www.shl.com/products/product-catalog/view/software-business-analysis",
+      "https://www.shl.com/products/product-catalog/view/sap-abap-advanced-level-new",
+      "https://www.shl.com/products/product-catalog/view/smart-interview-live-coding",
+      "https://www.shl.com/products/product-catalog/view/asp-net-4-5"
     ],
     "test_types": [
       "K",
-      "A",
       "K",
       "A",
-      "A",
+      "K",
+      "K",
       "K",
       "K"
     ],
     "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Python (Ne",
-    "has_java": false,
+    "has_java": true,
     "has_python": true,
     "has_devops": false,
     "success": true
@@ -788,30 +788,30 @@
     "first_rec": "Python (New)",
     "recommendation_names": [
       "Python (New)",
-      "Automata - Fix (New)",
       "Microservices (New)",
-      "Automata (New)",
-      ".NET WCF (New)",
       "Adobe Experience Manager (New)",
-      "Automata Pro (New)"
+      ".NET WCF (New)",
+      "SAP ABAP (Advanced Level) (New)",
+      "Smart Interview Live Coding",
+      "Accounts Payable (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/python-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/microservices-new",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
-      "https://www.shl.com/products/product-catalog/view/net-wcf-new",
       "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
-      "https://www.shl.com/products/product-catalog/view/automata-pro-new"
+      "https://www.shl.com/products/product-catalog/view/net-wcf-new",
+      "https://www.shl.com/products/product-catalog/view/sap-abap-advanced-level-new",
+      "https://www.shl.com/products/product-catalog/view/smart-interview-live-coding",
+      "https://www.shl.com/products/product-catalog/view/accounts-payable-new"
     ],
     "test_types": [
       "K",
-      "A",
-      "K",
-      "A",
       "K",
       "K",
-      "A"
+      "K",
+      "K",
+      "K",
+      "K"
     ],
     "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Python (Ne",
     "has_java": false,
@@ -829,21 +829,21 @@
     "first_rec": "Cloud Computing (New)",
     "recommendation_names": [
       "Cloud Computing (New)",
-      ".NET Framework 4.5",
-      ".NET MVC (New)",
-      "Accounts Payable (New)",
-      "Accounts Receivable (New)",
-      "Adobe Experience Manager (New)",
-      "Amazon Web Services (AWS) Development (New)"
+      "Docker (New)",
+      "Kubernetes (New)",
+      "Dojo (New)",
+      "Amazon Web Services (AWS) Development (New)",
+      "Apache Hadoop (New)",
+      "BizTalk (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
-      "https://www.shl.com/products/product-catalog/view/net-framework-4-5",
-      "https://www.shl.com/products/product-catalog/view/net-mvc-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-payable-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-receivable-new",
-      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
-      "https://www.shl.com/products/product-catalog/view/amazon-web-services-aws-development-new"
+      "https://www.shl.com/products/product-catalog/view/docker-new",
+      "https://www.shl.com/products/product-catalog/view/kubernetes-new",
+      "https://www.shl.com/products/product-catalog/view/dojo-new",
+      "https://www.shl.com/products/product-catalog/view/amazon-web-services-aws-development-new",
+      "https://www.shl.com/products/product-catalog/view/apache-hadoop-new",
+      "https://www.shl.com/products/product-catalog/view/biztalk-new"
     ],
     "test_types": [
       "K",
@@ -867,35 +867,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Cloud Computing (New)",
+    "first_rec": "Docker (New)",
     "recommendation_names": [
-      "Cloud Computing (New)",
+      "Docker (New)",
       "Dependability and Safety Instrument (DSI)",
-      ".NET Framework 4.5",
-      "Conversational Multichat Simulation",
-      "Count Out The Money",
-      ".NET MVC (New)",
-      "Accounts Payable (New)"
+      "Kubernetes (New)",
+      "Manufacturing & Industrial - Essential Focus 8.0",
+      "Manufac. & Indust. - Safety & Dependability 8.0",
+      "Manufacturing & Industrial - Vigilance Focus 8.0",
+      "ExpressJS (New)"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
+      "https://www.shl.com/products/product-catalog/view/docker-new",
       "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi",
-      "https://www.shl.com/products/product-catalog/view/net-framework-4-5",
-      "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation",
-      "https://www.shl.com/products/product-catalog/view/count-out-the-money",
-      "https://www.shl.com/products/product-catalog/view/net-mvc-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-payable-new"
+      "https://www.shl.com/products/product-catalog/view/kubernetes-new",
+      "https://www.shl.com/products/product-catalog/view/essential-focus-8-0",
+      "https://www.shl.com/products/product-catalog/view/safety-and-dependability-focus-8-0",
+      "https://www.shl.com/products/product-catalog/view/vigilance-focus-8-0",
+      "https://www.shl.com/products/product-catalog/view/expressjs-new"
     ],
     "test_types": [
       "K",
       "A",
       "K",
-      "A",
-      "A",
+      "K",
+      "K",
       "K",
       "K"
     ],
-    "reply_preview": "I've optimized an enterprise devops hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Cloud Compu",
+    "reply_preview": "I've optimized an enterprise devops hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Docker (New",
     "has_java": false,
     "has_python": false,
     "has_devops": true,
@@ -911,28 +911,28 @@
     "first_rec": "ITIL (IT Infrastructure Library) (New)",
     "recommendation_names": [
       "ITIL (IT Infrastructure Library) (New)",
+      "Microsoft PowerPoint 365 - Essentials (New)",
       "Cloud Computing (New)",
-      "Conversational Multichat Simulation",
-      "Count Out The Money",
-      "Dependability and Safety Instrument (DSI)",
-      ".NET Framework 4.5",
-      ".NET MVC (New)"
+      "Microsoft Word 365 - Essentials (New)",
+      "Docker (New)",
+      "Kubernetes (New)",
+      "Manufacturing & Industrial - Essential Focus 8.0"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/itil-it-infrastructure-library-new",
+      "https://www.shl.com/products/product-catalog/view/microsoft-powerpoint-365-essentials-new",
       "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
-      "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation",
-      "https://www.shl.com/products/product-catalog/view/count-out-the-money",
-      "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi",
-      "https://www.shl.com/products/product-catalog/view/net-framework-4-5",
-      "https://www.shl.com/products/product-catalog/view/net-mvc-new"
+      "https://www.shl.com/products/product-catalog/view/microsoft-word-365-essentials-new",
+      "https://www.shl.com/products/product-catalog/view/docker-new",
+      "https://www.shl.com/products/product-catalog/view/kubernetes-new",
+      "https://www.shl.com/products/product-catalog/view/essential-focus-8-0"
     ],
     "test_types": [
       "K",
+      "A",
       "K",
       "A",
-      "A",
-      "A",
+      "K",
       "K",
       "K"
     ],
@@ -953,25 +953,25 @@
     "recommendation_names": [
       "Kubernetes (New)",
       "Cloud Computing (New)",
+      "Smart Interview On Demand",
+      "Docker (New)",
+      "Dojo (New)",
       ".NET Framework 4.5",
-      ".NET MVC (New)",
-      "Accounts Payable (New)",
-      "Accounts Receivable (New)",
-      "Adobe Experience Manager (New)"
+      ".NET MVC (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/kubernetes-new",
       "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
+      "https://www.shl.com/products/product-catalog/view/smart-interview-on-demand",
+      "https://www.shl.com/products/product-catalog/view/docker-new",
+      "https://www.shl.com/products/product-catalog/view/dojo-new",
       "https://www.shl.com/products/product-catalog/view/net-framework-4-5",
-      "https://www.shl.com/products/product-catalog/view/net-mvc-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-payable-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-receivable-new",
-      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new"
+      "https://www.shl.com/products/product-catalog/view/net-mvc-new"
     ],
     "test_types": [
       "K",
       "K",
-      "K",
+      "A",
       "K",
       "K",
       "K",
@@ -993,28 +993,28 @@
     "first_rec": "Cloud Computing (New)",
     "recommendation_names": [
       "Cloud Computing (New)",
-      "Conversational Multichat Simulation",
+      "Docker (New)",
+      "Kubernetes (New)",
+      "ITIL (IT Infrastructure Library) (New)",
       "Amazon Web Services (AWS) Development (New)",
-      "Count Out The Money",
-      "Dependability and Safety Instrument (DSI)",
-      "DSI v1.1 Interpretation Report",
-      ".NET Framework 4.5"
+      "Manufacturing & Industrial - Essential Focus 8.0",
+      "Manufacturing & Industrial - Vigilance Focus 8.0"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
-      "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation",
+      "https://www.shl.com/products/product-catalog/view/docker-new",
+      "https://www.shl.com/products/product-catalog/view/kubernetes-new",
+      "https://www.shl.com/products/product-catalog/view/itil-it-infrastructure-library-new",
       "https://www.shl.com/products/product-catalog/view/amazon-web-services-aws-development-new",
-      "https://www.shl.com/products/product-catalog/view/count-out-the-money",
-      "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi",
-      "https://www.shl.com/products/product-catalog/view/dsi-v1-1-interpretation-report",
-      "https://www.shl.com/products/product-catalog/view/net-framework-4-5"
+      "https://www.shl.com/products/product-catalog/view/essential-focus-8-0",
+      "https://www.shl.com/products/product-catalog/view/vigilance-focus-8-0"
     ],
     "test_types": [
       "K",
-      "A",
       "K",
-      "A",
-      "A",
+      "K",
+      "K",
+      "K",
       "K",
       "K"
     ],
@@ -1034,29 +1034,29 @@
     "first_rec": "Docker (New)",
     "recommendation_names": [
       "Docker (New)",
-      "Cloud Computing (New)",
-      "Conversational Multichat Simulation",
       "Kubernetes (New)",
-      "Count Out The Money",
-      "Dependability and Safety Instrument (DSI)",
-      ".NET Framework 4.5"
+      "Conversational Multichat Simulation",
+      "Cloud Computing (New)",
+      "Manufacturing & Industrial - Essential Focus 8.0",
+      "Universal Competency Framework Job profiling guide",
+      "Manufacturing & Industrial - Vigilance Focus 8.0"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/docker-new",
-      "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
-      "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation",
       "https://www.shl.com/products/product-catalog/view/kubernetes-new",
-      "https://www.shl.com/products/product-catalog/view/count-out-the-money",
-      "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi",
-      "https://www.shl.com/products/product-catalog/view/net-framework-4-5"
+      "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation",
+      "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
+      "https://www.shl.com/products/product-catalog/view/essential-focus-8-0",
+      "https://www.shl.com/products/product-catalog/view/universal-competency-framework-job-profiling-guide",
+      "https://www.shl.com/products/product-catalog/view/vigilance-focus-8-0"
     ],
     "test_types": [
       "K",
       "K",
       "A",
       "K",
-      "A",
-      "A",
+      "K",
+      "K",
       "K"
     ],
     "reply_preview": "I've optimized an enterprise devops hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Docker (New",
@@ -1076,20 +1076,20 @@
     "recommendation_names": [
       "ITIL (IT Infrastructure Library) (New)",
       "Cloud Computing (New)",
+      "Docker (New)",
+      "Kubernetes (New)",
+      "Apache Hadoop (New)",
       ".NET Framework 4.5",
-      ".NET MVC (New)",
-      "Accounts Payable (New)",
-      "Accounts Receivable (New)",
-      "Adobe Experience Manager (New)"
+      "Apache Kafka (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/itil-it-infrastructure-library-new",
       "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
+      "https://www.shl.com/products/product-catalog/view/docker-new",
+      "https://www.shl.com/products/product-catalog/view/kubernetes-new",
+      "https://www.shl.com/products/product-catalog/view/apache-hadoop-new",
       "https://www.shl.com/products/product-catalog/view/net-framework-4-5",
-      "https://www.shl.com/products/product-catalog/view/net-mvc-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-payable-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-receivable-new",
-      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new"
+      "https://www.shl.com/products/product-catalog/view/apache-kafka-new"
     ],
     "test_types": [
       "K",
@@ -1117,20 +1117,20 @@
     "recommendation_names": [
       "Docker (New)",
       "Cloud Computing (New)",
-      ".NET Framework 4.5",
-      ".NET MVC (New)",
-      "Accounts Payable (New)",
-      "Accounts Receivable (New)",
-      "Adobe Experience Manager (New)"
+      "Kubernetes (New)",
+      "Dojo (New)",
+      "BizTalk (New)",
+      "Jenkins (New)",
+      ".NET Framework 4.5"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/docker-new",
       "https://www.shl.com/products/product-catalog/view/cloud-computing-new",
-      "https://www.shl.com/products/product-catalog/view/net-framework-4-5",
-      "https://www.shl.com/products/product-catalog/view/net-mvc-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-payable-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-receivable-new",
-      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new"
+      "https://www.shl.com/products/product-catalog/view/kubernetes-new",
+      "https://www.shl.com/products/product-catalog/view/dojo-new",
+      "https://www.shl.com/products/product-catalog/view/biztalk-new",
+      "https://www.shl.com/products/product-catalog/view/jenkins-new",
+      "https://www.shl.com/products/product-catalog/view/net-framework-4-5"
     ],
     "test_types": [
       "K",
@@ -1161,8 +1161,8 @@
       "Automata Front End",
       "Angular 6 (New)",
       "Adobe Experience Manager (New)",
-      ".NET WPF (New)",
-      "Accounts Payable (New)"
+      "JavaScript (New)",
+      "Drupal (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/reactjs-new",
@@ -1170,8 +1170,8 @@
       "https://www.shl.com/products/product-catalog/view/automata-front-end",
       "https://www.shl.com/products/product-catalog/view/angular-6-new",
       "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
-      "https://www.shl.com/products/product-catalog/view/net-wpf-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-payable-new"
+      "https://www.shl.com/products/product-catalog/view/javascript-new",
+      "https://www.shl.com/products/product-catalog/view/drupal-new"
     ],
     "test_types": [
       "K",
@@ -1199,29 +1199,29 @@
     "recommendation_names": [
       "ReactJS (New)",
       "Automata Front End",
-      "Conversational Multichat Simulation",
-      "AngularJS (New)",
       "Angular 6 (New)",
-      "Count Out The Money",
-      "Dependability and Safety Instrument (DSI)"
+      "AngularJS (New)",
+      "Manufacturing & Industrial - Essential Focus 8.0",
+      "Universal Competency Framework Job profiling guide",
+      "Adobe Experience Manager (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/reactjs-new",
       "https://www.shl.com/products/product-catalog/view/automata-front-end",
-      "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation",
-      "https://www.shl.com/products/product-catalog/view/angularjs-new",
       "https://www.shl.com/products/product-catalog/view/angular-6-new",
-      "https://www.shl.com/products/product-catalog/view/count-out-the-money",
-      "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi"
+      "https://www.shl.com/products/product-catalog/view/angularjs-new",
+      "https://www.shl.com/products/product-catalog/view/essential-focus-8-0",
+      "https://www.shl.com/products/product-catalog/view/universal-competency-framework-job-profiling-guide",
+      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new"
     ],
     "test_types": [
       "K",
       "K",
-      "A",
       "K",
       "K",
-      "A",
-      "A"
+      "K",
+      "K",
+      "K"
     ],
     "reply_preview": "I've optimized an enterprise frontend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | ReactJS (",
     "has_java": false,
@@ -1240,29 +1240,29 @@
     "recommendation_names": [
       "Angular 6 (New)",
       "AngularJS (New)",
-      "Conversational Multichat Simulation",
+      "ReactJS (New)",
       "Automata Front End",
-      "Count Out The Money",
-      "Dependability and Safety Instrument (DSI)",
-      "DSI v1.1 Interpretation Report"
+      "Manufacturing & Industrial - Essential Focus 8.0",
+      "Manufac. & Indust. - Safety & Dependability 8.0",
+      "Conversational Multichat Simulation"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/angular-6-new",
       "https://www.shl.com/products/product-catalog/view/angularjs-new",
-      "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation",
+      "https://www.shl.com/products/product-catalog/view/reactjs-new",
       "https://www.shl.com/products/product-catalog/view/automata-front-end",
-      "https://www.shl.com/products/product-catalog/view/count-out-the-money",
-      "https://www.shl.com/products/product-catalog/view/dependability-and-safety-instrument-dsi",
-      "https://www.shl.com/products/product-catalog/view/dsi-v1-1-interpretation-report"
+      "https://www.shl.com/products/product-catalog/view/essential-focus-8-0",
+      "https://www.shl.com/products/product-catalog/view/safety-and-dependability-focus-8-0",
+      "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation"
     ],
     "test_types": [
       "K",
       "K",
-      "A",
       "K",
-      "A",
-      "A",
-      "K"
+      "K",
+      "K",
+      "K",
+      "A"
     ],
     "reply_preview": "I've optimized an enterprise frontend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Angular 6",
     "has_java": false,
@@ -1283,18 +1283,18 @@
       "AngularJS (New)",
       "Angular 6 (New)",
       "Automata Front End",
+      "Universal Competency Framework Job profiling guide",
       "Business Communication (adaptive)",
-      "Business Communications",
-      "Dermatology (New)"
+      "Business Communications"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/reactjs-new",
       "https://www.shl.com/products/product-catalog/view/angularjs-new",
       "https://www.shl.com/products/product-catalog/view/angular-6-new",
       "https://www.shl.com/products/product-catalog/view/automata-front-end",
+      "https://www.shl.com/products/product-catalog/view/universal-competency-framework-job-profiling-guide",
       "https://www.shl.com/products/product-catalog/view/business-communication-adaptive",
-      "https://www.shl.com/products/product-catalog/view/business-communications",
-      "https://www.shl.com/products/product-catalog/view/dermatology-new"
+      "https://www.shl.com/products/product-catalog/view/business-communications"
     ],
     "test_types": [
       "K",
@@ -1321,27 +1321,27 @@
     "first_rec": "Automata Front End",
     "recommendation_names": [
       "Automata Front End",
-      "Angular 6 (New)",
-      "Conversational Multichat Simulation",
+      "Smart Interview On Demand",
       "AngularJS (New)",
+      "Verify - General Ability Screen",
+      "Angular 6 (New)",
       "iOS Development (New)",
-      "jQuery (New)",
       "Android Development (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/automata-front-end",
-      "https://www.shl.com/products/product-catalog/view/angular-6-new",
-      "https://www.shl.com/products/product-catalog/view/conversational-multichat-simulation",
+      "https://www.shl.com/products/product-catalog/view/smart-interview-on-demand",
       "https://www.shl.com/products/product-catalog/view/angularjs-new",
+      "https://www.shl.com/products/product-catalog/view/verify-general-ability-screen",
+      "https://www.shl.com/products/product-catalog/view/angular-6-new",
       "https://www.shl.com/products/product-catalog/view/ios-development-new",
-      "https://www.shl.com/products/product-catalog/view/jquery-new",
       "https://www.shl.com/products/product-catalog/view/android-development-new"
     ],
     "test_types": [
       "K",
-      "K",
       "A",
       "K",
+      "A",
       "K",
       "K",
       "K"
@@ -1359,35 +1359,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Automata Data Science (New)",
+    "first_rec": "Data Science (New)",
     "recommendation_names": [
-      "Automata Data Science (New)",
       "Data Science (New)",
+      "Automata Data Science (New)",
       "Automata Data Science Pro (New)",
+      "AI Skills",
       "ETL Testing (New)",
-      "Microsoft 365 (New)",
       "Workplace Administration Skills (New)",
-      "Verify - Numerical Ability"
+      "Microsoft 365 (New)"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/automata-data-science-new",
       "https://www.shl.com/products/product-catalog/view/data-science-new",
+      "https://www.shl.com/products/product-catalog/view/automata-data-science-new",
       "https://www.shl.com/products/product-catalog/view/automata-data-science-pro-new",
+      "https://www.shl.com/products/product-catalog/view/ai-skills",
       "https://www.shl.com/products/product-catalog/view/etl-testing-new",
-      "https://www.shl.com/products/product-catalog/view/microsoft-excel-365-new",
       "https://www.shl.com/products/product-catalog/view/workplace-administration-skills-new",
-      "https://www.shl.com/products/product-catalog/view/verify-numerical-ability"
+      "https://www.shl.com/products/product-catalog/view/microsoft-excel-365-new"
     ],
     "test_types": [
-      "A",
       "K",
       "A",
-      "K",
       "A",
+      "K",
+      "K",
       "A",
       "A"
     ],
-    "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Dat",
+    "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Data Science",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
@@ -1406,26 +1406,26 @@
       "Data Science (New)",
       "Automata Data Science Pro (New)",
       "AI Skills",
-      "Adobe Experience Manager (New)",
-      "Basic Statistics (New)",
-      ".NET MVVM (New)"
+      "Smart Interview On Demand",
+      "Workplace Administration Skills (New)",
+      "Adobe Experience Manager (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/automata-data-science-new",
       "https://www.shl.com/products/product-catalog/view/data-science-new",
       "https://www.shl.com/products/product-catalog/view/automata-data-science-pro-new",
       "https://www.shl.com/products/product-catalog/view/ai-skills",
-      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
-      "https://www.shl.com/products/product-catalog/view/basic-statistics-new",
-      "https://www.shl.com/products/product-catalog/view/net-mvvm-new"
+      "https://www.shl.com/products/product-catalog/view/smart-interview-on-demand",
+      "https://www.shl.com/products/product-catalog/view/workplace-administration-skills-new",
+      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new"
     ],
     "test_types": [
       "A",
       "K",
       "A",
       "K",
-      "K",
-      "K",
+      "A",
+      "A",
       "K"
     ],
     "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Dat",
@@ -1444,30 +1444,30 @@
     "first_rec": "AI Skills",
     "recommendation_names": [
       "AI Skills",
-      "Occupational Personality Questionnaire OPQ32r",
       "Automata Data Science (New)",
       "Automata Data Science Pro (New)",
+      "Data Science (New)",
       "Microsoft 365 (New)",
-      "Verify - Numerical Ability",
-      "Data Science (New)"
+      "Microsoft Excel 365 - Essentials (New)",
+      "SHL Verify Interactive - Inductive Reasoning"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/ai-skills",
-      "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r",
       "https://www.shl.com/products/product-catalog/view/automata-data-science-new",
       "https://www.shl.com/products/product-catalog/view/automata-data-science-pro-new",
+      "https://www.shl.com/products/product-catalog/view/data-science-new",
       "https://www.shl.com/products/product-catalog/view/microsoft-excel-365-new",
-      "https://www.shl.com/products/product-catalog/view/verify-numerical-ability",
-      "https://www.shl.com/products/product-catalog/view/data-science-new"
+      "https://www.shl.com/products/product-catalog/view/microsoft-excel-365-essentials-new",
+      "https://www.shl.com/products/product-catalog/view/shl-verify-interactive-inductive-reasoning"
     ],
     "test_types": [
       "K",
-      "P",
       "A",
       "A",
+      "K",
       "A",
       "A",
-      "K"
+      "A"
     ],
     "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | AI Skills | ",
     "has_java": false,
@@ -1487,26 +1487,26 @@
       "Automata Data Science (New)",
       "Data Science (New)",
       "Automata Data Science Pro (New)",
+      "AI Skills",
       "ETL Testing (New)",
-      "Microsoft 365 (New)",
       "Workplace Administration Skills (New)",
-      "Verify - Numerical Ability"
+      "Microsoft 365 (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/automata-data-science-new",
       "https://www.shl.com/products/product-catalog/view/data-science-new",
       "https://www.shl.com/products/product-catalog/view/automata-data-science-pro-new",
+      "https://www.shl.com/products/product-catalog/view/ai-skills",
       "https://www.shl.com/products/product-catalog/view/etl-testing-new",
-      "https://www.shl.com/products/product-catalog/view/microsoft-excel-365-new",
       "https://www.shl.com/products/product-catalog/view/workplace-administration-skills-new",
-      "https://www.shl.com/products/product-catalog/view/verify-numerical-ability"
+      "https://www.shl.com/products/product-catalog/view/microsoft-excel-365-new"
     ],
     "test_types": [
       "A",
       "K",
       "A",
       "K",
-      "A",
+      "K",
       "A",
       "A"
     ],
@@ -1529,8 +1529,8 @@
       "Data Science (New)",
       "Automata Data Science Pro (New)",
       "AI Skills",
+      "Smart Interview On Demand",
       "ETL Testing (New)",
-      "Microsoft 365 (New)",
       "Workplace Administration Skills (New)"
     ],
     "recommendation_urls": [
@@ -1538,8 +1538,8 @@
       "https://www.shl.com/products/product-catalog/view/data-science-new",
       "https://www.shl.com/products/product-catalog/view/automata-data-science-pro-new",
       "https://www.shl.com/products/product-catalog/view/ai-skills",
+      "https://www.shl.com/products/product-catalog/view/smart-interview-on-demand",
       "https://www.shl.com/products/product-catalog/view/etl-testing-new",
-      "https://www.shl.com/products/product-catalog/view/microsoft-excel-365-new",
       "https://www.shl.com/products/product-catalog/view/workplace-administration-skills-new"
     ],
     "test_types": [
@@ -1547,8 +1547,8 @@
       "K",
       "A",
       "K",
-      "K",
       "A",
+      "K",
       "A"
     ],
     "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Dat",
@@ -1563,36 +1563,30 @@
     "expected": "qa",
     "should_clarify": false,
     "is_clarification": false,
-    "rec_count": 7,
-    "first_rec": "Automata Selenium",
+    "rec_count": 5,
+    "first_rec": "Manual Testing (New)",
     "recommendation_names": [
-      "Automata Selenium",
       "Manual Testing (New)",
-      ".NET WPF (New)",
-      "Accounts Payable (New)",
-      "Accounts Receivable (New)",
-      "Adobe Experience Manager (New)",
+      "Automata Selenium",
+      "BizTalk (New)",
+      "Dojo (New)",
       "Occupational Personality Questionnaire OPQ32r"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/automata-selenium",
       "https://www.shl.com/products/product-catalog/view/manual-testing-new",
-      "https://www.shl.com/products/product-catalog/view/net-wpf-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-payable-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-receivable-new",
-      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
+      "https://www.shl.com/products/product-catalog/view/automata-selenium",
+      "https://www.shl.com/products/product-catalog/view/biztalk-new",
+      "https://www.shl.com/products/product-catalog/view/dojo-new",
       "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r"
     ],
     "test_types": [
+      "K",
       "A",
-      "K",
-      "K",
-      "K",
       "K",
       "K",
       "P"
     ],
-    "reply_preview": "I've optimized an enterprise qa hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Seleni",
+    "reply_preview": "I've optimized an enterprise qa hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Manual Testing ",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
@@ -1609,13 +1603,13 @@
     "recommendation_names": [
       "Automata Selenium",
       "Manual Testing (New)",
-      ".NET WPF (New)",
+      "SAP SD (Sales and Distribution) (New)",
       "Occupational Personality Questionnaire OPQ32r"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/automata-selenium",
       "https://www.shl.com/products/product-catalog/view/manual-testing-new",
-      "https://www.shl.com/products/product-catalog/view/net-wpf-new",
+      "https://www.shl.com/products/product-catalog/view/sap-sd-sales-and-distribution-new",
       "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r"
     ],
     "test_types": [
@@ -1637,35 +1631,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Agile Testing (New)",
+    "first_rec": "Automata Selenium",
     "recommendation_names": [
-      "Agile Testing (New)",
-      "Occupational Personality Questionnaire OPQ32r",
       "Automata Selenium",
+      "Manual Testing (New)",
+      "Agile Testing (New)",
+      "Selenium (New)",
       "Split Screen Typing Test - Form 1",
-      "Count Out The Money",
-      "Typing (New)",
-      "Verify G+ - Ability Test Report"
+      "Automation Anywhere RPA Development (New)",
+      "Following Instructions v1 - US (R2)"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/agile-testing-new",
-      "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r",
       "https://www.shl.com/products/product-catalog/view/automata-selenium",
+      "https://www.shl.com/products/product-catalog/view/manual-testing-new",
+      "https://www.shl.com/products/product-catalog/view/agile-testing-new",
+      "https://www.shl.com/products/product-catalog/view/selenium-new",
       "https://www.shl.com/products/product-catalog/view/split-screen-typing-test-form-1",
-      "https://www.shl.com/products/product-catalog/view/count-out-the-money",
-      "https://www.shl.com/products/product-catalog/view/typing-new",
-      "https://www.shl.com/products/product-catalog/view/verify-g-ability-test-report"
+      "https://www.shl.com/products/product-catalog/view/automation-anywhere-rpa-development-new",
+      "https://www.shl.com/products/product-catalog/view/following-instructions-v1-us-r2"
     ],
     "test_types": [
-      "K",
-      "P",
       "A",
       "K",
-      "A",
+      "K",
+      "K",
+      "K",
       "K",
       "A"
     ],
-    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Agile Test",
+    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata S",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
@@ -1677,31 +1671,34 @@
     "expected": "qa",
     "should_clarify": false,
     "is_clarification": false,
-    "rec_count": 6,
+    "rec_count": 7,
     "first_rec": "Automata Selenium",
     "recommendation_names": [
       "Automata Selenium",
       "Manual Testing (New)",
+      "Occupational Personality Questionnaire OPQ32r",
       "Verify - Inductive Reasoning (2014)",
-      ".NET WPF (New)",
-      "Accounts Payable (New)",
-      "Occupational Personality Questionnaire OPQ32r"
+      "Customer Service Phone Solution",
+      "Accounts Receivable (New)",
+      "Accounts Payable (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/automata-selenium",
       "https://www.shl.com/products/product-catalog/view/manual-testing-new",
+      "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r",
       "https://www.shl.com/products/product-catalog/view/verify-inductive-reasoning-2014",
-      "https://www.shl.com/products/product-catalog/view/net-wpf-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-payable-new",
-      "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r"
+      "https://www.shl.com/products/product-catalog/view/customer-service-phone-solution",
+      "https://www.shl.com/products/product-catalog/view/accounts-receivable-new",
+      "https://www.shl.com/products/product-catalog/view/accounts-payable-new"
     ],
     "test_types": [
       "A",
       "K",
+      "P",
+      "A",
       "A",
       "K",
-      "K",
-      "P"
+      "K"
     ],
     "reply_preview": "I've optimized an enterprise qa hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Seleni",
     "has_java": false,
@@ -1716,35 +1713,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Sales Transformation Report 1.0 - Sales Manager",
+    "first_rec": "OPQ Manager Plus Report",
     "recommendation_names": [
-      "Sales Transformation Report 1.0 - Sales Manager",
+      "OPQ Manager Plus Report",
       "Sales Transformation Report 2.0 - Sales Manager",
-      "Telecommunications Engineering (New)",
+      "OPQ User and Managers Report",
+      "Sales Transformation Report 1.0 - Sales Manager",
       "Electronics & Telecommunications Engineering (New)",
-      "Adobe Experience Manager (New)",
-      "Oracle WebLogic Server (New)",
-      "Civil Engineering (New)"
+      "OPQ Manager Plus Report 2.0",
+      "Telecommunications Engineering (New)"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/sales-transformation-report-sales-manager",
+      "https://www.shl.com/products/product-catalog/view/opq-manager-plus-report",
       "https://www.shl.com/products/product-catalog/view/sales-transformation-report-2-0-sales-manager",
-      "https://www.shl.com/products/product-catalog/view/telecommunications-engineering-new",
+      "https://www.shl.com/products/product-catalog/view/opq-user-and-managers-report",
+      "https://www.shl.com/products/product-catalog/view/sales-transformation-report-sales-manager",
       "https://www.shl.com/products/product-catalog/view/electronics-and-telecommunications-engineering-new",
-      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
-      "https://www.shl.com/products/product-catalog/view/oracle-weblogic-server-new",
-      "https://www.shl.com/products/product-catalog/view/civil-engineering-new"
+      "https://www.shl.com/products/product-catalog/view/opq-manager-plus-report-2-0",
+      "https://www.shl.com/products/product-catalog/view/telecommunications-engineering-new"
     ],
     "test_types": [
+      "P",
       "A",
+      "P",
       "A",
       "K",
-      "K",
-      "K",
-      "K",
+      "P",
       "K"
     ],
-    "reply_preview": "I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Sales T",
+    "reply_preview": "I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | OPQ Man",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
@@ -1757,35 +1754,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "AI Skills",
+    "first_rec": "Sales Transformation Report 1.0 - Sales Manager",
     "recommendation_names": [
-      "AI Skills",
       "Sales Transformation Report 1.0 - Sales Manager",
+      "Enterprise Leadership Report 2.0",
       "Sales Transformation Report 2.0 - Sales Manager",
-      "Software Business Analysis",
-      ".NET Framework 4.5",
-      "Verify - Inductive Reasoning (2014)",
-      "HiPo Assessment Report 2.0"
+      "Digital Readiness Development Report - Manager",
+      "HiPo Assessment Report 2.0",
+      "Enterprise Leadership Report 1.0",
+      "HiPo Assessment Report 1.0"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/ai-skills",
       "https://www.shl.com/products/product-catalog/view/sales-transformation-report-sales-manager",
+      "https://www.shl.com/products/product-catalog/view/enterprise-leadership-report-2-0",
       "https://www.shl.com/products/product-catalog/view/sales-transformation-report-2-0-sales-manager",
-      "https://www.shl.com/products/product-catalog/view/software-business-analysis",
-      "https://www.shl.com/products/product-catalog/view/net-framework-4-5",
-      "https://www.shl.com/products/product-catalog/view/verify-inductive-reasoning-2014",
-      "https://www.shl.com/products/product-catalog/view/hipo-assessment-report-2-0"
+      "https://www.shl.com/products/product-catalog/view/digital-readiness-development-report-manager",
+      "https://www.shl.com/products/product-catalog/view/hipo-assessment-report-2-0",
+      "https://www.shl.com/products/product-catalog/view/enterprise-leadership-report",
+      "https://www.shl.com/products/product-catalog/view/hipo-assessment-report-1-0"
     ],
     "test_types": [
-      "K",
-      "A",
       "A",
       "K",
-      "K",
       "A",
+      "P",
+      "A",
+      "K",
       "A"
     ],
-    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | AI Skills ",
+    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Sales Tran",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
@@ -1802,29 +1799,29 @@
     "recommendation_names": [
       "Sales Transformation Report 1.0 - Sales Manager",
       "OPQ User and Managers Report",
+      "360\u00b0 Multi-Rater Feedback System (MFS)",
       "Sales Transformation Report 2.0 - Sales Manager",
-      "OPQ Premium Plus Report",
-      "OPQ Premium Plus Report 2.0",
-      "Oracle WebLogic Server (New)",
-      "Digital Readiness Development Report - Manager"
+      "OPQ Manager Plus Report 2.0",
+      "Digital Readiness Development Report - Manager",
+      "HiPo Assessment Report 2.0"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/sales-transformation-report-sales-manager",
       "https://www.shl.com/products/product-catalog/view/opq-user-and-managers-report",
+      "https://www.shl.com/products/product-catalog/view/360-multi-rater-feedback-system-mfs",
       "https://www.shl.com/products/product-catalog/view/sales-transformation-report-2-0-sales-manager",
-      "https://www.shl.com/products/product-catalog/view/opq-premium-plus-report",
-      "https://www.shl.com/products/product-catalog/view/opq-premium-plus-report-2-0",
-      "https://www.shl.com/products/product-catalog/view/oracle-weblogic-server-new",
-      "https://www.shl.com/products/product-catalog/view/digital-readiness-development-report-manager"
+      "https://www.shl.com/products/product-catalog/view/opq-manager-plus-report-2-0",
+      "https://www.shl.com/products/product-catalog/view/digital-readiness-development-report-manager",
+      "https://www.shl.com/products/product-catalog/view/hipo-assessment-report-2-0"
     ],
     "test_types": [
       "A",
       "P",
+      "K",
       "A",
       "P",
       "P",
-      "K",
-      "P"
+      "A"
     ],
     "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Sales Tran",
     "has_java": false,
@@ -1839,35 +1836,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "MFS 360 Enterprise Leadership Report",
+    "first_rec": "OPQ Leadership Report",
     "recommendation_names": [
-      "MFS 360 Enterprise Leadership Report",
       "OPQ Leadership Report",
       "Executive Scenarios",
       "Occupational Personality Questionnaire OPQ32r",
-      "Interpersonal Communications",
-      "Global Skills Development Report",
-      "Adobe Experience Manager (New)"
+      "Digital Readiness Development Report - Manager",
+      "MFS 360 Enterprise Leadership Report",
+      "Digital Readiness Development Report - IC",
+      "Customer Service Phone Solution"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/mfs-360-enterprise-leadership-report",
       "https://www.shl.com/products/product-catalog/view/opq-leadership-report",
       "https://www.shl.com/products/product-catalog/view/executive-scenarios",
       "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r",
-      "https://www.shl.com/products/product-catalog/view/interpersonal-communications",
-      "https://www.shl.com/products/product-catalog/view/global-skills-development-report",
-      "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new"
+      "https://www.shl.com/products/product-catalog/view/digital-readiness-development-report-manager",
+      "https://www.shl.com/products/product-catalog/view/mfs-360-enterprise-leadership-report",
+      "https://www.shl.com/products/product-catalog/view/digital-readiness-development-report",
+      "https://www.shl.com/products/product-catalog/view/customer-service-phone-solution"
     ],
     "test_types": [
+      "P",
+      "P",
+      "P",
+      "P",
       "K",
       "P",
-      "P",
-      "P",
-      "K",
-      "A",
-      "K"
+      "A"
     ],
-    "reply_preview": "I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | MFS 360",
+    "reply_preview": "I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | OPQ Lea",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
@@ -1955,8 +1952,8 @@
       "Docker (New)",
       "Occupational Personality Questionnaire OPQ32r",
       "Automata - SQL (New)",
-      "Automata - Fix (New)",
-      "Java Frameworks (New)"
+      "Java Frameworks (New)",
+      "Core Java (Advanced Level) (New)"
     ],
     "recommendation_urls": [
       "https://www.shl.com/products/product-catalog/view/sql-server-integration-services-ssis-new",
@@ -1964,8 +1961,8 @@
       "https://www.shl.com/products/product-catalog/view/docker-new",
       "https://www.shl.com/products/product-catalog/view/occupational-personality-questionnaire-opq32r",
       "https://www.shl.com/products/product-catalog/view/automata-sql-new",
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
-      "https://www.shl.com/products/product-catalog/view/java-frameworks-new"
+      "https://www.shl.com/products/product-catalog/view/java-frameworks-new",
+      "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new"
     ],
     "test_types": [
       "K",
@@ -1973,7 +1970,7 @@
       "K",
       "P",
       "K",
-      "A",
+      "K",
       "K"
     ],
     "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | SQL Server",
@@ -1989,35 +1986,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Automata - Fix (New)",
+    "first_rec": "Informatica (Developer) (New)",
     "recommendation_names": [
-      "Automata - Fix (New)",
       "Informatica (Developer) (New)",
       "Microsoft SQL Server 2014 Programming",
+      "Automata Pro (New)",
       "Adobe Experience Manager (New)",
-      ".NET WCF (New)",
       "ASP.NET 4.5",
-      "Automata (New)"
+      ".NET WCF (New)",
+      "Smart Interview Live Coding"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/automata-fix-new",
       "https://www.shl.com/products/product-catalog/view/informatica-developer-new",
       "https://www.shl.com/products/product-catalog/view/microsoft-sql-server-2014-programming",
+      "https://www.shl.com/products/product-catalog/view/automata-pro-new",
       "https://www.shl.com/products/product-catalog/view/adobe-experience-manager-new",
-      "https://www.shl.com/products/product-catalog/view/net-wcf-new",
       "https://www.shl.com/products/product-catalog/view/asp-net-4-5",
-      "https://www.shl.com/products/product-catalog/view/automata-new"
+      "https://www.shl.com/products/product-catalog/view/net-wcf-new",
+      "https://www.shl.com/products/product-catalog/view/smart-interview-live-coding"
     ],
     "test_types": [
+      "K",
+      "K",
       "A",
       "K",
       "K",
       "K",
-      "K",
-      "K",
-      "A"
+      "K"
     ],
-    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata -",
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Informatic",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
@@ -2030,35 +2027,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Informatica (Developer) (New)",
+    "first_rec": "Virtual Assessment and Development Centers",
     "recommendation_names": [
+      "Virtual Assessment and Development Centers",
       "Informatica (Developer) (New)",
       "Microsoft SQL Server 2014 Programming",
-      "Automata (New)",
       "Mobility (New)",
       "ASP.NET 4.5",
       "Automata Pro (New)",
       "Global Skills Development Report"
     ],
     "recommendation_urls": [
+      "https://www.shl.com/products/product-catalog/view/virtual-assessment-and-development-centers",
       "https://www.shl.com/products/product-catalog/view/informatica-developer-new",
       "https://www.shl.com/products/product-catalog/view/microsoft-sql-server-2014-programming",
-      "https://www.shl.com/products/product-catalog/view/automata-new",
       "https://www.shl.com/products/product-catalog/view/mobility-new",
       "https://www.shl.com/products/product-catalog/view/asp-net-4-5",
       "https://www.shl.com/products/product-catalog/view/automata-pro-new",
       "https://www.shl.com/products/product-catalog/view/global-skills-development-report"
     ],
     "test_types": [
-      "K",
-      "K",
       "A",
+      "K",
+      "K",
       "K",
       "K",
       "A",
       "A"
     ],
-    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Informatic",
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Virtual As",
     "has_java": false,
     "has_python": false,
     "has_devops": false,
@@ -2071,35 +2068,35 @@
     "should_clarify": false,
     "is_clarification": false,
     "rec_count": 7,
-    "first_rec": "Global Skills Development Report",
+    "first_rec": "AI Skills",
     "recommendation_names": [
-      "Global Skills Development Report",
+      "AI Skills",
+      "Automata (New)",
+      "Automata Pro (New)",
       "Entry Level Technical Support Solution",
-      "Accounts Payable Simulation (New)",
       "VLSI and Embedded Systems (New)",
-      "Accounts Receivable Simulation (New)",
-      "Electronics and Embedded Systems Engineering (New)",
-      "Electrical Engineering (New)"
+      "Automata Selenium",
+      "Electronics and Embedded Systems Engineering (New)"
     ],
     "recommendation_urls": [
-      "https://www.shl.com/products/product-catalog/view/global-skills-development-report",
+      "https://www.shl.com/products/product-catalog/view/ai-skills",
+      "https://www.shl.com/products/product-catalog/view/automata-new",
+      "https://www.shl.com/products/product-catalog/view/automata-pro-new",
       "https://www.shl.com/products/product-catalog/view/entry-level-technical-support-solution",
-      "https://www.shl.com/products/product-catalog/view/accounts-payable-simulation-new",
       "https://www.shl.com/products/product-catalog/view/vlsi-and-embedded-systems-new",
-      "https://www.shl.com/products/product-catalog/view/accounts-receivable-simulation-new",
-      "https://www.shl.com/products/product-catalog/view/electronics-and-embedded-systems-engineering-new",
-      "https://www.shl.com/products/product-catalog/view/electrical-engineering-new"
+      "https://www.shl.com/products/product-catalog/view/automata-selenium",
+      "https://www.shl.com/products/product-catalog/view/electronics-and-embedded-systems-engineering-new"
     ],
     "test_types": [
-      "A",
       "K",
       "A",
-      "K",
       "A",
       "K",
+      "K",
+      "A",
       "K"
     ],
-    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Global Ski",
+    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | AI Skills ",
     "has_java": false,
     "has_python": false,
     "has_devops": false,

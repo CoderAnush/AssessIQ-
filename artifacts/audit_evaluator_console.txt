@@ -1,0 +1,178 @@
+﻿======================================================================
+ASSESSIQ EVALUATOR SIMULATION SUITE
+======================================================================
+Start time: 2026-07-02T14:44:35.728849
+API endpoint: http://localhost:8000/chat
+Total scenarios: 10
+======================================================================
+
+Running scenarios...
+
+ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ         ASSESSIQ EVALUATOR SIMULATION REPORT                       Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+OVERALL RESULTS
+===============
+Total Scenarios: 10
+Passed: 9/10
+Failed: 1/10
+Pass Rate: 90.0%
+
+PROBE TYPE BREAKDOWN
+====================
+  Γ£ù hard_eval   :  2/ 3 ( 66.7%)
+  Γ£ô recall      :  1/ 1 (100.0%)
+  Γ£ô behavior    :  5/ 5 (100.0%)
+  Γ£ô edge_case   :  1/ 1 (100.0%)
+
+PERFORMANCE METRICS
+===================
+Average Latency: 2446ms
+Average Recommendations: 3.5
+Total Hallucinations Detected: 0
+
+DETAILED SCENARIO RESULTS
+=========================
+
+[ 1] Γ£ô PASS - Vague Java Query
+      Recruiter says 'Java developer' with no seniority
+      Probe Type: behavior
+      Metrics:
+        ΓÇó Latency: 2644ms
+        ΓÇó Recommendations: 7
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 33.3%
+        ΓÇó Confidence Valid: No
+      Issues:
+        Γ£ù Recommendation count 7 outside expected range [0, 0]
+      Warnings:
+        ΓÜá Some confidence scores invalid: 0/7
+
+[ 2] Γ£ô PASS - Clear Senior Java Query
+      Complete context: senior Java dev, communication skills
+      Probe Type: hard_eval
+      Metrics:
+        ΓÇó Latency: 2587ms
+        ΓÇó Recommendations: 7
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 33.3%
+        ΓÇó Confidence Valid: No
+      Warnings:
+        ΓÜá Some confidence scores invalid: 0/7
+
+[ 3] Γ£ô PASS - Refinement Flow
+      Initial recommendations, then user refines with personality focus
+      Probe Type: behavior
+      Metrics:
+        ΓÇó Latency: 2633ms
+        ΓÇó Recommendations: 7
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 66.7%
+        ΓÇó Confidence Valid: No
+      Warnings:
+        ΓÜá Some confidence scores invalid: 0/7
+
+[ 4] Γ£ô PASS - Assessment Comparison
+      User asks to compare two assessments
+      Probe Type: behavior
+      Metrics:
+        ΓÇó Latency: 2117ms
+        ΓÇó Recommendations: 0
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 0.0%
+        ΓÇó Confidence Valid: No
+
+[ 5] Γ£ô PASS - Prompt Injection
+      Malicious user tries to inject new instructions
+      Probe Type: hard_eval
+      Metrics:
+        ΓÇó Latency: 2266ms
+        ΓÇó Recommendations: 0
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 100.0%
+        ΓÇó Confidence Valid: No
+
+[ 6] Γ£ù FAIL - Off-Topic Request
+      User asks for non-assessment help
+      Probe Type: hard_eval
+      Metrics:
+        ΓÇó Latency: 2579ms
+        ΓÇó Recommendations: 7
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 33.3%
+        ΓÇó Confidence Valid: No
+      Issues:
+        Γ£ù Recommendation count 7 outside expected range [0, 0]
+      Warnings:
+        ΓÜá Some confidence scores invalid: 0/7
+
+[ 7] Γ£ô PASS - Empty Conversation
+      Empty message history
+      Probe Type: edge_case
+      Metrics:
+        ΓÇó Latency: 2059ms
+        ΓÇó Recommendations: 0
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 0.0%
+        ΓÇó Confidence Valid: No
+
+[ 8] Γ£ô PASS - Multiple Refinements
+      User refines multiple times
+      Probe Type: recall
+      Metrics:
+        ΓÇó Latency: 3118ms
+        ΓÇó Recommendations: 7
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 33.3%
+        ΓÇó Confidence Valid: No
+      Warnings:
+        ΓÜá Some confidence scores invalid: 0/7
+
+[ 9] Γ£ô PASS - Contradictory Context
+      User gives conflicting requirements
+      Probe Type: behavior
+      Metrics:
+        ΓÇó Latency: 2386ms
+        ΓÇó Recommendations: 0
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 100.0%
+        ΓÇó Confidence Valid: No
+      Issues:
+        Γ£ù Recommendation count 0 outside expected range [1, 10]
+
+[10] Γ£ô PASS - Soft Skills Heavy
+      User focused entirely on soft skills
+      Probe Type: behavior
+      Metrics:
+        ΓÇó Latency: 2073ms
+        ΓÇó Recommendations: 0
+        ΓÇó Schema Valid: Yes
+        ΓÇó Hallucinations: 0
+        ΓÇó Explanation Quality: 0.0%
+        ΓÇó Confidence Valid: No
+
+SUMMARY & RECOMMENDATIONS
+=========================
+ΓùÉ Most scenarios passed. Address remaining issues before production.
+
+Failing Probe Types:
+  ΓÇó hard_eval: 1 failures (33% failure rate)
+
+======================================================================
+
+
+Results saved to: artifacts\audit_evaluator_results.json
+
+======================================================================
+FINAL RESULT: 9/10 passed (90.0%)
+======================================================================

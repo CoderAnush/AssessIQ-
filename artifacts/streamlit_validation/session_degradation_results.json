@@ -11,7 +11,7 @@
     "passed": true,
     "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_01.png",
-    "elapsed_s": 6.6
+    "elapsed_s": 4.5
   },
   {
     "step": 2,
@@ -25,7 +25,7 @@
     "passed": true,
     "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_02.png",
-    "elapsed_s": 6.9
+    "elapsed_s": 4.4
   },
   {
     "step": 3,
@@ -39,7 +39,7 @@
     "passed": true,
     "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_03.png",
-    "elapsed_s": 5.5
+    "elapsed_s": 3.9
   },
   {
     "step": 4,
@@ -53,7 +53,7 @@
     "passed": true,
     "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_04.png",
-    "elapsed_s": 6.2
+    "elapsed_s": 4.5
   },
   {
     "step": 5,
@@ -67,7 +67,7 @@
     "passed": true,
     "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_05.png",
-    "elapsed_s": 5.0
+    "elapsed_s": 4.5
   },
   {
     "step": 6,
@@ -81,76 +81,76 @@
     "passed": true,
     "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_06.png",
-    "elapsed_s": 4.7
+    "elapsed_s": 4.4
   },
   {
     "step": 7,
     "prompt": "hiring devops engineer",
     "top4": [
-      "Docker (New)",
-      "Kubernetes (New)",
       "Cloud Computing (New)",
-      "Amazon Web Services (AWS) Development (New)"
+      ".NET Framework 4.5",
+      ".NET MVC (New)",
+      "Accounts Payable (New)"
     ],
     "passed": true,
     "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_07.png",
-    "elapsed_s": 5.0
+    "elapsed_s": 4.4
   },
   {
     "step": 8,
     "prompt": "hiring frontend developer",
     "top4": [
-      "Docker (New)",
-      "Kubernetes (New)",
-      "Cloud Computing (New)",
-      "Amazon Web Services (AWS) Development (New)"
+      "AngularJS (New)",
+      "ReactJS (New)",
+      "Angular 6 (New)",
+      "Automata Front End"
     ],
-    "passed": false,
-    "reason": "stale finalized shortlist returned",
+    "passed": true,
+    "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_08.png",
-    "elapsed_s": 7.5
+    "elapsed_s": 4.4
   },
   {
     "step": 9,
     "prompt": "python",
     "top4": [
-      "Docker (New)",
-      "Kubernetes (New)",
-      "Cloud Computing (New)",
-      "Amazon Web Services (AWS) Development (New)"
+      "Adobe Experience Manager (New)",
+      ".NET WPF (New)",
+      "Accounts Payable (New)",
+      "Accounts Receivable (New)"
     ],
     "passed": false,
-    "reason": "stale finalized shortlist returned",
+    "reason": "expected one of ('python', 'java', 'spring'); got ['Adobe Experience Manager (New)', '.NET WPF (New)', 'Accounts Payable (New)', 'Accounts Receivable (New)']",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_09.png",
-    "elapsed_s": 7.5
+    "elapsed_s": 4.4
   },
   {
     "step": 10,
     "prompt": "need frontend",
     "top4": [
-      "Docker (New)",
-      "Kubernetes (New)",
-      "Cloud Computing (New)",
-      "Amazon Web Services (AWS) Development (New)"
+      "AngularJS (New)",
+      "ReactJS (New)",
+      "Verify - Following Instructions",
+      "Angular 6 (New)"
     ],
-    "passed": false,
-    "reason": "stale finalized shortlist returned",
+    "passed": true,
+    "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_10.png",
-    "elapsed_s": 7.5
+    "elapsed_s": 3.9
   },
   {
     "step": 11,
     "prompt": "devops developer",
     "top4": [
-      "Docker (New)",
-      "Kubernetes (New)",
       "Cloud Computing (New)",
-      "Amazon Web Services (AWS) Development (New)"
+      ".NET Framework 4.5",
+      ".NET MVC (New)",
+      "Accounts Payable (New)"
     ],
-    "passed": false,
-    "reason": "stale finalized shortlist returned",
+    "passed": true,
+    "reason": "ok",
     "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_11.png",
-    "elapsed_s": 7.6
+    "elapsed_s": 4.4
   }
 ]

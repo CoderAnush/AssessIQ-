@@ -1,0 +1,11 @@
+{
+  "verdict": "READY TO SUBMIT",
+  "failures_blocking": 0,
+  "risks": 1,
+  "hard_eval_pass": true,
+  "c1_c10_mean_recall": 1.0,
+  "eval_suite": "15/15",
+  "acceptance": "43/43",
+  "behavior_150": "146/150",
+  "base": "https://assessiq-kkw2.onrender.com"
+}

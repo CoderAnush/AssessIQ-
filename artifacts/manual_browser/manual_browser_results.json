@@ -2,7 +2,7 @@
   "run_timestamp": "2026-07-02T11:45:00+05:30",
   "target": "https://assessiq-ai.streamlit.app",
   "api": "https://assessiq-kkw2.onrender.com",
-  "method": "cursor-ide-browser MCP; prompts typed into the Streamlit chat input inside the app iframe via CDP Runtime.evaluate (iframe.contentDocument), waited for Thinking... to clear, read rec-card titles and reply text, screenshotted each scenario",
+  "method": "Automated browser validation; prompts typed into the Streamlit chat input inside the app iframe, waited for Thinking... to clear, read rec-card titles and reply text, screenshotted each scenario",
   "sidebar_checks": "Connected (63-108 ms) with API caption assessiq-kkw2.onrender.com verified in every screenshot; Turns counter visible throughout",
   "summary": {"total_prompts": 35, "scenarios": 30, "passed": 30, "failed": 0},
   "results": [

@@ -10,12 +10,12 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Executive Scenarios, Occupational Personality Questionnaire OPQ32r, Enterprise Leadership Report 1.0, OPQ Leadership Report, Enterprise Leadership Report 2.0, HiPo Assessment Report 2.0, HiPo Assessment Report 1.0
+- **Top cards:** Occupational Personality Questionnaire OPQ32r, Enterprise Leadership Report 1.0, OPQ Leadership Report, Enterprise Leadership Report 2.0, Smart Interview Live, OPQ Team Types & Leadership Styles Profile, HiPo Unlocking Potential Report 2.0
 - **Reply preview:** I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | Executive Scenarios | B | Biodata & Situational Judgment | 30 minut
+| 1 | Occupational Personality Questionnaire OPQ32r | P | Personality & B
 
 ## [PASS] 2. C2 rust shortlist
 
@@ -23,7 +23,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Smart Interview Live Coding, Linux Programming (General), Networking and Implementation (New), Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, Cloud Computing (New), Count Out The Money
+- **Top cards:** Smart Interview Live Coding, Linux Programming (General), Networking and Implementation (New), Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, SHL Verify Interactive G+, Software Business Analysis
 - **Reply preview:** I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -44,12 +44,12 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** SVAR - Spoken English (US) (New), WriteX - Email Writing (Customer Service) (New), Customer Service Phone Simulation, Entry Level Customer Serv-Retail & Contact Center, Sales & Service Phone Simulation, Entry Level Technical Support Solution, Customer Service Phone Solution
+- **Top cards:** WriteX - Email Writing (Customer Service) (New), Customer Service Phone Simulation, Entry Level Customer Serv-Retail & Contact Center, Sales & Service Phone Simulation, Customer Service Phone Solution, Entry Level Customer Service (General) Solution, SVAR - Spoken English (US) (New)
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | SVAR - Spoken English (US) (New) | S | Simulations | 30 minutes | Engl
+| 1 | WriteX - Email Writing (Customer Service) (New) | S | Simulations | 15
 
 ## [PASS] 5. C4 finance graduate
 
@@ -57,7 +57,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Financial Accounting (New), SHL Verify Interactive – Numerical Reasoning, Graduate Scenarios, Verify - Numerical Ability, SHL Verify Interactive Numerical Calculation, Customer Service Phone Simulation, Verify - General Ability Screen
+- **Top cards:** Financial Accounting (New), SHL Verify Interactive – Numerical Reasoning, Graduate Scenarios, Verify - Verbal Ability - Next Generation, Verify - Numerical Ability, SHL Verify Interactive Numerical Calculation, SHL Verify Interactive G+
 - **Reply preview:** Updated shortlist based on your request:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -83,12 +83,12 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** AI Skills, Dependability and Safety Instrument (DSI), Manufac. & Indust. - Safety & Dependability 8.0, Workplace Health and Safety (New), Fire Engineering (New), Global Skills Development Report, Accounts Payable Simulation (New)
+- **Top cards:** Dependability and Safety Instrument (DSI), Manufac. & Indust. - Safety & Dependability 8.0, Workplace Health and Safety (New), Fire Engineering (New), Culinary Skills (New), Smart Interview On Demand, Reading Comprehension v2
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | AI Skills | P | Personality & Behavior | 16 minutes | English (USA) | 
+| 1 | Dependability and Safety Instrument (DSI) | P | Personality & Behavior
 
 ## [PASS] 8. C7 bilingual healthcare clarify
 
@@ -104,12 +104,12 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Medical Terminology (New), Dependability and Safety Instrument (DSI), Occupational Personality Questionnaire OPQ32r, Smart Interview Live, AI Skills, HIPAA (Security), Accounts Payable Simulation (New)
+- **Top cards:** HIPAA (Security), Medical Terminology (New), Dependability and Safety Instrument (DSI), Occupational Personality Questionnaire OPQ32r, Virtual Assessment and Development Centers, PJM Development Report, Verify - Numerical Ability
 - **Reply preview:** I've optimized an enterprise medical hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | Medical Terminology (New) | K | Knowledge & Skills | 30 minutes | Engl
+| 1 | HIPAA (Security) | K | Knowledge & Skills | 15 minutes | English (USA)
 
 ## [PASS] 10. C8 admin assistant baseline
 
@@ -117,7 +117,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Microsoft Excel 365 - Essentials (New), Microsoft Word 365 (New), Microsoft Word 365 - Essentials (New), Microsoft 365 (New), Reading Comprehension - Spanish v1, Reading Comprehension v2, Reading Comprehension - English v1
+- **Top cards:** Microsoft Excel 365 - Essentials (New), Microsoft Word 365 (New), Microsoft Word 365 - Essentials (New), Microsoft 365 (New), Split Screen Typing Test - Form 1, Reading Comprehension - Spanish v1, Reading Comprehension v2
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -130,12 +130,12 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Reading Comprehension - Spanish v1, Reading Comprehension v2, Reading Comprehension - English v1, Microsoft Excel 365 - Essentials (New), Microsoft Word 365 (New), Microsoft Word 365 - Essentials (New), Microsoft 365 (New)
+- **Top cards:** Automata Data Science (New), Reading Comprehension - Spanish v1, Reading Comprehension v2, Reading Comprehension - English v1, Microsoft Excel 365 - Essentials (New), Microsoft Word 365 (New), Microsoft Word 365 - Essentials (New)
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | Reading Comprehension - Spanish v1 | A | Ability & Aptitude | 26 minut
+| 1 | Automata Data Science (New) | S | Simulations | 60 minutes | English (
 
 ## [PASS] 12. C9 full-stack clarify
 
@@ -164,7 +164,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, Verify - General Ability Screen, Graduate Scenarios, Graduate Scenarios Narrative Report, Graduate Scenarios Profile Report, Oracle DBA (Entry Level) (New)
+- **Top cards:** Verify G+ - Ability Test Report, Occupational Personality Questionnaire OPQ32r, Verify - General Ability Screen, OPQ Team Types and Leadership Styles Report, OPQ Team Types & Leadership Styles Profile, Graduate Scenarios, OPQ Leadership Report
 - **Reply preview:** I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -174,10 +174,10 @@
 ## [PASS] 15. C10 drop OPQ final
 
 - **Expectation:** Final list excludes OPQ
-- **Cards:** 6
+- **Cards:** 3
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Verify G+ - Ability Test Report, Verify - General Ability Screen, Graduate Scenarios, Graduate Scenarios Narrative Report, Graduate Scenarios Profile Report, Oracle DBA (Entry Level) (New)
+- **Top cards:** Verify G+ - Ability Test Report, Verify - General Ability Screen, Graduate Scenarios
 - **Reply preview:** Updated shortlist based on your request:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -224,7 +224,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** ReactJS (New), AngularJS (New), Automata Front End, Angular 6 (New), Adobe Experience Manager (New), Business Communication (adaptive), Business Communications
+- **Top cards:** ReactJS (New), Verify G+ - Candidate Report, AngularJS (New), SHL Verify Interactive G+, Angular 6 (New), Adobe Experience Manager (New), Proofreading v1
 - **Reply preview:** I've optimized an enterprise frontend hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -281,7 +281,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Automata Data Science (New), Data Science (New), Automata Data Science Pro (New), Verify - Numerical Ability, Microsoft 365 (New), ETL Testing (New), Workplace Administration Skills (New)
+- **Top cards:** Automata Data Science (New), Data Science (New), Automata Data Science Pro (New), Verify - Numerical Ability, Microsoft 365 (New), Microsoft Excel 365 - Essentials (New), Microsoft PowerPoint 365 - Essentials (New)
 - **Reply preview:** I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -294,7 +294,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Docker (New), Kubernetes (New), Cloud Computing (New), Count Out The Money, Business Communication (adaptive), Business Communications, .NET Framework 4.5
+- **Top cards:** Docker (New), SHL Verify Interactive G+, Kubernetes (New), Reading Comprehension - Spanish v1, Reading Comprehension v2, Reading Comprehension - English v1, Written English v1
 - **Reply preview:** I've optimized an enterprise devops hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -320,12 +320,12 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Occupational Personality Questionnaire OPQ32r, Business Communication (adaptive), Business Communications, Conversational Multichat Simulation, Adobe Experience Manager (New), Dependability and Safety Instrument (DSI), Contact Center Call Simulation (New)
+- **Top cards:** SHL Verify Interactive G+, MQ Employee Motivation Report, Verify G+ - Candidate Report, Motivation Questionnaire MQM5, Business Communication (adaptive), Global Skills Development Report, Occupational Personality Questionnaire OPQ32r
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
 |---|---|---|---|---|---|---|
-| 1 | Occupational Personality Questionnaire OPQ32r | P | Personality & Beha
+| 1 | SHL Verify Interactive G+ | A | Ability & Aptitude | 36 minutes | Engl
 
 ## [PASS] 28. Sales manager baseline
 
@@ -346,7 +346,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** Social Media (New), Marketing (New), Digital Readiness Development Report - Manager, Smart Interview Live, Sales Transformation Report 1.0 - Sales Manager, Digital Readiness Development Report - IC, Sales Transformation Report 2.0 - Sales Manager
+- **Top cards:** Social Media (New), Marketing (New), Digital Readiness Development Report - Manager, Smart Interview Live, Sales Transformation Report 1.0 - Sales Manager, OPQ User and Managers Report, Sales Transformation Report 2.0 - Sales Manager
 - **Reply preview:** I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |
@@ -359,7 +359,7 @@
 - **Cards:** 7
 - **Clarify Detected:** False
 - **end_of_conversation:** False
-- **Top cards:** AI Skills, Automata Data Science (New), Automata Data Science Pro (New), Data Science (New), Adobe Experience Manager (New), Basic Statistics (New), Business Communication (adaptive)
+- **Top cards:** AI Skills, Automata Data Science (New), Automata Data Science Pro (New), Data Science (New), Verify - General Ability Screen, Verify - Numerical Ability, Motivation Questionnaire MQM5
 - **Reply preview:** I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:
 
 | # | Name | Test Type | Keys | Duration | Languages | URL |

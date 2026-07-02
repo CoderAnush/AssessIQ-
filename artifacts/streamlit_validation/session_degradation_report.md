@@ -1,6 +1,6 @@
 # Streamlit Session Degradation Test
 
-**Summary:** 7/11 passed
+**Summary:** 10/11 passed
 
 | Step | Prompt | Pass | Top 4 | Notes |
 |---|---|---|---|---|
@@ -10,8 +10,8 @@
 | 4 | Hiring AI Developer... | PASS | AI Skills, Automata Data Science (New)... | ok |
 | 5 | hiring backend developer... | PASS | Spring (New), Occupational Personality Questionnaire OPQ32r... | ok |
 | 6 | hiring python engineer... | PASS | Spring (New), Occupational Personality Questionnaire OPQ32r... | ok |
-| 7 | hiring devops engineer... | PASS | Docker (New), Kubernetes (New)... | ok |
-| 8 | hiring frontend developer... | FAIL | Docker (New), Kubernetes (New)... | stale finalized shortlist returned |
-| 9 | python... | FAIL | Docker (New), Kubernetes (New)... | stale finalized shortlist returned |
-| 10 | need frontend... | FAIL | Docker (New), Kubernetes (New)... | stale finalized shortlist returned |
-| 11 | devops developer... | FAIL | Docker (New), Kubernetes (New)... | stale finalized shortlist returned |
+| 7 | hiring devops engineer... | PASS | Cloud Computing (New), .NET Framework 4.5... | ok |
+| 8 | hiring frontend developer... | PASS | AngularJS (New), ReactJS (New)... | ok |
+| 9 | python... | FAIL | Adobe Experience Manager (New), .NET WPF (New)... | expected one of ('python', 'java', 'spring'); got ['Adobe Experience Manager (New)', '.NET WPF (New)', 'Accounts Payable (New)', 'Accounts Receivable (New)'] |
+| 10 | need frontend... | PASS | AngularJS (New), ReactJS (New)... | ok |
+| 11 | devops developer... | PASS | Cloud Computing (New), .NET Framework 4.5... | ok |

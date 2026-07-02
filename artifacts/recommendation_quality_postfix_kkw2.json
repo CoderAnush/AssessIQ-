@@ -1,0 +1,38 @@
+[
+  {
+    "prompt": "Hiring B2B Sales Manager.",
+    "reply_head": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Ke",
+    "top3": [
+      "Global Skills Development Report",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Sales Transformation Report 1.0 - Sales Manager"
+    ]
+  },
+  {
+    "prompt": "Hiring QA Automation Engineer with Selenium, Playwright, Cypress, API Testing and Postman.",
+    "reply_head": "I've optimized an enterprise qa hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | ",
+    "top3": [
+      "Manual Testing (New)",
+      "Automata Selenium",
+      "Selenium (New)"
+    ]
+  },
+  {
+    "prompt": "Hiring an AI Engineer with Python, LLMs, LangChain, HuggingFace, Vector Databases and AWS.",
+    "reply_head": "I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type |",
+    "top3": [
+      "MFS 360 Enterprise Leadership Report",
+      "OPQ Leadership Report",
+      "Executive Scenarios"
+    ]
+  },
+  {
+    "prompt": "Hiring AI Developer",
+    "reply_head": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys",
+    "top3": [
+      "Automata Data Science (New)",
+      "AI Skills",
+      "Automata Data Science Pro (New)"
+    ]
+  }
+]

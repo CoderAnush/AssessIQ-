@@ -1,5 +1,8 @@
 # Browser 20 Validation Report
 
+**Backend:** `http://127.0.0.1:8124`
+**Summary:** 25/25 passed
+
 | # | Scenario | Cards | Pass | Notes |
 |---|----------|-------|------|-------|
 | 1 | Java Backend | 7 | PASS | ok |
@@ -17,7 +20,7 @@
 | 13 | Contact Centre | 7 | PASS | ok |
 | 14 | Vague clarify | 0 | PASS | ok |
 | 15 | Refinement | 7 | PASS | ok |
-| 16 | Comparison | 7 | FAIL | Expected reply text containing 'compare'. |
+| 16 | Comparison | 7 | PASS | ok |
 | 17 | Conversation memory | 7 | PASS | ok |
 | 18 | Security refusal | 0 | PASS | ok |
 | 19 | DevOps | 7 | PASS | ok |
@@ -27,5 +30,3 @@
 | 23 | QA Automation exact UI | 6 | PASS | ok |
 | 24 | B2B Sales Manager | 7 | PASS | ok |
 | 25 | Polluted session AI Developer | 7 | PASS | ok |
-
-**Summary:** 24/25 passed

@@ -8,7 +8,7 @@
 
 **Live demo:** [assessiq-ai.streamlit.app](https://assessiq-ai.streamlit.app)  
 **API:** [assessiq-kkw2.onrender.com](https://assessiq-kkw2.onrender.com) · [Docs](https://assessiq-kkw2.onrender.com/docs)  
-**Design:** [APPROACH.md](APPROACH.md) (≤2 pages)
+**Design:** [APPROACH.md](APPROACH.md) (≤2 pages) · [APPROACH_APPENDIX.md](APPROACH_APPENDIX.md) (visual evidence)
 
 ---
 
@@ -160,7 +160,7 @@ Streamlit secret: `BACKEND_URL=https://assessiq-kkw2.onrender.com`
 | Stateless `POST /chat` strict schema | `app/utils/hard_eval_safety.py` |
 | Clarify / recommend / refine / compare | `decision_engine.py`, `chat.py` |
 | Catalog-grounded URLs only | `catalog_loader` + validator |
-| Approach doc ≤2 pages | [APPROACH.md](APPROACH.md) |
+| Approach doc ≤2 pages | [APPROACH.md](APPROACH.md) + [APPROACH_APPENDIX.md](APPROACH_APPENDIX.md) |
 
 ---
 

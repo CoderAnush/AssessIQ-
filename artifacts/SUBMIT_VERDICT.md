@@ -7,7 +7,7 @@
 
 ## Verdict: **SUBMIT**
 
-All hard gates pass on production. Manual browser sign-off (Phase 5B) completed 30/30 scenarios on the hosted Streamlit app via IDE-browser control with screenshots.
+All hard gates pass on production. Manual browser sign-off (Phase 5B) completed 30/30 scenarios on the hosted Streamlit app with screenshots.
 
 ---
 

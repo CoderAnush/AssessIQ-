@@ -1,5 +1,7 @@
 # Screenshots
 
+## Main README
+
 | File | Demonstrates |
 |------|----------------|
 | `01-landing.png` | Streamlit home layout and sample starter prompts |
@@ -8,4 +10,8 @@
 | `04-compare-export.png` | Compare table plus grounded shortlist cards |
 | `05-validation-gates.png` | Automated submission validation gate summary |
 
-Generated via `python scripts/generate_readme_screenshots.py` against a running local backend.
+## Approach appendix (`APPROACH_APPENDIX.md`)
+
+Validation tables and production gate results are in the appendix document (text-only on GitHub).
+
+Capture live UI locally: `python scripts/capture_streamlit_screenshots.py`
