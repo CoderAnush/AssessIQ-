@@ -2,6 +2,7 @@ import re
 from typing import List, Set, Union, Optional
 from app.models.response import Recommendation
 from app.services.domain_classifier import Domain, DomainClassifier
+from app.services.tech_families import card_matches_any_excluded_family
 
 class RecommendationCompletenessValidator:
     """Validate and augment recommendation list to guarantee required assessment categories."""
@@ -113,6 +114,7 @@ class RecommendationCompletenessValidator:
         user_query: str = "",
         remove_coding: bool = False,
         context=None,
+        excluded_families: Optional[Set[str]] = None,
     ) -> List[Recommendation]:
         if isinstance(required_categories, (str, Domain)):
             from app.services.requirement_resolver import RequirementResolver
@@ -191,6 +193,7 @@ class RecommendationCompletenessValidator:
 
         augmented_recs = list(recommendations)
         added_personality_fallback = False
+        excluded = excluded_families or getattr(context, "excluded_families", None) or set()
 
         def add_best_fallback(target_type: str, reason: str, fallback_type: str):
             nonlocal added_personality_fallback
@@ -198,6 +201,10 @@ class RecommendationCompletenessValidator:
             best_score = -999.0
             for a in catalog.values():
                 if a.id in existing_ids:
+                    continue
+                if excluded and card_matches_any_excluded_family(
+                    a.name, excluded, getattr(a, "description", "")
+                ):
                     continue
                 score = self._score_candidate(
                     a, target_type, tech_stack, user_query_tokens, query_domain, user_query
@@ -244,5 +251,13 @@ class RecommendationCompletenessValidator:
                 test_type = str(test_type).upper()
                 return rec.is_fallback and (test_type == "P" or "opq" in rec.name.lower())
             augmented_recs = sorted(augmented_recs, key=_is_personality_fallback)
+
+        if excluded:
+            augmented_recs = [
+                rec for rec in augmented_recs
+                if not card_matches_any_excluded_family(
+                    rec.name, excluded, rec.ideal_use_case or ""
+                )
+            ]
 
         return augmented_recs

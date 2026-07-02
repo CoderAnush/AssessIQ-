@@ -34,7 +34,7 @@ class HiringContext:
     role: Optional[str] = None
     query: Optional[str] = None
     domain: str = "general"
-    seniority: str = "mid"
+    seniority: Optional[str] = None
     tech_stack: Set[str] = field(default_factory=set)
     workflow_mode: str = "default"
     leadership_needs: bool = False
@@ -50,8 +50,21 @@ class HiringContext:
     refinement_filters: List[str] = field(default_factory=list)
     preferred_test_types: Set[str] = field(default_factory=set)
     excluded_families: Set[str] = field(default_factory=set)
+    needs_hiring_profile: bool = False
+    last_user_message: Optional[str] = None
+
+    def _hiring_profile_satisfied(self) -> bool:
+        has_seniority = (
+            "seniority" in self.inferred_slots
+            or (self.seniority is not None and self.seniority != "")
+        )
+        has_tech = bool(self.tech_stack) or "tech_stack" in self.inferred_slots
+        return has_seniority and has_tech
 
     def get_missing_slots(self) -> List[str]:
+        if self.needs_hiring_profile and "hiring_profile" not in self.asked_slots:
+            if not self._hiring_profile_satisfied():
+                return ["hiring_profile"]
         missing = []
         if not self.role:
             missing.append("role")
@@ -126,15 +139,21 @@ class ConversationAnalyzer:
         last_user_msg = next((m["content"] for m in reversed(cleaned_messages) if m["role"] == "user"), "").lower()
         
         context = HiringContext()
+        context.last_user_message = next(
+            (m["content"] for m in reversed(cleaned_messages) if m["role"] == "user"),
+            "",
+        )
         
         # 1. Track what the assistant already asked (Phase 4)
         for m in cleaned_messages:
             if m["role"] == "assistant":
                 content = m["content"].lower()
-                if any(w in content for w in ["seniority", "experience level"]):
+                if any(w in content for w in ["seniority", "experience level", "mid-level", "junior, mid-level"]):
                     context.asked_slots.add("seniority")
-                if any(w in content for w in ["tech stack", "skills", "framework"]):
+                    context.asked_slots.add("hiring_profile")
+                if any(w in content for w in ["tech stack", "skills", "framework", "technologies are important"]):
                     context.asked_slots.add("tech_stack")
+                    context.asked_slots.add("hiring_profile")
                 if any(w in content for w in ["technical focus", "technical area", "backend, frontend"]):
                     context.asked_slots.add("tech_focus")
 
@@ -202,9 +221,7 @@ class ConversationAnalyzer:
                             if family_for_token(t)
                         )
 
-        # Ensure default seniority if not specified
-        if not context.seniority:
-            context.seniority = "mid"
+        # Do not default seniority — only set when explicitly extracted or at recommend time.
 
         last_user_raw = next(
             (m["content"] for m in reversed(cleaned_messages) if m["role"] == "user"),
@@ -223,7 +240,7 @@ class ConversationAnalyzer:
             last_user_raw.lower() if generic_role_last else full_text,
             context.role,
             context.tech_stack,
-        ):
+        ) and (context.role or "").lower() not in self.GENERIC_ROLE_QUERIES:
             context.role = None
             context.tech_stack = set()
 
@@ -257,13 +274,16 @@ class ConversationAnalyzer:
             elif context.role and families_for_text(context.role) & context.excluded_families:
                 context.role = "backend"
 
+        if self._needs_combined_hiring_clarify(context, last_user_raw):
+            context.needs_hiring_profile = True
+
         if re.search(r"\bai\b", full_text) and re.search(r"\b(developer|engineer|architect)\b", full_text):
             if not context.role or (context.role or "").lower() in self.GENERIC_ROLE_QUERIES:
                 context.role = "ai engineer"
             context.inferred_slots.add("tech_focus")
         
-        # NEW: Infer tech_stack from role if not explicitly provided
-        if not context.tech_stack and context.role:
+        # Infer tech_stack from role only when hiring profile is not pending
+        if not context.tech_stack and context.role and not context.needs_hiring_profile:
             role_lower = context.role.lower()
             inferred_tech = []
             if "java" in role_lower and "javascript" not in role_lower:
@@ -299,9 +319,16 @@ class ConversationAnalyzer:
         context.domain = self._infer_domain(context.role, context.tech_stack, full_text)
 
         # 3. Mark inferred slots
-        if context.role: context.inferred_slots.add("role")
-        if context.tech_stack: context.inferred_slots.add("tech_stack")
-        if "senior" in full_text or "junior" in full_text: context.inferred_slots.add("seniority")
+        if context.role:
+            context.inferred_slots.add("role")
+        if context.tech_stack:
+            context.inferred_slots.add("tech_stack")
+        if context.seniority and (
+            "senior" in full_text or "junior" in full_text
+            or "mid-level" in full_text or "mid level" in full_text
+            or "entry" in full_text or "graduate" in full_text
+        ):
+            context.inferred_slots.add("seniority")
 
         # 4. Role Normalization (Phase 4)
         from app.services.role_normalizer import RoleNormalizer
@@ -384,6 +411,34 @@ class ConversationAnalyzer:
 
         return context, intent
 
+    def _needs_combined_hiring_clarify(self, context: HiringContext, last_user_raw: str) -> bool:
+        """True when role/seniority/tech need a single combined clarify turn."""
+        if "hiring_profile" in context.asked_slots:
+            return False
+        low = last_user_raw.lower().strip()
+        tokens = normalize_tokens(last_user_raw)
+        role_low = (context.role or "").lower()
+
+        if low in self.GENERIC_ROLE_QUERIES or role_low in self.GENERIC_ROLE_QUERIES:
+            if not families_for_tokens(tokens) and not context._hiring_profile_satisfied():
+                return True
+
+        if self._is_underspecified_fullstack(last_user_raw, context):
+            return True
+        return False
+
+    def _is_underspecified_fullstack(self, text: str, context: HiringContext) -> bool:
+        low = text.lower()
+        if not re.search(r"\bfull[\s-]?stack\b|\bfullstack\b", low):
+            return False
+        if families_for_text(low):
+            return False
+        if self._extract_seniority(low):
+            return False
+        if context.tech_stack:
+            return False
+        return True
+
     def is_vague_request(self, last_message: str) -> bool:
         """Token-normalized vague assessment request (delegates to intent_tokens)."""
         return is_vague_request(last_message)
@@ -444,9 +499,17 @@ class ConversationAnalyzer:
     def _extract_role(self, text: str) -> Optional[str]:
         text_lower = text.lower()
 
-        # Generic role-only prompts should clarify once instead of defaulting to Java/backend.
-        if text_lower.strip() in self.GENERIC_ROLE_QUERIES:
-            return None
+        # Contact centre / call centre (C3) — detect before generic engineer matching
+        if re.search(
+            r"\b(contact centre|contact center|call centre|call center|customer service)\b",
+            text_lower,
+        ):
+            return "contact centre"
+
+        # Generic role-only prompts: keep role token for combined hiring_profile clarify.
+        stripped = text_lower.strip()
+        if stripped in self.GENERIC_ROLE_QUERIES:
+            return stripped
         
         # PRIORITY 1: Most specific compound roles (exact matches first)
         compound_roles = [
@@ -459,6 +522,7 @@ class ConversationAnalyzer:
             "fastapi developer", "fastapi engineer",
             "django developer", "django engineer",
             "mobile developer", "mobile engineer", "android developer", "ios developer",
+            "full stack engineer", "fullstack engineer",
             "fullstack developer", "full stack developer", "java developer", "python developer",
             # Frontend specific
             "frontend software engineer", "frontend developer", "frontend engineer",
@@ -579,7 +643,9 @@ class ConversationAnalyzer:
             return "senior"
         if any(w in text for w in ["junior", "entry", "intern", "graduate", "trainee"]):
             return "entry"
-        return "mid"
+        if "mid-level" in text or "mid level" in text:
+            return "mid"
+        return None
 
     def _extract_tech_stack(self, text: str) -> Set[str]:
         tech = set()
@@ -626,6 +692,18 @@ class ConversationAnalyzer:
         if not missing: return None
         
         slot = missing[0]
+        if slot == "hiring_profile":
+            last_msg = context.last_user_message or ""
+            if self._is_underspecified_fullstack(last_msg, context):
+                return (
+                    "What seniority level is this Full Stack Engineer role? "
+                    "Which tech stack should I prioritize (e.g. Java/Spring, Python/Django, React)?"
+                )
+            return (
+                "I'd be happy to help. What role are you hiring for?\n"
+                "Junior, Mid-Level, or Senior?\n"
+                "Which technologies are important? (Java, Python, React, DevOps…)"
+            )
         if slot == "role":
             if any(w in (context.domain or "") for w in ["business"]) and any(
                 w in (context.role or "").lower() for w in ["contact", "customer service", "call"]

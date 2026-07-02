@@ -173,6 +173,8 @@ def resolve_must_include_ids(
     Assessments matching excluded_families are never injected.
     """
     excluded = excluded_families or getattr(context, "excluded_families", None) or set()
+    if getattr(context, "needs_hiring_profile", False) and not context._hiring_profile_satisfied():
+        return []
     combined = _conversation_text(context, full_user_text)
     seen: Set[str] = set()
     ids: List[str] = []

@@ -100,19 +100,33 @@ class DecisionEngine:
                     next_question=question,
                 )
 
+        # Executive hiring (C1): selection vs development before OPQ Leadership Report
+        if (
+            re.search(r"\b(cto|chief technology officer|cxo)\b", full_user_text)
+            and turn_count < 2
+            and not any(w in full_user_text for w in ["selection", "development", "benchmark", "feedback"])
+        ):
+            question = (
+                "For such roles, the OPQ32r is the right instrument — it measures workplace "
+                "behaviour dimensions including strategic thinking and leadership. "
+                "One question before I commit to a report format: is this for selection against a "
+                "benchmark, or developmental feedback for an executive already in role?"
+            )
+            return Decision(
+                action=AgentAction.CLARIFY,
+                reasoning="Executive hiring requires selection vs development clarification.",
+                confidence=0.9,
+                next_question=question,
+            )
+
         # Leadership roles need purpose clarification before first recommendation
         # Only for executive/CXO-style leadership queries, not functional managers (sales, engineering, etc.)
         specific_function_signals = (
             "sales", "engineering", "marketing", "hr ", "human resources", "developer",
             "financial", "data scientist", "devops", "full stack", "fullstack", "java",
             "python", "react", "contact centre", "contact center", "analyst", "operator",
-            "chief technology",
         )
-        # "cto" needs word-boundary matching: plain substring falsely matches "director"/"vector".
-        has_specific_function = (
-            any(sig in full_user_text for sig in specific_function_signals)
-            or bool(re.search(r"\bcto\b", full_user_text))
-        )
+        has_specific_function = any(sig in full_user_text for sig in specific_function_signals)
         # Word-boundary matching: substring "director" would match "Active Directory",
         # substring "cto" matches inside "director"/"vector".
         _role_low = (context.role or "").lower()
@@ -154,12 +168,23 @@ class DecisionEngine:
             )
         
         # Contact centre flows need language clarification before recommendations (C3)
-        cc_role = context.role and any(
-            w in (context.role or "").lower()
-            for w in ["contact centre", "contact center", "call center", "call centre", "customer service"]
-        ) or any(w in full_user_text for w in ["contact centre", "contact center", "call center", "inbound calls"])
+        last_user_low = last_user.lower()
+        cc_signals = (
+            "contact centre", "contact center", "call center", "call centre",
+            "customer service", "contact centre agents", "contact centre screening",
+            "contact centre hiring", "contact center hiring", "inbound calls",
+        )
+        cc_role = (
+            context.role
+            and any(
+                w in (context.role or "").lower()
+                for w in ["contact centre", "contact center", "call center", "call centre", "customer service"]
+            )
+        ) or any(w in last_user_low for w in cc_signals) or any(
+            w in full_user_text for w in cc_signals
+        )
         if cc_role:
-            if turn_count < 1 and not any(
+            if turn_count < 2 and not any(
                 w in full_user_text
                 for w in ["english", "spanish", "french", "german", "language"]
             ):

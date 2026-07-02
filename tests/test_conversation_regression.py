@@ -409,15 +409,58 @@ def test_java_to_python_refinement(client):
     assert len(data2["recommendations"]) > 0
     names = " ".join(r["name"].lower() for r in data2["recommendations"])
     assert "spring" not in names
+    assert "java ee" not in names
     assert "java" not in names or "javascript" in names
     assert any(term in names for term in ("python", "django", "flask", "fastapi"))
+    tech_names = " ".join(
+        r["name"].lower() for r in data2["recommendations"]
+        if str(r.get("test_type", "")).upper() == "K"
+    )
+    assert "sql server" not in tech_names
 
 
 def test_vague_developer_asks_seniority(client):
     data = _chat(client, [{"role": "user", "content": "developer"}])
     assert len(data["recommendations"]) == 0
     reply_low = data["reply"].lower()
-    assert any(w in reply_low for w in ["seniority", "technical", "role", "focus", "backend", "frontend"])
+    assert any(w in reply_low for w in ["junior", "mid-level", "senior", "mid level"])
+    assert any(w in reply_low for w in ["technologies", "java", "python", "react", "devops"])
+
+
+def test_full_stack_engineer_clarifies_turn1(client):
+    data = _chat(client, [{"role": "user", "content": "Hiring Full Stack Engineer"}])
+    assert len(data["recommendations"]) == 0
+    reply_low = data["reply"].lower()
+    assert any(w in reply_low for w in ["seniority", "junior", "mid", "senior"])
+    assert any(w in reply_low for w in ["tech stack", "java", "python", "react", "prioritize"])
+    names = " ".join(r["name"].lower() for r in data["recommendations"])
+    assert "spring" not in names
+
+
+def test_cto_asks_selection_vs_development(client):
+    data = _chat(client, [{"role": "user", "content": "We are hiring a CTO"}])
+    assert len(data["recommendations"]) == 0
+    reply_low = data["reply"].lower()
+    assert any(w in reply_low for w in ["selection", "development", "benchmark", "feedback"])
+
+
+def test_contact_centre_bare_clarifies_language(client):
+    data = _chat(client, [{"role": "user", "content": "Contact centre hiring"}])
+    assert len(data["recommendations"]) == 0
+    assert "language" in data["reply"].lower()
+
+
+def test_compare_java_ee_and_spring(client):
+    messages = [{"role": "user", "content": "Senior Java Backend Engineer with Spring Boot"}]
+    data1 = _chat(client, messages)
+    assert len(data1["recommendations"]) > 0
+    messages.append({"role": "assistant", "content": data1["reply"]})
+    messages.append({"role": "user", "content": "Compare Java EE and Spring assessments"})
+    data2 = _chat(client, messages)
+    reply_low = data2["reply"].lower()
+    assert "java" in reply_low and "spring" in reply_low
+    assert "verify g+" not in reply_low.split("comparison")[0] if "comparison" in reply_low else True
+    assert "graduate scenarios" not in reply_low
 
 
 def test_c2_rust_turn1_clarifies_without_recs(client):

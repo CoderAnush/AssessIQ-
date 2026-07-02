@@ -89,6 +89,20 @@ def card_matches_family(card_name: str, family: str, description: str = "") -> b
     return False
 
 
+def card_matches_any_target_family(
+    card_name: str,
+    target_families: Set[str],
+    description: str = "",
+) -> bool:
+    """True if card belongs to any of the target families."""
+    if not target_families:
+        return True
+    for family in target_families:
+        if card_matches_family(card_name, family, description):
+            return True
+    return False
+
+
 def card_matches_any_excluded_family(
     card_name: str,
     excluded_families: Set[str],

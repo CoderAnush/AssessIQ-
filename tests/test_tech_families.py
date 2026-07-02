@@ -36,6 +36,18 @@ def test_card_matches_java_family():
     assert not card_matches_family("ReactJS", "JAVA")
 
 
+def test_card_matches_any_target_family():
+    from app.services.tech_families import card_matches_any_target_family
+
+    assert card_matches_any_target_family("Python (New)", {"PYTHON"})
+    assert card_matches_any_target_family("Django", {"PYTHON"})
+    assert not card_matches_any_target_family("Spring (New)", {"PYTHON"})
+    assert card_matches_any_target_family(
+        "ReactJS",
+        {"JS", "PYTHON"},
+    )
+
+
 def test_is_vague_request_paraphrases():
     assert is_vague_request("I need an assessment.")
     assert is_vague_request("Need a test")

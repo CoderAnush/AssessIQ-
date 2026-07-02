@@ -17,7 +17,13 @@ from app.models.response import (
 from app.services.catalog_injection import inject_must_include_recommendations, resolve_must_include_ids
 from app.services.domain_classifier import Domain, DomainClassifier
 from app.services.recommendation_validator import RecommendationCompletenessValidator
-from app.services.tech_families import card_matches_any_excluded_family
+from app.services.tech_families import (
+    card_matches_any_excluded_family,
+    card_matches_any_target_family,
+    drop_tokens_for_family,
+    families_for_tokens,
+)
+from app.utils.compare_resolver import resolve_compare_targets, suggest_compare_clarification
 from app.utils.hard_eval_safety import HardEvalSafetyLayer
 from app.utils.message_history import (
     apply_refinement_to_recommendations,
@@ -427,35 +433,14 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
 
         if decision.action == AgentAction.COMPARE:
             items = services.decision_engine._extract_comparison_items(messages)
-            
+
             a1, a2 = None, None
-            if not items:
-                top_two = get_top_n_from_history(messages, catalog, 2)
-                if len(top_two) >= 2:
-                    a1, a2 = top_two[0], top_two[1]
+            if items:
+                a1, a2 = resolve_compare_targets(items, catalog)
+                if not a1 or not a2:
+                    clarify = suggest_compare_clarification(items)
+                    return _make_evaluator_response(clarify, [], False)
             else:
-                alias_map = {
-                    "opq32r": "occupational-personality-questionnaire-opq32r",
-                    "opq": "occupational-personality-questionnaire-opq32r",
-                    "general ability assessment": "verify-general-ability-screen",
-                    "general ability": "verify-general-ability-screen",
-                    "gsa": "verify-general-ability-screen",
-                }
-                def resolve_item(item_name: str):
-                    name_clean = item_name.strip().lower()
-                    if name_clean in alias_map:
-                        return catalog.get(alias_map[name_clean])
-                    for assessment in catalog.values():
-                        if assessment.name.lower() == name_clean or name_clean in assessment.name.lower() or assessment.id.lower() == name_clean:
-                            return assessment
-                    return None
-
-                if len(items) > 0:
-                    a1 = resolve_item(items[0])
-                if len(items) > 1:
-                    a2 = resolve_item(items[1])
-
-            if not a1 or not a2:
                 top_two = get_top_n_from_history(messages, catalog, 2)
                 if len(top_two) >= 2:
                     a1, a2 = top_two[0], top_two[1]
@@ -490,13 +475,38 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
             return _make_evaluator_response(reply, [], False)
 
         if decision.action in {AgentAction.RECOMMEND, AgentAction.REFINE}:
+            if context.seniority is None:
+                context.seniority = "mid"
+
             # Refinement: mutate prior shortlist from message history (stateless)
             refinement = detect_refinement_intent(user_query)
             prior_recs = get_prior_recommendations_from_messages(messages, catalog)
             excluded = getattr(context, "excluded_families", set()) or set()
+            is_stack_swap = bool(refinement and refinement.get("is_stack_swap"))
             if refinement:
                 excluded = excluded | set(refinement.get("dropped_families", set()))
                 context.excluded_families = excluded
+                if is_stack_swap:
+                    dropped = set(refinement.get("dropped_families", set()))
+                    added = set(refinement.get("added_families", set()))
+                    for family in dropped:
+                        for member in drop_tokens_for_family(family):
+                            context.tech_stack = {
+                                t for t in context.tech_stack
+                                if member not in t.lower()
+                            }
+                    if "PYTHON" in added:
+                        context.tech_stack.update({"Python", "Django", "Flask", "FastAPI"})
+                    if "JS" in added or any(
+                        t.lower() in {"react", "angular", "vue", "javascript", "typescript"}
+                        for t in context.tech_stack
+                    ):
+                        context.tech_stack.update({"React"})
+                    if "DEVOPS" in added or any(
+                        t.lower() in {"docker", "aws", "kubernetes", "terraform"}
+                        for t in context.tech_stack
+                    ):
+                        context.tech_stack.update({"Docker", "AWS"})
             if refinement and prior_recs and not refinement.get("is_stack_swap"):
                 recommendations = apply_refinement_to_recommendations(prior_recs, refinement, catalog)
                 drop_blob = " ".join(refinement.get("drops", [])).lower()
@@ -886,7 +896,27 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                 user_query=user_query,
                 remove_coding=remove_coding,
                 context=context,
+                excluded_families=excluded,
             )
+
+            if is_stack_swap:
+                target_families = set(refinement.get("added_families", set()))
+                retained = families_for_tokens({t.lower() for t in context.tech_stack})
+                target_families |= retained - set(refinement.get("dropped_families", set()))
+                swap_filtered = []
+                for rec in recommendations:
+                    rec_test_type = str(getattr(rec.test_type, "value", rec.test_type)).upper()
+                    if rec_test_type == "K":
+                        if excluded and card_matches_any_excluded_family(
+                            rec.name, excluded, rec.ideal_use_case or ""
+                        ):
+                            continue
+                        if target_families and not card_matches_any_target_family(
+                            rec.name, target_families, rec.ideal_use_case or ""
+                        ):
+                            continue
+                    swap_filtered.append(rec)
+                recommendations = swap_filtered
 
             filtered_recommendations = []
             suppress_java = _should_suppress_java_spring(user_query, query_domain)
