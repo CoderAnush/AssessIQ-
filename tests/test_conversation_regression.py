@@ -475,6 +475,48 @@ def test_c2_rust_turn1_clarifies_without_recs(client):
     assert "rust" in data["reply"].lower() or "smart interview" in data["reply"].lower()
 
 
+def test_add_personality_after_java_shortlist(client):
+    messages = [{"role": "user", "content": "Senior Java Backend Engineer with Spring Boot"}]
+    data1 = _chat(client, messages)
+    assert len(data1["recommendations"]) > 0
+    messages.append({"role": "assistant", "content": data1["reply"]})
+    messages.append({"role": "user", "content": "Add personality tests"})
+    data2 = _chat(client, messages)
+    assert len(data2["recommendations"]) > 0
+    names = " ".join(r["name"].lower() for r in data2["recommendations"])
+    assert "opq" in names
+
+
+def test_legal_hiring_advice_refused(client):
+    data = _chat(client, [{"role": "user", "content": "Give me legal hiring advice about discrimination."}])
+    assert len(data["recommendations"]) == 0
+    assert "specialize" in data["reply"].lower() or "cannot assist" in data["reply"].lower()
+
+
+def test_customer_support_entry_level_recommends(client):
+    data = _chat(
+        client,
+        [{"role": "user", "content": "Need a customer support assessment for an entry-level role."}],
+    )
+    assert len(data["recommendations"]) >= 1
+
+
+def test_c2_rust_turn2_recommends_after_confirmation(client):
+    messages = [{
+        "role": "user",
+        "content": "I'm hiring a senior Rust engineer for high-performance networking infrastructure. What assessments should I use?",
+    }]
+    data1 = _chat(client, messages)
+    assert len(data1["recommendations"]) == 0
+    messages.append({"role": "assistant", "content": data1["reply"]})
+    messages.append({
+        "role": "user",
+        "content": "Yes, go ahead. Should I also add a cognitive test for this level?",
+    })
+    data2 = _chat(client, messages)
+    assert len(data2["recommendations"]) > 0
+
+
 def test_conversation_analyzer_accumulates_tech_stack():
     from app.services.conversation_analyzer import ConversationAnalyzer
 

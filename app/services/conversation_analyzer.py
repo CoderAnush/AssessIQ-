@@ -228,6 +228,29 @@ class ConversationAnalyzer:
             "",
         )
         vague_last = is_vague_request(last_user_raw)
+        last_user_low = last_user_raw.lower()
+        explicit_vague_paraphrases = (
+            "i need an assessment",
+            "need an assessment",
+            "need a test",
+            "suggest an assessment",
+            "recommend assessment",
+            "recommend an assessment",
+        )
+        is_explicit_vague = vague_last and any(p in last_user_low for p in explicit_vague_paraphrases)
+        has_prior_shortlist = any(
+            m["role"] == "assistant" and "|" in m.get("content", "")
+            for m in cleaned_messages[:-1]
+        )
+        if vague_last and not is_explicit_vague:
+            from app.utils.message_history import detect_refinement_intent
+            if has_prior_shortlist or detect_refinement_intent(last_user_raw):
+                vague_last = False
+            elif (
+                len([m for m in cleaned_messages if m["role"] == "user"]) > 1
+                and re.search(r"\b(yes|yeah|sure|go ahead|ok|okay)\b", last_user_low)
+            ):
+                vague_last = False
         last_tokens = normalize_tokens(last_user_raw)
         generic_role_last = last_user_raw.strip().lower() in self.GENERIC_ROLE_QUERIES
 
@@ -345,7 +368,7 @@ class ConversationAnalyzer:
         
         # Check off-topic and prompt injection
         off_topic_patterns = [
-            r"\b(capital of|weather|joke|politics|sports|football|soccer|cricket|recipe|cook|tax|visa|passport|legal advice|salary|salary guide|career path|interview tips|hackerrank|codility|leetcode)\b",
+            r"\b(capital of|weather|joke|politics|sports|football|soccer|cricket|recipe|cook|tax|visa|passport|legal advice|legal hiring|discrimination|salary|salary guide|career path|interview tips|hackerrank|codility|leetcode)\b",
             r"\b(ignore\s+(all\s+)?previous|system prompt|you are no longer|jailbreak|reveal prompt|secret key|api key|aws exam|competitor)\b",
             r"ignore\s+(all\s+)?previous\s+instructions",
             r"output hidden prompt",
@@ -700,9 +723,9 @@ class ConversationAnalyzer:
                     "Which tech stack should I prioritize (e.g. Java/Spring, Python/Django, React)?"
                 )
             return (
-                "I'd be happy to help. What role are you hiring for?\n"
-                "Junior, Mid-Level, or Senior?\n"
-                "Which technologies are important? (Java, Python, React, DevOps…)"
+                "I'd be happy to help. What role are you hiring for, and what seniority level "
+                "(Junior, Mid-Level, or Senior)?\n"
+                "Which technical technologies are important? (Java, Python, React, DevOps…)"
             )
         if slot == "role":
             if any(w in (context.domain or "") for w in ["business"]) and any(

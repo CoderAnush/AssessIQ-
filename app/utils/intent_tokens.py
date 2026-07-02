@@ -49,7 +49,9 @@ DOMAIN_HINT_TOKENS = {
     "centre", "center", "plant", "civil", "mechanical", "electrical",
     "chemical", "aeronautical", "aerospace", "data", "machine", "learning",
     "ai", "ml", "nlp", "cloud", "infrastructure", "platform", "api",
-    "microservice", "full", "stack",
+    "microservice", "full", "stack", "customer", "support", "service",
+    "entry", "personality", "cognitive", "behaviour", "behavior", "situational",
+    "rust", "java", "python", "spring", "react", "selenium", "hipaa",
 }
 
 
