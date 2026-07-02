@@ -1,0 +1,58 @@
+[
+  {
+    "prompt": "Hiring B2B Sales Manager.",
+    "status": 200,
+    "reply_head": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Ke",
+    "cards": [
+      "Global Skills Development Report",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Sales Transformation Report 1.0 - Sales Manager",
+      "Sales Profiler Cards",
+      "Sales Interview Guide",
+      "Sales Transformation Report 2.0 - Sales Manager",
+      "Sales & Service Phone Solution"
+    ]
+  },
+  {
+    "prompt": "Hiring QA Automation Engineer with Selenium, Playwright, Cypress, API Testing and Postman.",
+    "status": 200,
+    "reply_head": "I've optimized an enterprise qa hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | ",
+    "cards": [
+      "Manual Testing (New)",
+      "Automata Selenium",
+      "Selenium (New)",
+      "Automation Anywhere RPA Development (New)",
+      "Micro Focus Unified Functional Testing (New)",
+      ".NET WPF (New)",
+      "Occupational Personality Questionnaire OPQ32r"
+    ]
+  },
+  {
+    "prompt": "Hiring an AI Engineer with Python, LLMs, LangChain, HuggingFace, Vector Databases and AWS.",
+    "status": 200,
+    "reply_head": "I've optimized an enterprise management hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type |",
+    "cards": [
+      "MFS 360 Enterprise Leadership Report",
+      "OPQ Leadership Report",
+      "Executive Scenarios",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Python (New)",
+      "Automata (New)",
+      "AI Skills"
+    ]
+  },
+  {
+    "prompt": "Hiring AI Developer",
+    "status": 200,
+    "reply_head": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys",
+    "cards": [
+      "Automata Data Science (New)",
+      "AI Skills",
+      "Automata Data Science Pro (New)",
+      "Data Science (New)",
+      "Microsoft 365 (New)",
+      "Verify - Numerical Ability",
+      "SHL Verify Interactive - Inductive Reasoning"
+    ]
+  }
+]

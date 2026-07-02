@@ -208,5 +208,68 @@
       "expect_cards": true,
       "min_cards": 7
     }
+  },
+  {
+    "id": 21,
+    "name": "AI Developer single-shot",
+    "prompts": ["Hiring AI Developer"],
+    "ui_checks": {
+      "expect_cards": true,
+      "min_cards": 1,
+      "must_text_in_top_n": {"n": 3, "terms": ["ai skills", "data science", "automata data science"]},
+      "forbidden_in_top_n": {"n": 3, "terms": ["core java", "spring", "opq leadership", "enterprise leadership"]},
+      "must_text_in_reply": ["AI/ML"],
+      "forbidden_in_reply": ["management pipeline"]
+    }
+  },
+  {
+    "id": 22,
+    "name": "AI Engineer LLM stack",
+    "prompts": ["Hiring an AI Engineer with Python, LLMs, LangChain, HuggingFace, Vector Databases and AWS."],
+    "ui_checks": {
+      "expect_cards": true,
+      "min_cards": 1,
+      "must_text_in_top_n": {"n": 3, "terms": ["ai skills", "data science", "automata data science"]},
+      "forbidden_in_top_n": {"n": 3, "terms": ["core java", "spring", "opq leadership", "enterprise leadership", "executive scenarios"]},
+      "must_text_in_reply": ["AI/ML"],
+      "forbidden_in_reply": ["management pipeline"]
+    }
+  },
+  {
+    "id": 23,
+    "name": "QA Automation exact UI",
+    "prompts": ["Hiring QA Automation Engineer with Selenium, Playwright, Cypress, API Testing and Postman."],
+    "ui_checks": {
+      "expect_cards": true,
+      "min_cards": 1,
+      "must_text_in_top_n": {"n": 3, "terms": ["selenium", "automata selenium", "agile testing", "manual testing"]},
+      "forbidden_in_top_n": {"n": 3, "terms": ["core java", "spring", "opq leadership", "enterprise leadership"]},
+      "forbidden_in_reply": ["management pipeline"]
+    }
+  },
+  {
+    "id": 24,
+    "name": "B2B Sales Manager",
+    "prompts": ["Hiring B2B Sales Manager."],
+    "ui_checks": {
+      "expect_cards": true,
+      "min_cards": 1,
+      "must_text_in_top_n": {"n": 3, "terms": ["sales", "opq mq sales", "global skills"]},
+      "forbidden_in_top_n": {"n": 3, "terms": ["core java", "spring", "java frameworks"]},
+      "forbidden_in_reply": ["management pipeline"]
+    }
+  },
+  {
+    "id": 25,
+    "name": "Polluted session AI Developer",
+    "prompts": ["We need a solution for senior leadership.", "Hiring AI Developer"],
+    "ui_checks": {
+      "expect_cards": true,
+      "min_cards": 1,
+      "must_text_in_top_n": {"n": 3, "terms": ["ai skills", "data science", "automata data science"]},
+      "forbidden_in_top_n": {"n": 3, "terms": ["core java", "spring", "opq leadership", "enterprise leadership"]},
+      "must_text_in_reply": ["AI/ML"],
+      "forbidden_in_reply": ["management pipeline"]
+    }
   }
 ]

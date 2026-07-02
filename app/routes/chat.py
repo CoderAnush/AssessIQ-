@@ -47,7 +47,8 @@ DOMAIN_DENYLIST = {
     Domain.BACKEND: {"frontend", "react", "angular", "vue", "xaml", "selenium", "technical support", "contact center"},
     Domain.FRONTEND: {"spring", "java backend", "microservice backend", "technical support", "contact center"},
     Domain.DEVOPS: {"contact center", "data entry", "xaml", "technical support"},
-    Domain.DATA_AI: {"contact center", "data entry", "technical support", "xaml", "mechanical", "manufacturing", "safety & dependability", "front end", "selenium"},
+    Domain.DATA_AI: {"contact center", "data entry", "technical support", "xaml", "mechanical", "manufacturing", "safety & dependability", "front end", "selenium", "enterprise leadership", "opq leadership", "executive scenarios", "mfs 360"},
+    Domain.QA: {"enterprise leadership", "opq leadership", "executive scenarios", "mfs 360", "core java", "spring", "java frameworks"},
 }
 
 
@@ -65,6 +66,23 @@ def _matches_domain_denylist(query_domain: Domain, assessment_text: str) -> bool
     return any(term in assessment_text for term in deny_terms)
 
 
+def _should_suppress_java_spring(user_query: str, query_domain: Domain) -> bool:
+    if DomainClassifier.query_requests_java(user_query):
+        return False
+    if query_domain == Domain.BACKEND:
+        return False
+    return True
+
+
+def _should_suppress_leadership(user_query: str, query_domain: Domain) -> bool:
+    if query_domain == Domain.MANAGEMENT:
+        return False
+    combined = user_query.lower()
+    if any(sig in combined for sig in ("engineering manager", "tech lead", "cto", "chief technology", "leadership")):
+        return False
+    return True
+
+
 def _sort_technical_first(recs: List[Recommendation], context) -> List[Recommendation]:
     pinned = [
         r for r in recs
@@ -76,21 +94,29 @@ def _sort_technical_first(recs: List[Recommendation], context) -> List[Recommend
     role_lower = (getattr(context, "role", None) or "").lower()
     query_lower = (getattr(context, "query", None) or "").lower()
     combined_role = f"{role_lower} {query_lower}"
-    if any(w in combined_role for w in ["manager", "leader", "executive", "director", "sales"]):
+    domain_enum = getattr(context, "domain_enum", None)
+    if domain_enum == Domain.MANAGEMENT:
         return pinned + rest
 
     is_mlops = any(w in combined_role for w in ["ml ops", "mlops"])
     is_dev_role = any(w in combined_role for w in ["developer", "engineer", "full stack", "fullstack"])
+    is_qa_role = any(w in combined_role for w in ["qa", "sdet", "selenium", "playwright", "cypress", "automation"])
 
     def _priority(rec: Recommendation) -> tuple:
         name = rec.name.lower()
         tt = str(rec.test_type).upper()
+        if is_qa_role and any(s in name for s in ("automata selenium", "selenium", "agile testing", "manual testing")):
+            return (-1, -int(rec.confidence or 0))
         if is_mlops and "ai skills" in name:
             return (-1, -int(rec.confidence or 0))
         if any(s in name for s in ("ai skills", "data science", "automata data science")):
             return (0, -int(rec.confidence or 0))
+        if "sales" in combined_role and "sales" in name:
+            return (0, -int(rec.confidence or 0))
         if tt in ("K", "A", "S") or "simulation" in name:
             return (1, -int(rec.confidence or 0))
+        if DomainClassifier.is_leadership_assessment(name):
+            return (6, -int(rec.confidence or 0))
         if is_dev_role and (tt == "P" or "opq" in name):
             return (5, -int(rec.confidence or 0))
         if tt == "P" or "opq" in name:
@@ -338,14 +364,23 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
         context, _ = services.decision_engine.analyzer.analyze(messages)
         analysis_time = time.time() - analysis_start
         
-        # 1b. Domain Detection (cumulative across all user turns)
+        # 1b. Domain Detection (latest turn overrides polluted cumulative history)
         domain_start = time.time()
         full_user_text = " ".join(m["content"] for m in messages if m["role"] == "user")
-        query_class = domain_classifier.detect_query_domain(full_user_text)
-        if query_class.get("primaryDomain") == Domain.GENERAL and len(messages) > 2:
-            last_class = domain_classifier.detect_query_domain(user_query)
-            if last_class.get("primaryDomain") != Domain.GENERAL:
-                query_class = last_class
+        cum_class = domain_classifier.detect_query_domain(full_user_text)
+        last_class = domain_classifier.detect_query_domain(user_query)
+        query_class = cum_class
+        last_domain = last_class.get("primaryDomain")
+        cum_domain = cum_class.get("primaryDomain")
+        technical_latest = {
+            Domain.FRONTEND, Domain.BACKEND, Domain.DEVOPS, Domain.DATA_AI, Domain.QA,
+        }
+        if last_domain and last_domain != Domain.GENERAL:
+            query_class = last_class
+        elif cum_domain == Domain.GENERAL and last_domain != Domain.GENERAL:
+            query_class = last_class
+        elif cum_domain == Domain.MANAGEMENT and last_domain in technical_latest:
+            query_class = last_class
         query_domain = query_class["primaryDomain"]
         domain_time = time.time() - domain_start
         
@@ -483,9 +518,9 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
             generic_roles = {"developer", "engineer", "software engineer", "software developer", "programmer"}
             role_part = context.role or ""
             if (role_part or "").lower() in generic_roles:
-                query = f"{full_user_text} {context.seniority}"
+                query = f"{user_query} {context.seniority} {' '.join(context.tech_stack)}"
             else:
-                query = f"{role_part} {context.seniority} {' '.join(context.tech_stack)}"
+                query = f"{user_query} {role_part} {context.seniority} {' '.join(context.tech_stack)}"
             retrieved = services.retriever.retrieve(query, context, top_k=50) # increased for smarter domain fallback recall
             retrieval_time = time.time() - retrieval_start
             
@@ -849,8 +884,14 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
             )
 
             filtered_recommendations = []
+            suppress_java = _should_suppress_java_spring(user_query, query_domain)
+            suppress_leadership = _should_suppress_leadership(user_query, query_domain)
             for rec in recommendations:
                 rec_text = f"{rec.name} {rec.ideal_use_case}".lower()
+                if suppress_java and DomainClassifier.is_java_spring_assessment(rec.name, rec.ideal_use_case):
+                    continue
+                if suppress_leadership and DomainClassifier.is_leadership_assessment(rec.name, rec.ideal_use_case):
+                    continue
                 if _matches_domain_denylist(query_domain, rec_text):
                     continue
                 assessment_domain = domain_classifier.normalize_assessment_domain(rec.name, rec.ideal_use_case)

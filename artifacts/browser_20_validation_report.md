@@ -1,7 +1,7 @@
 # Browser 20 Validation Report
 
-**Backend:** `https://assessiq-kkw2.onrender.com`
-**Summary:** 20/20 passed
+**Backend:** `http://127.0.0.1:8000`
+**Summary:** 25/25 passed
 
 | # | Scenario | Cards | Pass | Notes |
 |---|----------|-------|------|-------|
@@ -25,3 +25,8 @@
 | 18 | Security refusal | 0 | PASS | ok |
 | 19 | DevOps | 7 | PASS | ok |
 | 20 | Full Stack | 7 | PASS | ok |
+| 21 | AI Developer single-shot | 7 | PASS | ok |
+| 22 | AI Engineer LLM stack | 7 | PASS | ok |
+| 23 | QA Automation exact UI | 6 | PASS | ok |
+| 24 | B2B Sales Manager | 7 | PASS | ok |
+| 25 | Polluted session AI Developer | 7 | PASS | ok |

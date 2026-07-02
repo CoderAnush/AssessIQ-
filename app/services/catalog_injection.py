@@ -78,6 +78,22 @@ _INJECTION_RULES: List[Dict[str, Any]] = [
         "substrings": ("automata selenium", "selenium", "manual testing", "agile testing"),
     },
     {
+        "signals": ("selenium", "playwright", "cypress", "postman"),
+        "substrings": ("automata selenium", "selenium", "agile testing", "manual testing"),
+    },
+    {
+        "signals": ("ai developer", "ai engineer", "ml engineer", "machine learning engineer"),
+        "substrings": ("ai skills", "automata data science", "data science"),
+    },
+    {
+        "signals": ("llm", "llms", "langchain", "huggingface", "vector database", "vector databases"),
+        "substrings": ("ai skills", "automata data science", "data science"),
+    },
+    {
+        "signals": ("b2b sales", "sales manager", "sales executive"),
+        "substrings": ("sales transformation", "opq mq sales", "sales profiler", "global skills"),
+    },
+    {
         "signals": ("ml ops", "mlops"),
         "substrings": ("ai skills", "docker", "kubernetes", "cloud computing"),
     },
@@ -88,6 +104,10 @@ _INJECTION_RULES: List[Dict[str, Any]] = [
     {
         "signals": ("leadership", "cxo", "director-level", "senior leadership"),
         "substrings": ("leadership", "occupational personality", "opq"),
+    },
+    {
+        "signals": ("graduate software engineer", "graduate swe", "fresh graduate software"),
+        "substrings": ("verify g", "graduate scenarios", "verify - general ability"),
     },
     {
         "signals": ("graduate management trainee", "graduate trainee", "trainee scheme"),
@@ -126,6 +146,17 @@ def _conversation_text(context: HiringContext, full_user_text: str) -> str:
     return " ".join(parts).lower()
 
 
+def _signals_match(combined: str, signals: tuple) -> bool:
+    for sig in signals:
+        if sig in {"cto"}:
+            if re.search(rf"\b{re.escape(sig)}\b", combined):
+                return True
+            continue
+        if sig in combined:
+            return True
+    return False
+
+
 def resolve_must_include_ids(
     catalog: Dict[str, Any],
     context: HiringContext,
@@ -140,7 +171,7 @@ def resolve_must_include_ids(
     ids: List[str] = []
 
     for rule in _INJECTION_RULES:
-        if not any(sig in combined for sig in rule["signals"]):
+        if not _signals_match(combined, rule["signals"]):
             continue
         for substring in rule["substrings"]:
             assessment = find_assessment_by_substring(catalog, substring)

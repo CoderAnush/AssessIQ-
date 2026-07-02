@@ -191,7 +191,7 @@ def main() -> None:
             placeholder.markdown("_Thinking..._")
             try:
                 payload = {"messages": [{"role": m["role"], "content": m["content"]} for m in st.session_state["messages"]]}
-                resp = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=45)
+                resp = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=120)
                 if resp.status_code != 200:
                     placeholder.empty()
                     st.error(f"Backend returned HTTP {resp.status_code}.")

@@ -11,7 +11,7 @@ from app.models.ranking import RankingFactors, RankedAssessment
 from app.services.conversation_analyzer import HiringContext
 from app.services.recruiter_reasoning import RecruiterExplanationEngine
 from app.core.assessment_taxonomy import AssessmentTaxonomy, AssessmentDomain, RoleDomain, AssessmentClassification
-from app.services.domain_classifier import Domain
+from app.services.domain_classifier import Domain, DomainClassifier
 from app.logger_config.logger import get_logger
 
 logger = get_logger("ranker")
@@ -182,6 +182,13 @@ class RecruiterRanker:
             role_score = min(role_score, 0.1)
         if is_data_ai_role and "spring" in candidate_name_lower:
             role_score = min(role_score, 0.1)
+
+        query_text = (context.query or "").lower()
+        query_domain = getattr(context, "domain_enum", None)
+        if not DomainClassifier.query_requests_java(query_text):
+            if DomainClassifier.is_java_spring_assessment(assessment.name, assessment.description):
+                if query_domain != Domain.BACKEND:
+                    role_score = min(role_score, 0.05)
 
         is_qa_role = any(t in role_lower for t in ["qa", "sdet", "test automation"])
         if is_data_ai_role or (

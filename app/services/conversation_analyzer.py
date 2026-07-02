@@ -225,7 +225,9 @@ class ConversationAnalyzer:
             if inferred_tech:
                 context.tech_stack = set(inferred_tech)
         
-        if any(w in full_text for w in ["leadership", "executive", "director", "cxo", "vp ", "chief", "cto"]):
+        if any(w in full_text for w in ["leadership", "executive", "director", "cxo", "vp ", "chief"]):
+            context.leadership_needs = True
+        if re.search(r"\bcto\b", full_text):
             context.leadership_needs = True
 
         context.domain = self._infer_domain(context.role, context.tech_stack, full_text)

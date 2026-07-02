@@ -119,14 +119,35 @@ class DomainClassifier:
         if any(kw in query_low for kw in ["hipaa", "healthcare admin", "medical terminology", "bilingual healthcare", "patient records"]):
             return {"primaryDomain": Domain.MEDICAL, "confidence": 1.0, "reason": "Healthcare Admin Role", "techStack": ["healthcare"]}
 
-        if any(kw in query_low for kw in ["cto", "chief technology officer", "chief technical officer", "vp engineering"]):
-            return {"primaryDomain": Domain.MANAGEMENT, "confidence": 1.0, "reason": "Executive Technology Leadership"}
-
         if any(kw in query_low for kw in ["sdet", "software developer in test", "developer in test", "qa automation engineer", "qa automation", "senior qa analyst"]):
             return {"primaryDomain": Domain.QA, "confidence": 1.0, "reason": "QA/SDET Role"}
 
+        if any(kw in query_low for kw in ["selenium", "playwright", "cypress", "postman"]) and any(
+            kw in query_low for kw in ["qa", "test", "automation", "sdet"]
+        ):
+            return {"primaryDomain": Domain.QA, "confidence": 1.0, "reason": "QA Automation Role", "techStack": ["selenium"]}
+
         if any(kw in query_low for kw in ["ml ops", "mlops", "ml ops engineer", "machine learning ops"]):
             return {"primaryDomain": Domain.DATA_AI, "confidence": 1.0, "reason": "MLOps Role", "techStack": ["mlops"]}
+
+        if any(kw in query_low for kw in ["machine learning engineer", "ml engineer", "data scientist", "data engineer"]):
+            return {
+                "primaryDomain": Domain.DATA_AI,
+                "confidence": 1.0,
+                "reason": "ML/Data Science Role",
+                "techStack": ["machine learning", "python"],
+            }
+
+        if any(kw in query_low for kw in ["llm", "llms", "langchain", "huggingface", "vector database", "vector databases", "pytorch", "tensorflow", "nlp"]):
+            if re.search(r"\b(ai|ml|machine learning|data science)\b", query_low) or re.search(
+                r"\b(developer|engineer|architect)\b", query_low
+            ):
+                return {
+                    "primaryDomain": Domain.DATA_AI,
+                    "confidence": 1.0,
+                    "reason": "AI/ML Stack Role",
+                    "techStack": ["ai", "machine learning", "python"],
+                }
 
         if any(kw in query_low for kw in ["ui developer", "ui engineer", "ui/ux developer"]):
             return {"primaryDomain": Domain.FRONTEND, "confidence": 1.0, "reason": "UI Developer Role"}
@@ -140,7 +161,12 @@ class DomainClassifier:
                     "techStack": ["ai", "machine learning", "python"],
                 }
 
-        if any(kw in query_low for kw in ["sales", "marketing", "financial", "accounting", "hr executive", "recruitment", "customer service", "retail", "business development"]):
+        if re.search(r"\bcto\b", query_low) or any(
+            kw in query_low for kw in ["chief technology officer", "chief technical officer", "vp engineering"]
+        ):
+            return {"primaryDomain": Domain.MANAGEMENT, "confidence": 1.0, "reason": "Executive Technology Leadership"}
+
+        if any(kw in query_low for kw in ["sales", "marketing", "financial", "accounting", "hr executive", "recruitment", "customer service", "retail", "business development", "b2b"]):
             return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Non-technical Business Role"}
         
         # 1. EXPLICIT OVERRIDES (Highest Priority)
@@ -341,3 +367,35 @@ class DomainClassifier:
             return assessment_domain in {Domain.MANAGEMENT, Domain.GENERAL}
 
         return query_domain == assessment_domain
+
+    @staticmethod
+    def query_requests_java(query: str) -> bool:
+        """True when the recruiter explicitly asked for Java/Spring stack."""
+        q = query.lower()
+        if re.search(r"\bjavascript\b", q):
+            return bool(re.search(r"\bjava\b", q))
+        return bool(re.search(r"\b(java|spring|springboot|spring boot|j2ee)\b", q))
+
+    @staticmethod
+    def is_java_spring_assessment(name: str, description: str = "") -> bool:
+        text = f"{name} {description}".lower()
+        if re.search(r"\bjavascript\b", text):
+            return False
+        return bool(
+            re.search(r"\b(core java|java frameworks|spring)\b", text)
+            or (re.search(r"\bjava\b", text) and "javascript" not in text)
+        )
+
+    @staticmethod
+    def is_leadership_assessment(name: str, description: str = "") -> bool:
+        text = f"{name} {description}".lower()
+        return any(
+            sig in text
+            for sig in (
+                "enterprise leadership",
+                "opq leadership",
+                "executive scenarios",
+                "mfs 360",
+                "leadership report",
+            )
+        )

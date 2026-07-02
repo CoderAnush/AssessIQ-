@@ -85,6 +85,22 @@ def evaluate_scenario(scenario: Dict) -> Dict:
         if item.lower() not in cards_text:
             errors.append(f"Expected card text containing '{item}'.")
 
+    top_n_spec = ui_checks.get("must_text_in_top_n")
+    if top_n_spec:
+        n = int(top_n_spec.get("n", 3))
+        top_names = _normalize_text(" | ".join(recommendation_names[:n]))
+        terms = top_n_spec.get("terms", [])
+        if terms and not any(term.lower() in top_names for term in terms):
+            errors.append(f"Expected one of {terms} in top {n} cards; got {recommendation_names[:n]}.")
+
+    forbidden_top = ui_checks.get("forbidden_in_top_n")
+    if forbidden_top:
+        n = int(forbidden_top.get("n", 3))
+        top_names = _normalize_text(" | ".join(recommendation_names[:n]))
+        for item in forbidden_top.get("terms", []):
+            if item.lower() in top_names:
+                errors.append(f"Forbidden text '{item}' in top {n} cards.")
+
     for item in ui_checks.get("forbidden_in_cards", []):
         if item.lower() in cards_text:
             errors.append(f"Forbidden card text found: '{item}'.")
@@ -92,6 +108,10 @@ def evaluate_scenario(scenario: Dict) -> Dict:
     for item in ui_checks.get("must_text_in_reply", []):
         if item.lower() not in _normalize_text(reply_text):
             errors.append(f"Expected reply text containing '{item}'.")
+
+    for item in ui_checks.get("forbidden_in_reply", []):
+        if item.lower() in _normalize_text(reply_text):
+            errors.append(f"Forbidden reply text found: '{item}'.")
 
     for rec in recommendations:
         url = rec.get("url", "")

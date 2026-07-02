@@ -91,10 +91,15 @@ def test_c1_c10_requirement_resolution():
     reqs_c2 = resolver.resolve(Domain.FRONTEND, ctx_c2)
     assert "technical" in reqs_c2
 
-    ctx_c5 = HiringContext(role="Sales Manager", seniority="senior")
+    ctx_c5 = HiringContext(role="Engineering Manager", seniority="senior")
     reqs_c5 = resolver.resolve(Domain.MANAGEMENT, ctx_c5)
     assert "personality" in reqs_c5
     assert "leadership_report" in reqs_c5
+
+    ctx_c5_sales = HiringContext(role="Sales Manager", seniority="senior")
+    reqs_c5_sales = resolver.resolve(Domain.GENERAL, ctx_c5_sales)
+    assert "personality" in reqs_c5_sales
+    assert "leadership_report" not in reqs_c5_sales
 
     ctx_c10 = HiringContext(role="Fresh Graduate Software Engineer", seniority="entry")
     reqs_c10 = resolver.resolve(Domain.GENERAL, ctx_c10)
@@ -262,6 +267,57 @@ def test_ai_single_shot_developer_with_python(client):
     names_low = " ".join(rec_names).lower()
     assert "ai skills" in names_low or "data science" in names_low
     assert "core java" not in names_low and "java frameworks" not in names_low
+
+
+def test_ai_engineer_vector_databases_not_management(client):
+    """Regression: 'cto' substring in 'vector' must not route to MANAGEMENT."""
+    messages = [
+        {
+            "role": "user",
+            "content": "Hiring an AI Engineer with Python, LLMs, LangChain, HuggingFace, Vector Databases and AWS.",
+        }
+    ]
+    data = _chat(client, messages)
+    assert "management pipeline" not in data["reply"].lower()
+    assert "AI/ML" in data["reply"] or "ai/ml" in data["reply"].lower()
+    top3 = " ".join(r["name"] for r in data["recommendations"][:3]).lower()
+    assert "core java" not in top3 and "spring" not in top3
+    assert "ai skills" in top3 or "data science" in top3 or "automata data science" in top3
+
+
+def test_qa_automation_top_cards_not_java(client):
+    messages = [
+        {
+            "role": "user",
+            "content": "Hiring QA Automation Engineer with Selenium, Playwright, Cypress, API Testing and Postman.",
+        }
+    ]
+    data = _chat(client, messages)
+    assert "management pipeline" not in data["reply"].lower()
+    top3 = " ".join(r["name"] for r in data["recommendations"][:3]).lower()
+    assert "core java" not in top3 and "spring" not in top3
+    assert any(t in top3 for t in ("selenium", "automata selenium", "agile testing", "manual testing"))
+
+
+def test_polluted_session_ai_developer_still_ai(client):
+    messages = [{"role": "user", "content": "We need a solution for senior leadership."}]
+    data1 = _chat(client, messages)
+    messages.append({"role": "assistant", "content": data1["reply"]})
+    messages.append({"role": "user", "content": "Hiring AI Developer"})
+    data2 = _chat(client, messages)
+    assert "management pipeline" not in data2["reply"].lower()
+    top3 = " ".join(r["name"] for r in data2["recommendations"][:3]).lower()
+    assert "core java" not in top3 and "spring" not in top3
+    assert "ai skills" in top3 or "data science" in top3 or "automata data science" in top3
+
+
+def test_domain_classifier_vector_not_cto():
+    from app.services.domain_classifier import DomainClassifier, Domain
+    dc = DomainClassifier()
+    result = dc.detect_query_domain(
+        "Hiring an AI Engineer with Python, LLMs, LangChain, HuggingFace, Vector Databases and AWS."
+    )
+    assert result["primaryDomain"] == Domain.DATA_AI
 
 
 def test_refinement_drop_opq(client):
