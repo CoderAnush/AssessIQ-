@@ -405,7 +405,12 @@ class ConversationAnalyzer:
             "mechanical engineer", "civil engineer", "chemical engineer",
         ]
         for r in compound_roles:
-            if r in text_lower: 
+            # Word-boundary matching for short tokens: bare "cto"/"cxo"/"sre" substrings
+            # false-match inside words like "directory", "vector".
+            if len(r) <= 4:
+                if re.search(rf"\b{re.escape(r)}s?\b", text_lower):
+                    return r
+            elif r in text_lower:
                 return r
         
         if "graduate" in text_lower and "software" in text_lower and "engineer" in text_lower:

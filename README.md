@@ -7,7 +7,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-Demo-red.svg)](https://streamlit.io/)
 
 **Live demo:** [assessiq-ai.streamlit.app](https://assessiq-ai.streamlit.app)  
-**API:** [assessiq-nkp2.onrender.com](https://assessiq-kkw2.onrender.com) · [Docs](https://assessiq-kkw2.onrender.com/docs)  
+**API:** [assessiq-kkw2.onrender.com](https://assessiq-kkw2.onrender.com) · [Docs](https://assessiq-kkw2.onrender.com/docs)  
 **Design:** [APPROACH.md](APPROACH.md) (≤2 pages)
 
 ---

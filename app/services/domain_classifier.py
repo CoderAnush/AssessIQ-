@@ -207,6 +207,9 @@ class DomainClassifier:
                 return {"primaryDomain": Domain.BACKEND, "confidence": 0.95, "reason": "Python Backend Context"}
             if has_ai:
                 return {"primaryDomain": Domain.DATA_AI, "confidence": 0.95, "reason": "Python AI/ML Context"}
+            # Bare "python" (e.g. single-word role pivot mid-session): treat as backend so the
+            # latest-turn override beats a stale FRONTEND/other cumulative domain.
+            return {"primaryDomain": Domain.BACKEND, "confidence": 0.9, "reason": "Python Default Backend Context", "techStack": ["python"]}
 
         # 3. Standard Weighted Scoring
         scores = {domain: 0.0 for domain in self.DOMAIN_GROUPS}

@@ -3,6 +3,7 @@ Decision engine - core agentic reasoning.
 Decides whether to clarify, recommend, refine, compare, or refuse.
 """
 
+import re
 from dataclasses import dataclass
 from typing import List, Optional
 from enum import Enum
@@ -84,30 +85,51 @@ class DecisionEngine:
             "sales", "engineering", "marketing", "hr ", "human resources", "developer",
             "financial", "data scientist", "devops", "full stack", "fullstack", "java",
             "python", "react", "contact centre", "contact center", "analyst", "operator",
-            "cto", "chief technology",
+            "chief technology",
         )
-        has_specific_function = any(sig in full_user_text for sig in specific_function_signals)
+        # "cto" needs word-boundary matching: plain substring falsely matches "director"/"vector".
+        has_specific_function = (
+            any(sig in full_user_text for sig in specific_function_signals)
+            or bool(re.search(r"\bcto\b", full_user_text))
+        )
+        # Word-boundary matching: substring "director" would match "Active Directory",
+        # substring "cto" matches inside "director"/"vector".
+        _role_low = (context.role or "").lower()
         leadership_role = (
             not has_specific_function
             and (
-                any(w in (context.role or "").lower() for w in ["leadership", "cxo", "director", "cto", "chief"])
-                or any(
-                    w in full_user_text
-                    for w in ["senior leadership", "solution for leadership", "cxo", "director-level", "chief technology", "chief executive"]
+                bool(re.search(r"\b(leadership|cxo|cxos|director|cto|chief)\b", _role_low))
+                or bool(
+                    re.search(
+                        r"senior leadership|solution for leadership|\bcxos?\b|\bdirector-level\b|chief technology|chief executive",
+                        full_user_text,
+                    )
                 )
             )
         )
         if (
             leadership_role
-            and turn_count < 1
+            and turn_count < 2
             and not any(w in full_user_text for w in ["selection", "development", "benchmark", "feedback"])
         ):
+            if turn_count < 1:
+                question = (
+                    self.analyzer.get_clarification_question(context)
+                    or "Who is this meant for — selection against a benchmark, or developmental feedback?"
+                )
+            else:
+                # Turn 2 (C1): audience described but purpose still unknown — ask before shortlisting.
+                question = (
+                    "For such roles, the OPQ32r is the right instrument — it measures 32 workplace "
+                    "behaviour dimensions including strategic thinking, influencing style, and leadership. "
+                    "One question before I commit to a report format: is this for selection against a "
+                    "benchmark, or developmental feedback for an executive already in role?"
+                )
             return Decision(
                 action=AgentAction.CLARIFY,
                 reasoning="Leadership context requires purpose clarification.",
                 confidence=0.9,
-                next_question=self.analyzer.get_clarification_question(context)
-                or "Who is this meant for — selection against a benchmark, or developmental feedback?",
+                next_question=question,
             )
         
         # Contact centre flows need language clarification before recommendations (C3)
@@ -126,10 +148,12 @@ class DecisionEngine:
                     confidence=0.9,
                     next_question="Before I shape the stack — what language are the calls in? That drives which spoken-language screen we use.",
                 )
-            if turn_count < 3 and "english" in full_user_text and not any(
-                w in full_user_text
-                for w in [" us", " us.", " uk", " uk.", "australian", "indian accent", "us accent", "uk accent"]
-            ):
+            # Word-boundary matching: plain " us" would false-match "use" ("what should we use?").
+            accent_selected = bool(
+                re.search(r"\b(us|uk|usa|australian|american|british)\b", full_user_text)
+                or "indian accent" in full_user_text
+            )
+            if turn_count < 3 and "english" in full_user_text and not accent_selected:
                 return Decision(
                     action=AgentAction.CLARIFY,
                     reasoning="Contact centre English accent selection.",

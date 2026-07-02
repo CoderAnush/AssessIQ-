@@ -54,10 +54,11 @@ Run `python scripts/run_c1_c10_recall.py` after starting the backend; report at 
 
 ## What Did Not Work Initially
 
-- Substring Java/JavaScript false positives → word-boundary matching.
+- Substring Java/JavaScript false positives → word-boundary matching (same class: "cto" inside "vector"/"directory").
 - Last-turn-only domain → cumulative conversation text + injection layer.
 - OPQ #1 on technical roles → technical-first sort + DATA_AI branch.
 - Admin “assistants” misrouted to DevOps → classifier override for office roles.
+- Turn-cap replayed a stale shortlist instead of the new role → removed early-return at the cap; turn 8 processes the latest prompt (Streamlit also auto-resets long sessions).
 
 ## AI Tools Used
 
