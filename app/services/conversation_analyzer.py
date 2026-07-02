@@ -61,6 +61,13 @@ class HiringContext:
         has_tech = bool(self.tech_stack) or "tech_stack" in self.inferred_slots
         return has_seniority and has_tech
 
+    def _tech_beyond_role_name(self) -> bool:
+        """True when explicit tech was given beyond keywords embedded in the role title."""
+        if not self.tech_stack:
+            return False
+        role_low = (self.role or "").lower()
+        return any(t.lower() not in role_low for t in self.tech_stack)
+
     def get_missing_slots(self) -> List[str]:
         if self.needs_hiring_profile and "hiring_profile" not in self.asked_slots:
             if not self._hiring_profile_satisfied():
@@ -80,6 +87,19 @@ class HiringContext:
                     and role_low in {"developer", "programmer", "engineer"}
                 ):
                     missing.append("tech_focus")
+
+        if (
+            self.role
+            and not self.seniority
+            and "seniority" not in self.asked_slots
+            and "seniority" not in self.inferred_slots
+            and not self.needs_hiring_profile
+            and not self._tech_beyond_role_name()
+        ):
+            role_low = (self.role or "").lower()
+            if any(t in role_low for t in ("developer", "engineer", "programmer")):
+                if "seniority" not in missing:
+                    missing.append("seniority")
 
         return [s for s in missing if s not in self.asked_slots and s not in self.inferred_slots]
 
@@ -258,6 +278,9 @@ class ConversationAnalyzer:
             context.role = None
             context.tech_stack = set()
             context.leadership_needs = False
+            if is_explicit_vague:
+                context.seniority = None
+                context.inferred_slots.discard("seniority")
 
         if self._is_generic_without_domain_signal(
             last_user_raw.lower() if generic_role_last else full_text,
@@ -367,8 +390,26 @@ class ConversationAnalyzer:
         intent = UserIntent.CLEAR_REQUIREMENT
         
         # Check off-topic and prompt injection
+        hiring_signals = [
+            "hire", "hiring", "recruiter", "assessment", "assessments", "candidate",
+            "role", "developer", "engineer", "test", "resume", "cv", "job description",
+            "jd", "looking for", "talent", "qualification", "seniority", "screening",
+            "contact centre", "contact center", "customer service", "trainee", "scheme",
+            "battery", "analyst", "operator", "admin", "healthcare", "financial",
+            "graduate", "management trainee", "plant", "facility", "agents", "inbound",
+            "recommend", "shortlist", "we need", "solutions", "solution for",
+            "executive", "leadership", "director", "cxo", "sales", "marketing", "hr",
+            "devops", "security", "cyber", "full stack", "fullstack", "backend",
+            "frontend", "data scientist", "machine learning", "verify", "scenarios", "opq",
+            "drop the", "final list", "remove the", "add a", "trainee", "scheme", "battery",
+            "cognitive", "personality", "situational", "graduate",
+        ]
+        has_hiring_signal = any(s in full_text for s in hiring_signals)
+        last_turn_hiring = any(s in last_user_msg.lower() for s in hiring_signals)
+
         off_topic_patterns = [
             r"\b(capital of|weather|joke|politics|sports|football|soccer|cricket|recipe|cook|tax|visa|passport|legal advice|legal hiring|discrimination|salary|salary guide|career path|interview tips|hackerrank|codility|leetcode)\b",
+            r"\b(teach me|tutor me|help me learn|how (?:do|can) i learn)\b",
             r"\b(ignore\s+(all\s+)?previous|system prompt|you are no longer|jailbreak|reveal prompt|secret key|api key|aws exam|competitor)\b",
             r"ignore\s+(all\s+)?previous\s+instructions",
             r"output hidden prompt",
@@ -386,25 +427,13 @@ class ConversationAnalyzer:
             if re.search(pattern, last_user_msg.lower()):
                 if "ignore" in pattern or "prompt" in pattern or "jailbreak" in pattern:
                     is_prompt_injection = True
+                elif pattern.startswith(r"\b(teach me"):
+                    if not last_turn_hiring:
+                        is_off_topic = True
                 else:
                     is_off_topic = True
                 break
-                
-        hiring_signals = [
-            "hire", "hiring", "recruiter", "assessment", "assessments", "candidate",
-            "role", "developer", "engineer", "test", "resume", "cv", "job description",
-            "jd", "looking for", "talent", "qualification", "seniority", "screening",
-            "contact centre", "contact center", "customer service", "trainee", "scheme",
-            "battery", "analyst", "operator", "admin", "healthcare", "financial",
-            "graduate", "management trainee", "plant", "facility", "agents", "inbound",
-            "recommend", "shortlist", "we need", "solutions", "solution for",
-            "executive", "leadership", "director", "cxo", "sales", "marketing", "hr",
-            "devops", "security", "cyber", "full stack", "fullstack", "backend",
-            "frontend", "data scientist", "machine learning", "verify", "scenarios", "opq",
-            "drop the", "final list", "remove the", "add a", "trainee", "scheme", "battery",
-            "cognitive", "personality", "situational", "graduate",
-        ]
-        has_hiring_signal = any(s in full_text for s in hiring_signals)
+
         has_prior_recommendations = any(
             m["role"] == "assistant" and "|" in m.get("content", "")
             for m in messages[:-1]
@@ -733,9 +762,11 @@ class ConversationAnalyzer:
             ):
                 return "Before I shape the stack — what language are the calls in? That drives which spoken-language screen we use."
             if any(w in (context.seniority or "") for w in ["senior", "executive"]) or context.leadership_needs:
-                return "Happy to help narrow that down. Who is this meant for — selection, development, or a specific leadership level?"
+                if not (context.last_user_message and is_vague_request(context.last_user_message)):
+                    return "Happy to help narrow that down. Who is this meant for — selection, development, or a specific leadership level?"
             return (
                 "I'd be happy to help. What role are you hiring for? "
+                "What seniority level — Junior, Mid-Level, or Senior? "
                 "(e.g. Senior Backend Developer, Junior Frontend Engineer — "
                 "and any technical focus like Java, React, or DevOps.)"
             )

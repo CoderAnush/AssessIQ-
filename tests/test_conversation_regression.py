@@ -196,7 +196,7 @@ SAMPLE_TRACES = {
             "Add AWS and Docker. Drop REST — the API design signal will already come through in Spring and the live interview.",
         ],
         "expected": ["java", "spring", "sql", "aws", "docker"],
-        "min_recall": 0.0,
+        "min_recall": 0.8,
     },
     "C10_grad_mgmt": {
         "turns": [
@@ -530,3 +530,64 @@ def test_conversation_analyzer_accumulates_tech_stack():
     stack_low = {t.lower() for t in context.tech_stack}
     assert "aws" in stack_low or "docker" in stack_low
     assert "java" in stack_low or "spring" in stack_low
+
+
+def test_drop_rest_keeps_java_spring_in_history(catalog):
+    from app.utils.message_history import (
+        apply_refinement_to_recommendations,
+        detect_refinement_intent,
+        parse_recommendations_from_assistant_content,
+    )
+
+    prior = parse_recommendations_from_assistant_content(
+        "| 1 | Core Java (Advanced Level) (New) | K | ... | "
+        "https://www.shl.com/products/product-catalog/view/core-java-advanced-level-new |\n"
+        "| 2 | Spring (New) | K | ... | "
+        "https://www.shl.com/products/product-catalog/view/spring-new |\n"
+        "| 3 | RESTful Web Services (New) | K | ... | "
+        "https://www.shl.com/products/product-catalog/view/restful-web-services-new |",
+        catalog,
+    )
+    refinement = detect_refinement_intent(
+        "Drop REST - the API design signal will already come through in Spring and the live interview."
+    )
+    assert refinement is not None
+    assert "JAVA" not in refinement["dropped_families"]
+    result = apply_refinement_to_recommendations(prior, refinement, catalog)
+    names = " ".join(r.name.lower() for r in result)
+    assert "java" in names
+    assert "spring" in names
+    assert "restful" not in names
+
+
+def test_need_something_technical_asks_seniority(client):
+    data = _chat(client, [{"role": "user", "content": "Need something technical."}])
+    assert len(data["recommendations"]) == 0
+    reply_low = data["reply"].lower()
+    assert "seniority" in reply_low
+    assert "role" in reply_low
+
+
+def test_teach_me_python_refusal(client):
+    data = _chat(client, [{"role": "user", "content": "Can you teach me Python programming?"}])
+    assert len(data["recommendations"]) == 0
+    assert "specialize" in data["reply"].lower() or "cannot" in data["reply"].lower()
+
+
+def test_java_developer_vague_clarifies_seniority(client):
+    data = _chat(client, [{"role": "user", "content": "I need to hire a Java developer"}])
+    assert len(data["recommendations"]) == 0
+    assert "seniority" in data["reply"].lower()
+
+
+def test_p12_vague_after_java_role_clarify_not_leadership(client):
+    messages = [{"role": "user", "content": "Senior Java Backend Engineer with Spring Boot"}]
+    data1 = _chat(client, messages)
+    assert len(data1["recommendations"]) > 0
+    messages.append({"role": "assistant", "content": data1["reply"]})
+    messages.append({"role": "user", "content": "I need an assessment."})
+    data2 = _chat(client, messages)
+    assert len(data2["recommendations"]) == 0
+    reply_low = data2["reply"].lower()
+    assert any(w in reply_low for w in ["role", "hiring", "happy to help"])
+    assert "selection" not in reply_low and "development" not in reply_low

@@ -209,8 +209,18 @@ def get_top_n_from_history(
     return []
 
 
+def _normalize_drop_token(drop_text: str) -> str:
+    """Strip explanatory tail so 'Drop REST — … in Spring' does not drop JAVA family."""
+    token = re.split(r"[—–\-]", drop_text, maxsplit=1)[0].strip()
+    token = token.split(".")[0].strip()
+    return token
+
+
 def _resolve_drop_families(drop_text: str) -> Set[str]:
-    return families_for_text(drop_text)
+    token = _normalize_drop_token(drop_text).lower()
+    if token in {"rest", "restful", "rest api", "rest apis"}:
+        return set()
+    return families_for_text(token)
 
 
 def _resolve_add_families(add_text: str) -> Set[str]:
@@ -302,15 +312,21 @@ def apply_refinement_to_recommendations(
         ]
 
     for drop in drops:
-        drop_low = drop.lower()
+        drop_low = _normalize_drop_token(drop).lower()
         if "opq" in drop_low:
             result = [r for r in result if "opq" not in r.name.lower()]
+            continue
+        if drop_low in {"rest", "restful"} or drop_low.startswith("rest api"):
+            result = [
+                r for r in result
+                if "restful" not in r.name.lower()
+                and not re.search(r"\brest\b", r.name.lower())
+            ]
             continue
         result = [
             r for r in result
             if drop_low not in r.name.lower()
             and not (drop_low in ("opq", "opq32r") and "opq" in r.name.lower())
-            and not (drop_low in ("rest", "restful") and "rest" in r.name.lower())
             and not (
                 any(term in drop_low for term in ("coding", "technical", "knowledge", "programming"))
                 and str(r.test_type).upper() == "K"

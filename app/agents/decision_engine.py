@@ -89,6 +89,7 @@ class DecisionEngine:
                     self.analyzer.get_clarification_question(context)
                     or (
                         "I'd be happy to help. What role are you hiring for? "
+                        "What seniority level — Junior, Mid-Level, or Senior? "
                         "(e.g. Senior Backend Developer, Junior Frontend Engineer — "
                         "and any technical focus like Java, React, or DevOps.)"
                     )

@@ -49,12 +49,22 @@ _INJECTION_RULES: List[Dict[str, Any]] = [
     {
         "signals": ("full stack", "fullstack", "full-stack"),
         "substrings": (
-            "java frameworks",
+            "core java",
             "spring (new)",
             "sql",
             "amazon web services",
             "docker",
             "reactjs",
+        ),
+    },
+    {
+        "signals": ("backend-leaning", "senior ic", "assessment battery", "core java"),
+        "substrings": (
+            "core java",
+            "spring (new)",
+            "sql",
+            "amazon web services",
+            "docker",
         ),
     },
     {
