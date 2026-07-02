@@ -17,6 +17,7 @@ from app.models.response import (
 from app.services.catalog_injection import inject_must_include_recommendations, resolve_must_include_ids
 from app.services.domain_classifier import Domain, DomainClassifier
 from app.services.recommendation_validator import RecommendationCompletenessValidator
+from app.services.tech_families import card_matches_any_excluded_family
 from app.utils.hard_eval_safety import HardEvalSafetyLayer
 from app.utils.message_history import (
     apply_refinement_to_recommendations,
@@ -492,11 +493,18 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
             # Refinement: mutate prior shortlist from message history (stateless)
             refinement = detect_refinement_intent(user_query)
             prior_recs = get_prior_recommendations_from_messages(messages, catalog)
-            if refinement and prior_recs:
+            excluded = getattr(context, "excluded_families", set()) or set()
+            if refinement:
+                excluded = excluded | set(refinement.get("dropped_families", set()))
+                context.excluded_families = excluded
+            if refinement and prior_recs and not refinement.get("is_stack_swap"):
                 recommendations = apply_refinement_to_recommendations(prior_recs, refinement, catalog)
                 drop_blob = " ".join(refinement.get("drops", [])).lower()
                 if not any(term in drop_blob for term in ("opq", "personality")):
-                    must_ids = resolve_must_include_ids(catalog, context, full_user_text, query_domain)
+                    must_ids = resolve_must_include_ids(
+                        catalog, context, full_user_text, query_domain,
+                        excluded_families=excluded,
+                    )
                     recommendations = inject_must_include_recommendations(
                         recommendations, catalog, must_ids, max_total=MAX_RECOMMENDATIONS
                     )
@@ -859,7 +867,10 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                     ))
 
             # Catalog injection — grounded must-includes for C1–C10 and niche roles
-            must_ids = resolve_must_include_ids(catalog, context, full_user_text, query_domain)
+            must_ids = resolve_must_include_ids(
+                catalog, context, full_user_text, query_domain,
+                excluded_families=getattr(context, "excluded_families", None),
+            )
             recommendations = inject_must_include_recommendations(
                 recommendations, catalog, must_ids, max_total=12
             )
@@ -880,8 +891,13 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
             filtered_recommendations = []
             suppress_java = _should_suppress_java_spring(user_query, query_domain)
             suppress_leadership = _should_suppress_leadership(user_query, query_domain)
+            excluded_fams = getattr(context, "excluded_families", None) or set()
             for rec in recommendations:
                 rec_text = f"{rec.name} {rec.ideal_use_case}".lower()
+                if excluded_fams and card_matches_any_excluded_family(
+                    rec.name, excluded_fams, rec.ideal_use_case or ""
+                ):
+                    continue
                 if suppress_java and DomainClassifier.is_java_spring_assessment(rec.name, rec.ideal_use_case):
                     continue
                 if suppress_leadership and DomainClassifier.is_leadership_assessment(rec.name, rec.ideal_use_case):

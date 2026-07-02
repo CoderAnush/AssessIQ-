@@ -10,6 +10,10 @@ from typing import Any, Dict, List, Optional, Set
 
 from app.services.conversation_analyzer import HiringContext
 from app.services.domain_classifier import Domain
+from app.services.tech_families import (
+    card_matches_any_excluded_family,
+    signal_matches_excluded_family,
+)
 
 # Signal keywords -> ordered name substrings to inject when missing from ranked results.
 _INJECTION_RULES: List[Dict[str, Any]] = [
@@ -162,30 +166,47 @@ def resolve_must_include_ids(
     context: HiringContext,
     full_user_text: str,
     query_domain: Optional[Domain] = None,
+    excluded_families: Optional[Set[str]] = None,
 ) -> List[str]:
     """
     Return ordered catalog IDs that must be present for the current trace signals.
+    Assessments matching excluded_families are never injected.
     """
+    excluded = excluded_families or getattr(context, "excluded_families", None) or set()
     combined = _conversation_text(context, full_user_text)
     seen: Set[str] = set()
     ids: List[str] = []
 
     for rule in _INJECTION_RULES:
+        if excluded and any(
+            signal_matches_excluded_family(sig, excluded) for sig in rule["signals"]
+        ):
+            continue
         if not _signals_match(combined, rule["signals"]):
             continue
         for substring in rule["substrings"]:
             assessment = find_assessment_by_substring(catalog, substring)
-            if assessment and assessment.id not in seen:
-                seen.add(assessment.id)
-                ids.append(assessment.id)
+            if not assessment or assessment.id in seen:
+                continue
+            if excluded and card_matches_any_excluded_family(
+                assessment.name, excluded, getattr(assessment, "description", "")
+            ):
+                continue
+            seen.add(assessment.id)
+            ids.append(assessment.id)
 
     # Domain-specific fallbacks when explicit signals are thin.
     if query_domain == Domain.MEDICAL and not ids:
         for substring in ("hipaa", "medical terminology", "dependability and safety"):
             assessment = find_assessment_by_substring(catalog, substring)
-            if assessment and assessment.id not in seen:
-                seen.add(assessment.id)
-                ids.append(assessment.id)
+            if not assessment or assessment.id in seen:
+                continue
+            if excluded and card_matches_any_excluded_family(
+                assessment.name, excluded, getattr(assessment, "description", "")
+            ):
+                continue
+            seen.add(assessment.id)
+            ids.append(assessment.id)
 
     return ids
 

@@ -4,9 +4,16 @@ No server-side session storage required for evaluator compliance.
 """
 
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 from app.models.response import Recommendation
+from app.services.tech_families import (
+    card_matches_any_excluded_family,
+    card_matches_family,
+    families_for_text,
+    families_for_tokens,
+    family_for_token,
+)
 
 
 def _resolve_catalog_assessment(name: str, catalog: Dict):
@@ -202,8 +209,16 @@ def get_top_n_from_history(
     return []
 
 
+def _resolve_drop_families(drop_text: str) -> Set[str]:
+    return families_for_text(drop_text)
+
+
+def _resolve_add_families(add_text: str) -> Set[str]:
+    return families_for_text(add_text)
+
+
 def detect_refinement_intent(user_msg: str) -> Optional[Dict]:
-    """Detect drop/add/remove refinement commands."""
+    """Detect drop/add/remove refinement commands with family resolution."""
     msg = user_msg.lower().strip()
     drop_patterns = [
         r"drop\s+(?:the\s+)?(.+?)(?:\.|$|,|\s+and\s+)",
@@ -216,21 +231,57 @@ def detect_refinement_intent(user_msg: str) -> Optional[Dict]:
         r"include\s+(?:a\s+|an\s+|the\s+)?(.+?)(?:\.|$|,)",
     ]
 
-    drops = []
+    drops: List[str] = []
     for pat in drop_patterns:
         m = re.search(pat, msg)
         if m:
             drops.append(m.group(1).strip())
 
-    adds = []
+    adds: List[str] = []
     for pat in add_patterns:
         m = re.search(pat, msg)
         if m:
             adds.append(m.group(1).strip())
 
+    swap_target = None
+    swap_match = re.search(r"\bmake it (.+?) instead\b", msg)
+    if swap_match:
+        swap_target = swap_match.group(1).strip()
+    replace_match = re.search(r"\breplace .+? with (.+?)(?:\.|$|,|\s+and\s+)", msg)
+    if replace_match:
+        swap_target = replace_match.group(1).strip()
+    switch_match = re.search(r"\bswitch to (.+?)(?:\.|$|,)", msg)
+    if switch_match:
+        swap_target = switch_match.group(1).strip()
+
+    if swap_target and swap_target not in adds:
+        adds.append(swap_target)
+
+    dropped_families: Set[str] = set()
+    for drop in drops:
+        dropped_families.update(_resolve_drop_families(drop))
+
+    added_families: Set[str] = set()
+    for add in adds:
+        added_families.update(_resolve_add_families(add))
+
     if not drops and not adds:
         return None
-    return {"drops": drops, "adds": adds}
+
+    is_stack_swap = bool(
+        swap_target
+        or replace_match
+        or switch_match
+        or (dropped_families and added_families)
+    )
+
+    return {
+        "drops": drops,
+        "adds": adds,
+        "dropped_families": dropped_families,
+        "added_families": added_families,
+        "is_stack_swap": is_stack_swap,
+    }
 
 
 def apply_refinement_to_recommendations(
@@ -238,10 +289,17 @@ def apply_refinement_to_recommendations(
     refinement: Dict,
     catalog: Dict,
 ) -> List[Recommendation]:
-    """Mutate prior shortlist based on drop/add intents."""
+    """Mutate prior shortlist based on drop/add intents (family-aware)."""
     result = list(prior)
     drops = refinement.get("drops", [])
     adds = refinement.get("adds", [])
+    dropped_families = set(refinement.get("dropped_families", set()))
+
+    for family in dropped_families:
+        result = [
+            r for r in result
+            if not card_matches_family(r.name, family)
+        ]
 
     for drop in drops:
         drop_low = drop.lower()
@@ -261,6 +319,7 @@ def apply_refinement_to_recommendations(
                 any(term in drop_low for term in ("coding", "programming"))
                 and any(term in r.name.lower() for term in ("java", "react", "programming", "coding", "automata"))
             )
+            and not card_matches_any_excluded_family(r.name, dropped_families)
         ]
 
     for add_term in adds:
@@ -275,14 +334,23 @@ def apply_refinement_to_recommendations(
                 "sql": "sql",
                 "spring": "spring",
                 "java": "java",
+                "python": "python",
+                "django": "django",
+                "flask": "flask",
+                "fastapi": "fastapi",
                 "rest": "rest",
             }
-            search_term = tech_aliases.get(add_low.split()[0], add_low)
+            first_tok = add_low.split()[0]
+            search_term = tech_aliases.get(first_tok, add_low)
             existing_names = {r.name.lower() for r in result}
             for a in catalog.values():
                 text = (a.name + " " + a.description).lower()
                 if search_term in text or add_low in a.name.lower():
                     if a.name.lower() not in existing_names:
+                        if dropped_families and card_matches_any_excluded_family(
+                            a.name, dropped_families, a.description
+                        ):
+                            continue
                         result.insert(0, _recommendation_from_assessment(a))
                         existing_names.add(a.name.lower())
                         break

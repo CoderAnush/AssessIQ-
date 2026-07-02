@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Set
 
 from app.logger_config.logger import get_logger
+from app.services.tech_families import TECH_FAMILIES, card_matches_family, family_key_for_business_rules
 
 logger = get_logger("business_rules_engine")
 
@@ -21,23 +22,11 @@ _PERSONALITY_TYPE = "P"
 _ABILITY_TYPE = "A"
 _KNOWLEDGE_TYPE = "K"
 
-# Simple technology family detection from name/description
-_TECH_FAMILIES = {
-    "java":      ["java", "spring", "j2ee", "hibernate", "servlet"],
-    "python":    ["python", "django", "fastapi", "flask"],
-    "javascript":["javascript", "typescript", "node", "express", "react", "angular", "vue"],
-    "dotnet":    [".net", "c#", "asp.net"],
-    "sql":       ["sql", "database", "postgresql", "mysql", "oracle"],
-    "devops":    ["kubernetes", "docker", "terraform", "aws", "cloud", "devops"],
-    "ml":        ["machine learning", "deep learning", "tensorflow", "pytorch", "nlp"],
-}
-
 
 def _get_tech_family(candidate: Dict[str, Any]) -> str:
-    text = (candidate.get("name", "") + " " + candidate.get("description", "")).lower()
-    for family, signals in _TECH_FAMILIES.items():
-        if any(s in text for s in signals):
-            return family
+    for family in TECH_FAMILIES:
+        if card_matches_family(candidate.get("name", ""), family, candidate.get("description", "")):
+            return family_key_for_business_rules(family)
     return "other"
 
 

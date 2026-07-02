@@ -381,6 +381,45 @@ def test_clarify_returns_empty_recommendations(client):
     assert data["recommendations"] == []
 
 
+def test_vague_after_specific_context(client):
+    """Vague follow-up must clarify even when prior turn had a specific role."""
+    messages = [{"role": "user", "content": "Full Stack Java Spring React"}]
+    data1 = _chat(client, messages)
+    messages.append({"role": "assistant", "content": data1["reply"]})
+    messages.append({"role": "user", "content": "I need an assessment."})
+    data2 = _chat(client, messages)
+    assert len(data2["recommendations"]) == 0
+    assert any(w in data2["reply"].lower() for w in ["role", "hiring", "happy to help"])
+
+
+def test_vague_paraphrases(client):
+    for prompt in ("Need a test", "Suggest an assessment", "Recommend assessment help"):
+        data = _chat(client, [{"role": "user", "content": prompt}])
+        assert len(data["recommendations"]) == 0, f"Expected clarify for: {prompt}"
+        assert "?" in data["reply"] or "happy to help" in data["reply"].lower()
+
+
+def test_java_to_python_refinement(client):
+    messages = [{"role": "user", "content": "Full Stack Java Spring React"}]
+    data1 = _chat(client, messages)
+    assert len(data1["recommendations"]) > 0
+    messages.append({"role": "assistant", "content": data1["reply"]})
+    messages.append({"role": "user", "content": "Remove Java and make it Python instead."})
+    data2 = _chat(client, messages)
+    assert len(data2["recommendations"]) > 0
+    names = " ".join(r["name"].lower() for r in data2["recommendations"])
+    assert "spring" not in names
+    assert "java" not in names or "javascript" in names
+    assert any(term in names for term in ("python", "django", "flask", "fastapi"))
+
+
+def test_vague_developer_asks_seniority(client):
+    data = _chat(client, [{"role": "user", "content": "developer"}])
+    assert len(data["recommendations"]) == 0
+    reply_low = data["reply"].lower()
+    assert any(w in reply_low for w in ["seniority", "technical", "role", "focus", "backend", "frontend"])
+
+
 def test_c2_rust_turn1_clarifies_without_recs(client):
     data = _chat(
         client,

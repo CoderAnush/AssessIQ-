@@ -78,6 +78,27 @@ class DecisionEngine:
         # 3. CLARIFY if insufficient context (Phase 5: Exactly ONCE)
         turn_count = sum(1 for m in messages if m["role"] == "assistant")
         full_user_text = " ".join(m["content"].lower() for m in messages if m["role"] == "user")
+        last_user = next(
+            (m["content"] for m in reversed(messages) if m["role"] == "user"),
+            "",
+        )
+
+        if intent == UserIntent.VAGUE_QUERY or self.analyzer.is_vague_request(last_user):
+            if turn_count < 2:
+                question = (
+                    self.analyzer.get_clarification_question(context)
+                    or (
+                        "I'd be happy to help. What role are you hiring for? "
+                        "(e.g. Senior Backend Developer, Junior Frontend Engineer — "
+                        "and any technical focus like Java, React, or DevOps.)"
+                    )
+                )
+                return Decision(
+                    action=AgentAction.CLARIFY,
+                    reasoning="Vague assessment request requires role clarification.",
+                    confidence=0.9,
+                    next_question=question,
+                )
 
         # Leadership roles need purpose clarification before first recommendation
         # Only for executive/CXO-style leadership queries, not functional managers (sales, engineering, etc.)

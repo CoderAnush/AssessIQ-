@@ -9,6 +9,14 @@ import re
 from enum import Enum
 from app.logger_config.logger import get_logger
 from app.services.skill_graph import SkillGraph
+from app.services.tech_families import (
+    card_matches_family,
+    drop_tokens_for_family,
+    families_for_text,
+    families_for_tokens,
+    family_for_token,
+)
+from app.utils.intent_tokens import is_vague_request, normalize_tokens
 
 logger = get_logger("conversation_analyzer")
 
@@ -41,6 +49,7 @@ class HiringContext:
     technical_skills: Set[str] = field(default_factory=set)
     refinement_filters: List[str] = field(default_factory=list)
     preferred_test_types: Set[str] = field(default_factory=set)
+    excluded_families: Set[str] = field(default_factory=set)
 
     def get_missing_slots(self) -> List[str]:
         missing = []
@@ -175,21 +184,78 @@ class ConversationAnalyzer:
                     if tok in msg_text and re.search(r"\badd\b", msg_text):
                         context.tech_stack.add(tok.title() if tok != "aws" else "AWS")
 
+                # Stack-swap phrases: "make it python instead", "switch to django"
+                swap_match = re.search(r"\bmake it (.+?) instead\b", msg_text)
+                if swap_match:
+                    swap_tokens = set(re.findall(r"\b[a-z0-9]+\b", swap_match.group(1).lower()))
+                    swap_families = families_for_tokens(swap_tokens)
+                    for fam in swap_families:
+                        for member in drop_tokens_for_family(fam):
+                            context.tech_stack = {
+                                t for t in context.tech_stack
+                                if member not in t.lower()
+                            }
+                    if swap_families:
+                        context.tech_stack.update(
+                            t.title() if t != "aws" else "AWS"
+                            for t in swap_tokens
+                            if family_for_token(t)
+                        )
+
         # Ensure default seniority if not specified
         if not context.seniority:
             context.seniority = "mid"
 
-        if self._is_generic_without_domain_signal(full_text, context.role, context.tech_stack):
+        last_user_raw = next(
+            (m["content"] for m in reversed(cleaned_messages) if m["role"] == "user"),
+            "",
+        )
+        vague_last = is_vague_request(last_user_raw)
+        last_tokens = normalize_tokens(last_user_raw)
+        generic_role_last = last_user_raw.strip().lower() in self.GENERIC_ROLE_QUERIES
+
+        if vague_last:
+            context.role = None
+            context.tech_stack = set()
+            context.leadership_needs = False
+
+        if self._is_generic_without_domain_signal(
+            last_user_raw.lower() if generic_role_last else full_text,
+            context.role,
+            context.tech_stack,
+        ):
             context.role = None
             context.tech_stack = set()
 
         # Recover role from cumulative user text (e.g. turn 1 "ai developer" + turn 2 "junior")
-        if not context.role or (context.role or "").lower() in self.GENERIC_ROLE_QUERIES:
-            history_role = self._extract_role(full_text)
+        if not vague_last and (
+            not context.role or (context.role or "").lower() in self.GENERIC_ROLE_QUERIES
+        ):
+            recovery_text = last_user_msg if context.excluded_families else full_text
+            history_role = self._extract_role(recovery_text)
             if history_role and history_role.lower() not in self.GENERIC_ROLE_QUERIES:
-                context.role = history_role
-            elif re.search(r"\bai\b", full_text) and re.search(r"\b(developer|engineer)\b", full_text):
+                hist_fams = families_for_text(history_role)
+                if not (hist_fams & context.excluded_families):
+                    context.role = history_role
+            elif (
+                not context.excluded_families
+                and re.search(r"\bai\b", full_text)
+                and re.search(r"\b(developer|engineer)\b", full_text)
+            ):
                 context.role = "ai engineer"
+
+        if context.excluded_families:
+            context.tech_stack = {
+                t for t in context.tech_stack
+                if not any(card_matches_family(t, fam) for fam in context.excluded_families)
+            }
+            tech_fams = families_for_tokens({t.lower() for t in context.tech_stack})
+            if "PYTHON" in tech_fams:
+                context.role = "python backend"
+                if not any("python" in t.lower() for t in context.tech_stack):
+                    context.tech_stack.add("Python")
+            elif context.role and families_for_text(context.role) & context.excluded_families:
+                context.role = "backend"
 
         if re.search(r"\bai\b", full_text) and re.search(r"\b(developer|engineer|architect)\b", full_text):
             if not context.role or (context.role or "").lower() in self.GENERIC_ROLE_QUERIES:
@@ -311,12 +377,28 @@ class ConversationAnalyzer:
             intent = UserIntent.OFF_TOPIC
         elif is_comparison:
             intent = UserIntent.COMPARISON
-        elif not context.role and not context.tech_stack:
+        elif vague_last or (not context.role and not context.tech_stack):
             intent = UserIntent.VAGUE_QUERY
         elif len(messages) > 2 and intent == UserIntent.CLEAR_REQUIREMENT:
             intent = UserIntent.CLARIFICATION_PROVIDED
 
         return context, intent
+
+    def is_vague_request(self, last_message: str) -> bool:
+        """Token-normalized vague assessment request (delegates to intent_tokens)."""
+        return is_vague_request(last_message)
+
+    def _exclude_family_from_context(self, context: HiringContext, family: str) -> None:
+        """Remove a tech family from stack and mark it excluded for injection."""
+        context.excluded_families.add(family)
+        members = drop_tokens_for_family(family)
+        context.tech_stack = {
+            t for t in context.tech_stack
+            if not any(
+                card_matches_family(t, family) or m in t.lower()
+                for m in members
+            )
+        }
 
     def _apply_tech_refinements(self, context: HiringContext, msg_text: str) -> None:
         """Apply add/drop/remove refinements to accumulated tech stack."""
@@ -334,9 +416,13 @@ class ConversationAnalyzer:
                 token = match.group(1).strip().lower()
                 if not token:
                     continue
+                drop_families = families_for_text(token)
+                for family in drop_families:
+                    self._exclude_family_from_context(context, family)
                 context.tech_stack = {
                     t for t in context.tech_stack
                     if token not in t.lower() and t.lower() not in token
+                    and not any(card_matches_family(t, fam) for fam in drop_families)
                 }
                 if token in {"rest", "restful", "rest api", "rest apis"}:
                     context.tech_stack = {
@@ -548,9 +634,9 @@ class ConversationAnalyzer:
             if any(w in (context.seniority or "") for w in ["senior", "executive"]) or context.leadership_needs:
                 return "Happy to help narrow that down. Who is this meant for — selection, development, or a specific leadership level?"
             return (
-                "What type of role and seniority are you hiring for? "
-                "Examples: Senior Backend Developer, Junior Frontend Engineer, or Leadership — "
-                "and any technical focus (e.g. Java, React, DevOps)."
+                "I'd be happy to help. What role are you hiring for? "
+                "(e.g. Senior Backend Developer, Junior Frontend Engineer — "
+                "and any technical focus like Java, React, or DevOps.)"
             )
         if slot == "tech_stack":
             return f"Are there specific frameworks or tools required for this {context.role} position (e.g. FastAPI, Kubernetes, or React)?"
