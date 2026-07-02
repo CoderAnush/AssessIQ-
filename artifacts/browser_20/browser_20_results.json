@@ -1,0 +1,346 @@
+[
+  {
+    "id": 1,
+    "name": "Java Backend",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Spring (New)",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Java Frameworks (New)",
+      "Automata - Fix (New)",
+      "Java 8 (New)",
+      "Java Platform Enterprise Edition 7 (Java EE 7)",
+      "Java Design Patterns (New)"
+    ],
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Spring (Ne",
+    "is_clarify": false
+  },
+  {
+    "id": 2,
+    "name": "React Frontend",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Angular 6 (New)",
+      "ReactJS (New)",
+      "AngularJS (New)",
+      "Automata Front End",
+      "Business Communication (adaptive)",
+      "Business Communications",
+      "Dermatology (New)"
+    ],
+    "reply_preview": "I've optimized an enterprise frontend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Angular 6",
+    "is_clarify": false
+  },
+  {
+    "id": 3,
+    "name": "Python Backend",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Python (New)",
+      "Automata - Fix (New)",
+      "Automata (New)",
+      "Adobe Experience Manager (New)",
+      ".NET WCF (New)",
+      "Automata Pro (New)",
+      "Automotive Engineering (New)"
+    ],
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Python (Ne",
+    "is_clarify": false
+  },
+  {
+    "id": 4,
+    "name": "AI single-shot",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Automata Data Science (New)",
+      "Data Science (New)",
+      "Automata Data Science Pro (New)",
+      "AI Skills",
+      "Adobe Experience Manager (New)",
+      "Basic Statistics (New)",
+      "Business Communication (adaptive)"
+    ],
+    "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Dat",
+    "is_clarify": false
+  },
+  {
+    "id": 5,
+    "name": "AI multi-turn bug",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Automata Data Science (New)",
+      "AI Skills",
+      "Automata Data Science Pro (New)",
+      "Data Science (New)",
+      "Verify - General Ability Screen",
+      "Microsoft 365 (New)",
+      "SHL Verify Interactive - Inductive Reasoning"
+    ],
+    "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Dat",
+    "is_clarify": false
+  },
+  {
+    "id": 6,
+    "name": "ML Engineer",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Automata Data Science (New)",
+      "Data Science (New)",
+      "Automata Data Science Pro (New)",
+      "AI Skills",
+      "Adobe Experience Manager (New)",
+      "Basic Statistics (New)",
+      "Business Communication (adaptive)"
+    ],
+    "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Dat",
+    "is_clarify": false
+  },
+  {
+    "id": 7,
+    "name": "Data Scientist",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Automata Data Science (New)",
+      "Data Science (New)",
+      "Automata Data Science Pro (New)",
+      "Verify - Numerical Ability",
+      "ETL Testing (New)",
+      "Microsoft 365 (New)",
+      "Workplace Administration Skills (New)"
+    ],
+    "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Automata Dat",
+    "is_clarify": false
+  },
+  {
+    "id": 8,
+    "name": "Finance Analyst",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Microsoft Excel 365 - Essentials (New)",
+      "Microsoft Word 365 - Essentials (New)",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Basic Statistics (New)",
+      "Automata Data Science (New)",
+      "Automata Data Science Pro (New)",
+      "AI Skills"
+    ],
+    "reply_preview": "I've optimized an enterprise AI/ML hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Microsoft Ex",
+    "is_clarify": false
+  },
+  {
+    "id": 9,
+    "name": "HR Executive",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Occupational Personality Questionnaire OPQ32r",
+      "Business Communication (adaptive)",
+      "Business Communications",
+      "Dependability and Safety Instrument (DSI)",
+      "Adobe Experience Manager (New)",
+      "Contact Center Call Simulation (New)",
+      "Conversational Multichat Simulation"
+    ],
+    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Occupation",
+    "is_clarify": false
+  },
+  {
+    "id": 10,
+    "name": "Sales Manager",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Global Skills Development Report",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Sales Transformation Report 1.0 - Sales Manager",
+      "Sales & Service Phone Solution",
+      "Sales Transformation Report 2.0 - Sales Manager",
+      "Entry Level Sales Solution",
+      "Sales Interview Guide"
+    ],
+    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Global Ski",
+    "is_clarify": false
+  },
+  {
+    "id": 11,
+    "name": "Graduate SWE",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Verify - General Ability Screen",
+      "Basic Computer Literacy (Windows 10) (New)",
+      "Global Skills Development Report",
+      "Dependability and Safety Instrument (DSI)",
+      "Count Out The Money",
+      "Business Communication (adaptive)",
+      "Business Communications"
+    ],
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Verify - G",
+    "is_clarify": false
+  },
+  {
+    "id": 12,
+    "name": "Engineering Manager",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "OPQ Manager Plus Report",
+      "OPQ User and Managers Report",
+      "OPQ Manager Plus Report 2.0",
+      "Digital Readiness Development Report - Manager",
+      "Telecommunications Engineering (New)",
+      "Adobe Experience Manager (New)",
+      "OPQ Premium Plus Report"
+    ],
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | OPQ Manage",
+    "is_clarify": false
+  },
+  {
+    "id": 13,
+    "name": "Contact Centre",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "SVAR - Spoken English (US) (New)",
+      "WriteX - Email Writing (Customer Service) (New)",
+      "Customer Service Phone Simulation",
+      "Entry Level Customer Serv-Retail & Contact Center",
+      "Sales & Service Phone Simulation",
+      "Entry Level Technical Support Solution",
+      "Customer Service Phone Solution"
+    ],
+    "reply_preview": "I've optimized an enterprise general hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | SVAR - Spo",
+    "is_clarify": false
+  },
+  {
+    "id": 14,
+    "name": "Vague clarify",
+    "pass": true,
+    "errors": [],
+    "rec_count": 0,
+    "recommendation_names": [],
+    "reply_preview": "What type of role and seniority are you hiring for? Examples: Senior Backend Developer, Junior Frontend Engineer, or Leadership \u2014 and any technical focus (e.g. Java, React, DevOps).",
+    "is_clarify": true
+  },
+  {
+    "id": 15,
+    "name": "Refinement",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Amazon Web Services (AWS) Development (New)",
+      "Java 8 (New)",
+      "Java Platform Enterprise Edition 7 (Java EE 7)",
+      "Java Design Patterns (New)",
+      "Java Frameworks (New)",
+      "Core Java (Advanced Level) (New)",
+      "Enterprise Java Beans (New)"
+    ],
+    "reply_preview": "Updated shortlist based on your request:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Amazon Web Services (AWS) Development (New) | K | Knowledge &",
+    "is_clarify": false
+  },
+  {
+    "id": 16,
+    "name": "Comparison",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "ReactJS (New)",
+      "AngularJS (New)",
+      "Angular 6 (New)",
+      "Automata Front End",
+      "Business Communication (adaptive)",
+      "Business Communications",
+      "Dermatology (New)"
+    ],
+    "reply_preview": "Compare these two assessments side by side:\n\n### Comparison: ReactJS (New) vs AngularJS (New)\n\n| Dimension | ReactJS (New) | AngularJS (New) |\n| :--- | :--- | :--- |\n| **Best For** | Technical skill v",
+    "is_clarify": false
+  },
+  {
+    "id": 17,
+    "name": "Conversation memory",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Python (New)",
+      "Automata - Fix (New)",
+      ".NET WCF (New)",
+      "Adobe Experience Manager (New)",
+      "Automata (New)",
+      "Automata Pro (New)",
+      "Automotive Engineering (New)"
+    ],
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Python (Ne",
+    "is_clarify": false
+  },
+  {
+    "id": 18,
+    "name": "Security refusal",
+    "pass": true,
+    "errors": [],
+    "rec_count": 0,
+    "recommendation_names": [],
+    "reply_preview": "I specialize in recommending SHL assessments and cannot assist with unrelated topics.",
+    "is_clarify": false
+  },
+  {
+    "id": 19,
+    "name": "DevOps",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "Docker (New)",
+      "Kubernetes (New)",
+      "Cloud Computing (New)",
+      "ASP .NET with C# (New)",
+      "Business Communication (adaptive)",
+      "Business Communications",
+      ".NET Framework 4.5"
+    ],
+    "reply_preview": "I've optimized an enterprise devops hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | Docker (New",
+    "is_clarify": false
+  },
+  {
+    "id": 20,
+    "name": "Full Stack",
+    "pass": true,
+    "errors": [],
+    "rec_count": 7,
+    "recommendation_names": [
+      "SQL Server Integration Services (SSIS) (New)",
+      "Core Java (Advanced Level) (New)",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Java Frameworks (New)",
+      "Spring (New)",
+      "Automata - Fix (New)",
+      "Automata - SQL (New)"
+    ],
+    "reply_preview": "I've optimized an enterprise backend hiring pipeline. Here are the recommended assessments:\n\n| # | Name | Test Type | Keys | Duration | Languages | URL |\n|---|---|---|---|---|---|---|\n| 1 | SQL Server",
+    "is_clarify": false
+  }
+]

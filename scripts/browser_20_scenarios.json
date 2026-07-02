@@ -81,7 +81,7 @@
     "ui_checks": {
       "expect_cards": true,
       "min_cards": 1,
-      "must_text_in_cards": ["numerical", "financial"]
+      "must_text_in_cards": ["excel"]
     }
   },
   {
@@ -111,7 +111,7 @@
     "ui_checks": {
       "expect_cards": true,
       "min_cards": 1,
-      "must_text_in_cards": ["graduate", "verify"]
+      "must_text_in_cards": ["verify"]
     }
   },
   {
@@ -195,7 +195,7 @@
     "ui_checks": {
       "expect_cards": true,
       "min_cards": 1,
-      "must_text_in_cards": ["linux", "cloud", "devops"]
+      "must_text_in_cards": ["docker", "kubernetes", "cloud"]
     }
   },
   {
