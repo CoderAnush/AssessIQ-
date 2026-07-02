@@ -68,6 +68,17 @@ class HiringContext:
         role_low = (self.role or "").lower()
         return any(t.lower() not in role_low for t in self.tech_stack)
 
+    def _has_explicit_skill_context(self) -> bool:
+        """True when the latest user turn already names skills or an assessment battery target."""
+        msg = (self.last_user_message or "").lower()
+        if re.search(r"\bexperienced in\b", msg):
+            return True
+        if re.search(r"\bneed assessments? for hiring\b", msg):
+            return True
+        if msg.count(",") >= 2:
+            return True
+        return False
+
     def get_missing_slots(self) -> List[str]:
         if self.needs_hiring_profile and "hiring_profile" not in self.asked_slots:
             if not self._hiring_profile_satisfied():
@@ -95,6 +106,7 @@ class HiringContext:
             and "seniority" not in self.inferred_slots
             and not self.needs_hiring_profile
             and not self._tech_beyond_role_name()
+            and not self._has_explicit_skill_context()
         ):
             role_low = (self.role or "").lower()
             if any(t in role_low for t in ("developer", "engineer", "programmer")):
