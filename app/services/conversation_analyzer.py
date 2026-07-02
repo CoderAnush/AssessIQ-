@@ -38,7 +38,6 @@ class HiringContext:
     is_sufficient: bool = False
 
     # Additional properties needed by ranker
-    soft_skills: Set[str] = field(default_factory=set)
     technical_skills: Set[str] = field(default_factory=set)
     refinement_filters: List[str] = field(default_factory=list)
     preferred_test_types: Set[str] = field(default_factory=set)
@@ -52,8 +51,13 @@ class HiringContext:
             if role_low in {"developer", "engineer", "software engineer", "software developer", "programmer"}:
                 if "seniority" not in self.asked_slots and "seniority" not in self.inferred_slots:
                     missing.append("seniority")
-                if not self.tech_stack and "role" not in self.asked_slots and role_low in {"developer", "programmer"}:
-                    missing.append("role")
+                if (
+                    not self.tech_stack
+                    and "tech_focus" not in self.asked_slots
+                    and "tech_focus" not in self.inferred_slots
+                    and role_low in {"developer", "programmer", "engineer"}
+                ):
+                    missing.append("tech_focus")
 
         return [s for s in missing if s not in self.asked_slots and s not in self.inferred_slots]
 
@@ -86,8 +90,9 @@ class ConversationAnalyzer:
 
     DOMAIN_HINT_KEYWORDS = {
         "backend", "frontend", "fullstack", "full stack", "devops", "sre", "qa", "sdet",
-        "data scientist", "machine learning", "ml", "mobile", "android", "ios", "security",
+        "data scientist", "machine learning", "ml", "ai", "mobile", "android", "ios", "security",
         "java", "python", "react", "angular", "vue", "javascript", "typescript", "nextjs",
+        "nlp", "tensorflow", "pytorch", "llm",
         "fastapi", "django", "flask", "kubernetes", "terraform", "docker", "api", "microservice",
         "software", "programmer", "coder", "civil", "mechanical", "electrical", "chemical", "aeronautical", "aerospace", "design"
     }
@@ -117,9 +122,12 @@ class ConversationAnalyzer:
         for m in cleaned_messages:
             if m["role"] == "assistant":
                 content = m["content"].lower()
-                if any(w in content for w in ["seniority", "experience level"]): context.asked_slots.add("seniority")
-                if any(w in content for w in ["role", "position", "technical area"]): context.asked_slots.add("role")
-                if any(w in content for w in ["tech stack", "skills", "framework"]): context.asked_slots.add("tech_stack")
+                if any(w in content for w in ["seniority", "experience level"]):
+                    context.asked_slots.add("seniority")
+                if any(w in content for w in ["tech stack", "skills", "framework"]):
+                    context.asked_slots.add("tech_stack")
+                if any(w in content for w in ["technical focus", "technical area", "backend, frontend"]):
+                    context.asked_slots.add("tech_focus")
 
         # Chronological Context Update (fixes conversational refinement overriding)
         for m in cleaned_messages:
@@ -174,6 +182,19 @@ class ConversationAnalyzer:
         if self._is_generic_without_domain_signal(full_text, context.role, context.tech_stack):
             context.role = None
             context.tech_stack = set()
+
+        # Recover role from cumulative user text (e.g. turn 1 "ai developer" + turn 2 "junior")
+        if not context.role or (context.role or "").lower() in self.GENERIC_ROLE_QUERIES:
+            history_role = self._extract_role(full_text)
+            if history_role and history_role.lower() not in self.GENERIC_ROLE_QUERIES:
+                context.role = history_role
+            elif re.search(r"\bai\b", full_text) and re.search(r"\b(developer|engineer)\b", full_text):
+                context.role = "ai engineer"
+
+        if re.search(r"\bai\b", full_text) and re.search(r"\b(developer|engineer|architect)\b", full_text):
+            if not context.role or (context.role or "").lower() in self.GENERIC_ROLE_QUERIES:
+                context.role = "ai engineer"
+            context.inferred_slots.add("tech_focus")
         
         # NEW: Infer tech_stack from role if not explicitly provided
         if not context.tech_stack and context.role:
@@ -189,7 +210,7 @@ class ConversationAnalyzer:
                 inferred_tech.append("Node.js")
             if "devops" in role_lower or "sre" in role_lower or "infrastructure" in role_lower:
                 inferred_tech.append("DevOps")
-            if any(t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "machine learning"]):
+            if any(t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "machine learning", "ai developer", "ml developer"]):
                 inferred_tech.extend(["Python", "Machine Learning", "Data Science"])
             if "django" in role_lower:
                 inferred_tech.extend(["Django", "Python"])
@@ -358,7 +379,8 @@ class ConversationAnalyzer:
             "typescript developer", "typescript engineer",
             # Data/ML
             "data scientist", "machine learning engineer", "ml engineer", "ml ops",
-            "data engineer", "ai engineer", "ai architect", "data analyst",
+            "data engineer", "ai engineer", "ai developer", "ai architect",
+            "ml developer", "machine learning developer",
             "platform engineer", "systems engineer", "embedded developer",
             "spring boot developer", "spring boot engineer", "spring boot",
             "ui/ux developer", "digital marketing manager", "digital marketing",
@@ -398,11 +420,13 @@ class ConversationAnalyzer:
             return "frontend"
         if "frontend" in text_lower or "ui" in text_lower or "web" in text_lower:
             return "frontend"
-        if "ai engineer" in text_lower or "ai architect" in text_lower:
+        if "ai engineer" in text_lower or "ai architect" in text_lower or "ai developer" in text_lower:
             return "ai engineer"
+        if "ml developer" in text_lower or "machine learning developer" in text_lower:
+            return "ml engineer"
         if "machine learning" in text_lower or " ml " in text_lower or "data science" in text_lower:
             return "data scientist"
-        if re.search(r"\bai\b", text_lower) and "engineer" in text_lower:
+        if re.search(r"\bai\b", text_lower) and re.search(r"\b(developer|engineer)\b", text_lower):
             return "ai engineer"
         if "java" in text_lower and "javascript" not in text_lower:
             return "java backend"
@@ -477,8 +501,9 @@ class ConversationAnalyzer:
         # Phase 3: Enhanced Domain Inference
         if any(w in combined for w in ["platform", "sre", "infrastructure", "kubernetes", "terraform", "cloud"]):
             return "devops"
-        if any(w in combined for w in ["ml", "ai", "machine learning", "pytorch", "tensorflow", "architect"]):
-            if "architect" in combined: return "backend engineering" # Technical depth
+        if any(w in combined for w in ["ml", "ai", "machine learning", "pytorch", "tensorflow", "nlp", "llm"]):
+            if "architect" in combined and "ai" not in combined:
+                return "backend engineering"
             return "data science"
         if any(w in combined for w in ["backend", "python", "java", "api", "apis", "microservice", "sql", "distributed", "server", "fastapi"]):
             return "backend engineering"
@@ -522,6 +547,10 @@ class ConversationAnalyzer:
             )
         if slot == "tech_stack":
             return f"Are there specific frameworks or tools required for this {context.role} position (e.g. FastAPI, Kubernetes, or React)?"
+        if slot == "tech_focus":
+            return (
+                "Which technical area should I prioritize — backend, frontend, AI/ML, DevOps, or another stack?"
+            )
         if slot == "seniority":
             return (
                 "What seniority level and technical focus should I use "

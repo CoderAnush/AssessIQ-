@@ -233,6 +233,37 @@ def test_ai_engineer_recall(client):
     assert recall >= 0.25, f"AI engineer recall {recall:.2f} below 0.25"
 
 
+def test_ai_multi_turn_developer_not_java(client):
+    """Multi-turn: hiring ai developer -> junior must not surface Java backend stack."""
+    messages = [{"role": "user", "content": "hiring ai developer"}]
+    data1 = _chat(client, messages)
+    messages.append({"role": "assistant", "content": data1["reply"]})
+    messages.append({"role": "user", "content": "junior"})
+    data2 = _chat(client, messages)
+    rec_names = [r["name"] for r in data2["recommendations"]]
+    assert len(rec_names) >= 1
+    names_low = " ".join(rec_names).lower()
+    assert "ai skills" in names_low or "data science" in names_low
+    forbidden = ["core java", "java frameworks"]
+    for bad in forbidden:
+        assert bad not in names_low, f"unexpected {bad} in {rec_names}"
+
+
+def test_ai_single_shot_developer_with_python(client):
+    messages = [
+        {
+            "role": "user",
+            "content": "hiring ai developer with python and nlp",
+        }
+    ]
+    data = _chat(client, messages)
+    rec_names = [r["name"] for r in data["recommendations"]]
+    assert len(rec_names) >= 1
+    names_low = " ".join(rec_names).lower()
+    assert "ai skills" in names_low or "data science" in names_low
+    assert "core java" not in names_low and "java frameworks" not in names_low
+
+
 def test_refinement_drop_opq(client):
     messages = [
         {"role": "user", "content": "We run a graduate management trainee scheme. We need cognitive, personality, and situational judgement."},

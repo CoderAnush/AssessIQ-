@@ -131,6 +131,15 @@ class DomainClassifier:
         if any(kw in query_low for kw in ["ui developer", "ui engineer", "ui/ux developer"]):
             return {"primaryDomain": Domain.FRONTEND, "confidence": 1.0, "reason": "UI Developer Role"}
 
+        if re.search(r"\bai\b", query_low) and re.search(r"\b(developer|engineer|architect)\b", query_low):
+            if not any(kw in query_low for kw in ["java", "spring", "react", "angular", "frontend", "backend api"]):
+                return {
+                    "primaryDomain": Domain.DATA_AI,
+                    "confidence": 1.0,
+                    "reason": "AI/ML Developer Role",
+                    "techStack": ["ai", "machine learning", "python"],
+                }
+
         if any(kw in query_low for kw in ["sales", "marketing", "financial", "accounting", "hr executive", "recruitment", "customer service", "retail", "business development"]):
             return {"primaryDomain": Domain.GENERAL, "confidence": 1.0, "reason": "Non-technical Business Role"}
         
@@ -187,6 +196,8 @@ class DomainClassifier:
         if "frontend" in query_low: scores[Domain.FRONTEND] += 10.0
         if "devops" in query_low: scores[Domain.DEVOPS] += 10.0
         if "data science" in query_low or "machine learning" in query_low: scores[Domain.DATA_AI] += 10.0
+        if re.search(r"\bai\b", query_low) and re.search(r"\b(developer|engineer)\b", query_low):
+            scores[Domain.DATA_AI] += 12.0
 
         sorted_domains = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         

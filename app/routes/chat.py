@@ -480,7 +480,12 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
                 )
             # 2. RETRIEVAL & RANKING PHASE
             retrieval_start = time.time()
-            query = f"{context.role} {context.seniority} {' '.join(context.tech_stack)}"
+            generic_roles = {"developer", "engineer", "software engineer", "software developer", "programmer"}
+            role_part = context.role or ""
+            if (role_part or "").lower() in generic_roles:
+                query = f"{full_user_text} {context.seniority}"
+            else:
+                query = f"{role_part} {context.seniority} {' '.join(context.tech_stack)}"
             retrieved = services.retriever.retrieve(query, context, top_k=50) # increased for smarter domain fallback recall
             retrieval_time = time.time() - retrieval_start
             
@@ -889,6 +894,8 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
 
             # Premium Recruiter Narrative
             domain_label = query_domain.lower().replace("_", " ")
+            if query_domain == Domain.DATA_AI:
+                domain_label = "AI/ML"
             table_md = generate_recommendations_table(recommendations, catalog)
             reply_intro = f"I've optimized an enterprise {domain_label} hiring pipeline. Here are the recommended assessments:\n\n{table_md}\n\n"
             if sparse_catalog_msg:

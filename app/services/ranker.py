@@ -96,7 +96,7 @@ class RecruiterRanker:
                 role_score = 1.0
             if any(t in candidate_text for t in ["linux", "kubernetes", "docker", "cloud", "terraform", "infrastructure"]):
                 role_score = max(role_score, 1.0)
-        elif any(t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "mlops", "machine learning", "deep learning", "nlp", "llm"]):
+        elif any(t in role_lower for t in ["ai engineer", "ai developer", "ml developer", "ml engineer", "data scientist", "data engineer", "ml ops", "mlops", "machine learning", "deep learning", "nlp", "llm"]):
             if "ml ops" in role_lower or "mlops" in role_lower:
                 if "ai skills" in candidate_name_lower:
                     role_score = 1.0
@@ -175,8 +175,14 @@ class RecruiterRanker:
             role_score = min(role_score, 0.05)
 
         is_data_ai_role = any(
-            t in role_lower for t in ["ai engineer", "ml engineer", "data scientist", "data engineer", "ml ops", "machine learning", "deep learning", "nlp", "llm"]
-        )
+            t in role_lower for t in ["ai engineer", "ai developer", "ml developer", "ml engineer", "data scientist", "data engineer", "ml ops", "machine learning", "deep learning", "nlp", "llm"]
+        ) or getattr(context, "domain", "") == "data science" or str(getattr(context, "domain_enum", "")).endswith("DATA_AI")
+
+        if is_data_ai_role and re.search(r"\bjava\b", candidate_name_lower) and "javascript" not in candidate_name_lower:
+            role_score = min(role_score, 0.1)
+        if is_data_ai_role and "spring" in candidate_name_lower:
+            role_score = min(role_score, 0.1)
+
         is_qa_role = any(t in role_lower for t in ["qa", "sdet", "test automation"])
         if is_data_ai_role or (
             "engineer" in role_lower and "data entry clerk" not in role_lower and not is_qa_role

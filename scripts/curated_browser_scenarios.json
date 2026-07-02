@@ -437,5 +437,18 @@
       "must_text_in_cards": ["ai skills", "data science"],
       "forbidden_in_cards": ["hackerrank", "faang-level", "elite signal"]
     }
+  },
+  {
+    "id": 31,
+    "name": "AI multi-turn developer junior",
+    "prompts": ["hiring ai developer", "junior"],
+    "expect": "AI/Data Science cards after seniority follow-up; no Java stack",
+    "ui_checks": {
+      "expect_cards": true,
+      "expect_clarify": false,
+      "min_cards": 1,
+      "must_text_in_cards": ["ai skills", "data science"],
+      "forbidden_in_cards": ["java frameworks", "core java", "hackerrank", "faang-level", "elite signal"]
+    }
   }
 ]
