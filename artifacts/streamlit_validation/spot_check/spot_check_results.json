@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "01_ai_developer",
+    "prompt": "Hiring AI Developer",
+    "top3": [
+      "Automata Data Science (New)",
+      "AI Skills",
+      "Automata Data Science Pro (New)"
+    ],
+    "passed": true,
+    "errors": [],
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\spot_check\\01_ai_developer.png"
+  },
+  {
+    "slug": "02_ai_engineer_llm",
+    "prompt": "Hiring an AI Engineer with Python, LLMs, LangChain, HuggingFace, Vector Databases and AWS.",
+    "top3": [
+      "AI Skills",
+      "Automata Data Science (New)",
+      "Automata Data Science Pro (New)"
+    ],
+    "passed": true,
+    "errors": [],
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\spot_check\\02_ai_engineer_llm.png"
+  },
+  {
+    "slug": "03_qa_automation",
+    "prompt": "Hiring QA Automation Engineer with Selenium, Playwright, Cypress, API Testing and Postman.",
+    "top3": [
+      "Automata Selenium",
+      "Selenium (New)",
+      "Manual Testing (New)"
+    ],
+    "passed": true,
+    "errors": [],
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\spot_check\\03_qa_automation.png"
+  },
+  {
+    "slug": "04_b2b_sales",
+    "prompt": "Hiring B2B Sales Manager.",
+    "top3": [
+      "Global Skills Development Report",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Sales Transformation Report 1.0 - Sales Manager"
+    ],
+    "passed": true,
+    "errors": [],
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\spot_check\\04_b2b_sales.png"
+  }
+]

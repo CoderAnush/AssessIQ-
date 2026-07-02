@@ -321,19 +321,13 @@ async def chat(request_obj: Request, payload: Dict = Body(...)):
 
         catalog = {a.id: a for a in services.catalog_loader.get_all()}
 
-        # Enforce 8-turn cap (count user turns only)
+        # Enforce 8-turn cap (count user turns only).
+        # Do NOT early-return a stale prior shortlist here — always process the latest
+        # user message so turn 8 still gets role-relevant cards. end_of_conversation is
+        # set via at_turn_cap on the final response. Closure phrases still return prior
+        # through _is_conversation_closure below.
         user_turn_count = sum(1 for m in messages if m.get("role") == "user")
         at_turn_cap = user_turn_count >= settings.max_conversation_turns
-        if at_turn_cap:
-            prior = get_prior_recommendations_from_messages(messages, catalog)
-            if prior:
-                table_md = generate_recommendations_table(prior, catalog)
-                return _make_evaluator_response(
-                    f"Here is your finalized assessment shortlist:\n\n{table_md}",
-                    prior,
-                    end_of_conversation=True,
-                )
-            # Fall through to generate a best-effort shortlist on the final turn.
 
         # Typo correction preprocessing in chat route
         typos = {

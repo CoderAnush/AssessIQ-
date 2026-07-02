@@ -8,7 +8,22 @@ import requests
 import streamlit as st
 
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
+MAX_USER_TURNS = 8
 TYPE_LABELS = {"K": "Knowledge", "A": "Ability", "P": "Personality", "S": "Simulation", "B": "Biodata", "C": "Competency"}
+
+
+def count_user_turns(messages: List[dict]) -> int:
+    return sum(1 for m in messages if m.get("role") == "user")
+
+
+def looks_like_fresh_role_query(text: str) -> bool:
+    low = text.lower().strip()
+    if any(p in low for p in ("compare", "add ", "remove ", "drop ", "perfect", "thank", "what did you")):
+        return False
+    return bool(
+        re.search(r"\b(hiring|need|looking for|recruit|screening)\b", low)
+        or re.search(r"\b(developer|engineer|manager|analyst|scientist|devops)\b", low)
+    )
 
 
 def sanitize_text(value: Any, fallback: str = "") -> str:
@@ -130,6 +145,10 @@ def main() -> None:
         else:
             st.error(detail)
         st.caption(f"API: `{BACKEND_URL}`")
+        turns = count_user_turns(st.session_state["messages"])
+        st.caption(f"Turns: {turns}/{MAX_USER_TURNS}")
+        if turns >= MAX_USER_TURNS - 1:
+            st.warning("Near turn limit — clear or start a new role to avoid stale results.")
         if st.button("Clear conversation", use_container_width=True):
             st.session_state["messages"] = []
             st.rerun()
@@ -182,6 +201,11 @@ def main() -> None:
                 st.markdown(reply)
 
     if prompt := st.chat_input("Describe the role or hiring need..."):
+        user_turns = count_user_turns(st.session_state["messages"])
+        if user_turns >= MAX_USER_TURNS or (
+            user_turns >= 6 and looks_like_fresh_role_query(prompt)
+        ):
+            st.session_state["messages"] = []
         st.session_state["messages"].append({"role": "user", "content": prompt})
         st.rerun()
 

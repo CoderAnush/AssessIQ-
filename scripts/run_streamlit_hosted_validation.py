@@ -1,8 +1,9 @@
-﻿"""Streamlit hosted app validation: default 12 queries or browser_20_scenarios.json."""
+"""Streamlit hosted app validation: default 12 queries or browser_20_scenarios.json."""
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import time
 from pathlib import Path
 
@@ -61,46 +62,146 @@ def card_text(page) -> str:
     return " ".join(texts).lower()
 
 
+CLARIFY_PATTERNS = [
+    "can you clarify",
+    "could you clarify",
+    "which role",
+    "what role",
+    "what type of role",
+    "type of role",
+    "seniority",
+    "which language",
+    "before i shape",
+    "before i commit",
+]
+
+
+def _normalize_text(value: str) -> str:
+    return re.sub(r"\s+", " ", (value or "")).strip().lower()
+
+
+def _is_clarify_reply(reply: str) -> bool:
+    text = _normalize_text(reply)
+    if "?" not in (reply or ""):
+        return False
+    return any(pattern in text for pattern in CLARIFY_PATTERNS)
+
+
+def wait_for_thinking(page, timeout=120000) -> None:
+    frame = app_frame(page)
+    # Wait up to 5s for the "Thinking..." element to appear in the DOM
+    try:
+        frame.locator('text="Thinking..."').wait_for(state="visible", timeout=5000)
+    except Exception:
+        pass
+    # Now wait for it to disappear
+    frame.locator('text="Thinking..."').wait_for(state="hidden", timeout=timeout)
+    # Give a short extra wait for Streamlit state to settle
+    page.wait_for_timeout(2000)
+
+
 def evaluate_scenario(page, scenario: dict) -> dict:
-    checks = scenario.get("ui_checks", {})
-    cards = count_cards(page)
-    body = card_text(page)
-    reply = app_frame(page).locator("body").inner_text().lower()
-    passed = True
-    reasons = []
+    frame = app_frame(page)
+    
+    # 1. Locate the last assistant message
+    last_assistant_msg = frame.locator('[data-testid="stChatMessage"]').last
+    
+    # 2. Get card names from the last assistant message
+    recommendation_names = []
+    if last_assistant_msg.locator("div.rec-card").count() > 0:
+        recommendation_names = last_assistant_msg.locator("div.rec-card h4").all_inner_texts()
+    
+    recommendation_names = [name.strip() for name in recommendation_names if name.strip()]
+    cards_count = len(recommendation_names)
+    cards_text = _normalize_text(" | ".join(recommendation_names))
+    
+    # 3. Get assistant reply text (include comparison blocks rendered separately in Streamlit)
+    reply_text = last_assistant_msg.inner_text()
+    
+    # 4. Check if clarify
+    is_clarify = _is_clarify_reply(reply_text)
+    has_banner = last_assistant_msg.locator("div.clarify-banner").count() > 0
+    if has_banner:
+        is_clarify = True
+        
+    errors = []
+    ui_checks = scenario.get("ui_checks", {})
+    
+    expect_cards = bool(ui_checks.get("expect_cards", True))
+    expect_clarify = bool(ui_checks.get("expect_clarify", False))
+    min_cards = int(ui_checks.get("min_cards", 0))
 
-    if checks.get("expect_cards") and cards == 0:
-        passed = False
-        reasons.append("expected cards")
-    if checks.get("expect_clarify") and cards > 0:
-        passed = False
-        reasons.append("expected clarify without cards")
-    min_cards = checks.get("min_cards", 0)
-    if cards < min_cards:
-        passed = False
-        reasons.append(f"cards {cards} < {min_cards}")
+    if expect_cards and cards_count == 0:
+        errors.append("Expected recommendation cards but received none.")
+    if not expect_cards and cards_count > 0:
+        errors.append(f"Expected no recommendation cards but received {cards_count}.")
+    if cards_count < min_cards:
+        errors.append(f"Expected at least {min_cards} cards but received {cards_count}.")
 
-    for token in checks.get("must_text_in_cards", []):
-        if token.lower() not in body:
-            passed = False
-            reasons.append(f"missing card text: {token}")
+    if expect_clarify and not is_clarify:
+        errors.append("Expected clarification question in assistant reply.")
+    if not expect_clarify and is_clarify and expect_cards:
+        errors.append("Unexpected clarification question in assistant reply.")
 
-    for token in checks.get("forbidden_in_cards", []):
-        if token.lower() in body:
-            passed = False
-            reasons.append(f"forbidden card text: {token}")
+    for item in ui_checks.get("must_text_in_cards", []):
+        full_cards_text = ""
+        if last_assistant_msg.locator("div.rec-card").count() > 0:
+            full_cards_text = _normalize_text(" ".join(last_assistant_msg.locator("div.rec-card").all_inner_texts()))
+        if item.lower() not in full_cards_text:
+            errors.append(f"Expected card text containing '{item}'.")
 
-    for token in checks.get("must_text_in_reply", []):
-        if token.lower() not in reply:
-            passed = False
-            reasons.append(f"missing reply text: {token}")
+    top_n_spec = ui_checks.get("must_text_in_top_n")
+    if top_n_spec:
+        n = int(top_n_spec.get("n", 3))
+        top_names = _normalize_text(" | ".join(recommendation_names[:n]))
+        terms = top_n_spec.get("terms", [])
+        if terms and not any(term.lower() in top_names for term in terms):
+            errors.append(f"Expected one of {terms} in top {n} cards; got {recommendation_names[:n]}.")
+
+    forbidden_top = ui_checks.get("forbidden_in_top_n")
+    if forbidden_top:
+        n = int(forbidden_top.get("n", 3))
+        top_names = _normalize_text(" | ".join(recommendation_names[:n]))
+        for item in forbidden_top.get("terms", []):
+            if item.lower() in top_names:
+                errors.append(f"Forbidden text '{item}' in top {n} cards.")
+
+    for item in ui_checks.get("forbidden_in_cards", []):
+        full_cards_text = ""
+        if last_assistant_msg.locator("div.rec-card").count() > 0:
+            full_cards_text = _normalize_text(" ".join(last_assistant_msg.locator("div.rec-card").all_inner_texts()))
+        if item.lower() in full_cards_text or item.lower() in cards_text:
+            errors.append(f"Forbidden card text found: '{item}'.")
+
+    for item in ui_checks.get("must_text_in_reply", []):
+        if item.lower() not in _normalize_text(reply_text):
+            errors.append(f"Expected reply text containing '{item}'.")
+
+    for item in ui_checks.get("forbidden_in_reply", []):
+        if item.lower() in _normalize_text(reply_text):
+            errors.append(f"Forbidden reply text found: '{item}'.")
+
+    # Check SHL URLs in the last assistant message
+    shl_buttons = last_assistant_msg.locator('a:has-text("View on SHL")')
+    urls = []
+    for idx in range(shl_buttons.count()):
+        href = shl_buttons.nth(idx).get_attribute("href")
+        if href:
+            urls.append(href)
+            
+    for url in urls:
+        if url and not url.startswith("https://www.shl.com/"):
+            errors.append(f"Invalid SHL URL: {url}")
+
+    if len(recommendation_names) != len(set(recommendation_names)):
+        errors.append("Duplicate assessment names in recommendations.")
 
     return {
-        "id": scenario.get("id"),
-        "name": scenario.get("name"),
-        "cards": cards,
-        "passed": passed,
-        "reasons": reasons,
+        "id": scenario["id"],
+        "name": scenario["name"],
+        "cards": cards_count,
+        "passed": len(errors) == 0,
+        "reasons": errors,
     }
 
 
@@ -118,7 +219,7 @@ def run_browser_20(page, out_dir: Path) -> list:
                 page.wait_for_timeout(1500)
             for prompt in scenario["prompts"]:
                 send_chat(page, prompt)
-                page.wait_for_timeout(45000)
+                wait_for_thinking(page)
             result = evaluate_scenario(page, scenario)
         except Exception as e:
             result = {

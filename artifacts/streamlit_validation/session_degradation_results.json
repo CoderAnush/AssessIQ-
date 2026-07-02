@@ -1,0 +1,156 @@
+[
+  {
+    "step": 1,
+    "prompt": "Hiring a Senior Java Backend Engineer with Spring Boot, Microservices, Kafka, Redis, Docker, Kubernetes, AWS, MySQL and REST APIs.",
+    "top4": [
+      "Spring (New)",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Java Platform Enterprise Edition 7 (Java EE 7)",
+      "Automata - Fix (New)"
+    ],
+    "passed": true,
+    "reason": "ok",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_01.png",
+    "elapsed_s": 6.6
+  },
+  {
+    "step": 2,
+    "prompt": "hiring frontend developer",
+    "top4": [
+      "ReactJS (New)",
+      "AngularJS (New)",
+      "Automata Front End",
+      "Angular 6 (New)"
+    ],
+    "passed": true,
+    "reason": "ok",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_02.png",
+    "elapsed_s": 6.9
+  },
+  {
+    "step": 3,
+    "prompt": "hiring java developer",
+    "top4": [
+      "Spring (New)",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Automata - Fix (New)",
+      "Java Platform Enterprise Edition 7 (Java EE 7)"
+    ],
+    "passed": true,
+    "reason": "ok",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_03.png",
+    "elapsed_s": 5.5
+  },
+  {
+    "step": 4,
+    "prompt": "Hiring AI Developer",
+    "top4": [
+      "AI Skills",
+      "Automata Data Science (New)",
+      "Automata Data Science Pro (New)",
+      "Data Science (New)"
+    ],
+    "passed": true,
+    "reason": "ok",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_04.png",
+    "elapsed_s": 6.2
+  },
+  {
+    "step": 5,
+    "prompt": "hiring backend developer",
+    "top4": [
+      "Spring (New)",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Java Platform Enterprise Edition 7 (Java EE 7)",
+      "Java 8 (New)"
+    ],
+    "passed": true,
+    "reason": "ok",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_05.png",
+    "elapsed_s": 5.0
+  },
+  {
+    "step": 6,
+    "prompt": "hiring python engineer",
+    "top4": [
+      "Spring (New)",
+      "Occupational Personality Questionnaire OPQ32r",
+      "Java Platform Enterprise Edition 7 (Java EE 7)",
+      "Python (New)"
+    ],
+    "passed": true,
+    "reason": "ok",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_06.png",
+    "elapsed_s": 4.7
+  },
+  {
+    "step": 7,
+    "prompt": "hiring devops engineer",
+    "top4": [
+      "Docker (New)",
+      "Kubernetes (New)",
+      "Cloud Computing (New)",
+      "Amazon Web Services (AWS) Development (New)"
+    ],
+    "passed": true,
+    "reason": "ok",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_07.png",
+    "elapsed_s": 5.0
+  },
+  {
+    "step": 8,
+    "prompt": "hiring frontend developer",
+    "top4": [
+      "Docker (New)",
+      "Kubernetes (New)",
+      "Cloud Computing (New)",
+      "Amazon Web Services (AWS) Development (New)"
+    ],
+    "passed": false,
+    "reason": "stale finalized shortlist returned",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_08.png",
+    "elapsed_s": 7.5
+  },
+  {
+    "step": 9,
+    "prompt": "python",
+    "top4": [
+      "Docker (New)",
+      "Kubernetes (New)",
+      "Cloud Computing (New)",
+      "Amazon Web Services (AWS) Development (New)"
+    ],
+    "passed": false,
+    "reason": "stale finalized shortlist returned",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_09.png",
+    "elapsed_s": 7.5
+  },
+  {
+    "step": 10,
+    "prompt": "need frontend",
+    "top4": [
+      "Docker (New)",
+      "Kubernetes (New)",
+      "Cloud Computing (New)",
+      "Amazon Web Services (AWS) Development (New)"
+    ],
+    "passed": false,
+    "reason": "stale finalized shortlist returned",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_10.png",
+    "elapsed_s": 7.5
+  },
+  {
+    "step": 11,
+    "prompt": "devops developer",
+    "top4": [
+      "Docker (New)",
+      "Kubernetes (New)",
+      "Cloud Computing (New)",
+      "Amazon Web Services (AWS) Development (New)"
+    ],
+    "passed": false,
+    "reason": "stale finalized shortlist returned",
+    "screenshot": "C:\\Users\\anush\\Desktop\\SHL\\AssessIQ-\\artifacts\\streamlit_validation\\session_11.png",
+    "elapsed_s": 7.6
+  }
+]

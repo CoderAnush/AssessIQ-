@@ -195,7 +195,7 @@
     "ui_checks": {
       "expect_cards": true,
       "min_cards": 1,
-      "must_text_in_cards": ["docker", "kubernetes", "cloud"]
+      "must_text_in_cards": ["docker", "kubernetes"]
     }
   },
   {

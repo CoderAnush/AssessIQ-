@@ -351,6 +351,31 @@ def test_end_of_conversation_closure(client):
     assert len(data2["recommendations"]) >= 1
 
 
+def test_turn_cap_uses_latest_role_not_stale_prior(client):
+    """Turn 8 must process the latest query, not replay the previous shortlist."""
+    messages = []
+    warmup = [
+        "Senior Java Backend Engineer with Spring Boot and microservices",
+        "hiring python engineer",
+        "hiring devops engineer with kubernetes docker terraform",
+        "Hiring AI Developer",
+        "hiring backend developer",
+        "hiring java developer",
+        "hiring frontend developer",
+    ]
+    for prompt in warmup:
+        messages.append({"role": "user", "content": prompt})
+        data = _chat(client, messages)
+        messages.append({"role": "assistant", "content": data["reply"]})
+
+    messages.append({"role": "user", "content": "hiring frontend developer"})
+    data8 = _chat(client, messages)
+    assert data8["end_of_conversation"] is True
+    top_names = " | ".join(r["name"].lower() for r in data8["recommendations"][:3])
+    assert any(term in top_names for term in ("react", "angular", "front end"))
+    assert "spring" not in top_names.split(" | ")[0]
+
+
 def test_clarify_returns_empty_recommendations(client):
     data = _chat(client, [{"role": "user", "content": "I need an assessment."}])
     assert data["recommendations"] == []
